@@ -113,7 +113,7 @@ class QuasarSphere(object):
     def create_QSO_endpoints(self, R, n_th, n_phi, n_r, rmax, length,\
                              distances = "kpc", overwrite = False, endonsph = False):
         if not overwrite and self.scanparams:
-            print "overwrite is FALSE, set to TRUE to create new scan."
+            print("overwrite is FALSE, set to TRUE to create new scan.")
             return None
         r_arr = np.linspace(0,rmax,n_r)
         th_arr = np.linspace(0,np.pi,n_th,endpoint = False)
@@ -204,7 +204,7 @@ class QuasarSphere(object):
             for item in prev:
                 if item.endswith("of_%s-"%str(numlines) +ionsstr+"_z"+str(redshift)[:4]+".txt"):
                     os.remove(foldername+"/"+item)
-        f = file(filename,"w+")
+        f = open(filename,"w+")
         firstline = "[dsname, z, center[0], center[1], center[2], Rvir, pathname]\n"
         secondline = str(self.simparams)+"\n"
         thirdline = "[R, n_th, n_phi, n_r, r_max, num_lines, line_reached]\n"
@@ -248,7 +248,7 @@ def read_values(filename):
         fifthline = "ions"
         sixthline = "["+str(self.ions[0])+", "+...+"]"
     """
-    f = file(filename)
+    f = open(filename)
     firstline = f.readline()
     secondline = f.readline()[:-1]
     thirdline = f.readline()
@@ -392,7 +392,7 @@ def read_Choi_metadata():
     all_data_dict = {}
     for num in files:
         filename = "/Users/claytonstrawn/Downloads/Choi17_z1set/m0{0:03d}_info_044.txt".format(num)
-        f = file(filename)
+        f = open(filename)
         lines = f.readlines()
         data_dict = {}
         for line in lines:
@@ -402,23 +402,94 @@ def read_Choi_metadata():
         all_data_dict[num] = data_dict
     return files,all_data_dict
 
+def get_vela_metadata(simname,a0):
+    Rvir = float(parse_vela_metadata.Rdict[simname][a0])
+    Lstrings = parse_vela_metadata.Ldict[simname][a0]
+    L = np.zeros(3)
+    L[0] = float(Lstrings[0])
+    L[1] = float(Lstrings[1])
+    L[2] = float(Lstrings[2])
+    return Rvir,L
+
+def read_command_line_args(args, shortform,longform, tograb, defaults = 0):
+    if shortform in args or longform in args:
+        if tograb == 0:
+            return 1
+        if shortform in args:
+            i = args.index(shortform)
+        else:
+            i = args.index(longform)
+        paramsstr = args[i+1:i+1+tograb]
+        params = [None]*len(paramsstr)
+        for i in len(defaults):
+            if type(defaults[i]) is str
+                params[i] = paramsstr[i]
+            else:
+                toinsert = eval(defaults[i])
+                if type(defaults[i]) is type(toinsert):
+                    params[i] = toinsert
+                else:
+                    print("Called with incorrect arguments: \
+                        The %dth argument after '%s' or '%s' should be type: %s",\
+                        (i, shortform, longform, type(defaults[i])))
+                    return None
+        return params
+    else: 
+        return defaults
+
 if __name__ == "__main__":
 	new = sys.argv[1]
 	if new == "n":	
 		dspath = sys.argv[2]
+        a0 = "0"+dspath.split("a0.")[1][:3]
 		simname = sys.argv[3]
-		ions = sys.argv[4]
-		scanparams = sys.argv[5]
-		# R, n_th, n_phi, n_r, rmax
-		scan_methods = sys.argv[6]
-		# length, save, parallel
-		q = QuasarSphere(simname = simname ,dspath = dspath)
+        if simname.lower().startswith("vela"):
+            Rvir, L = get_vela_metadata(simname,a0)
+            distances = "Rvir"
+        elif simname.lower().startswith("choi"):
+            Rvir = read_Choi_metadata()[1]["Rvir"]
+            L = read_Choi_metadata()[1]["L"]
+            distances = "Rvir"
+        else: 
+            print("simulation not found! Rvir, L not set")
+            Rvir = None
+            L = None
+            distances = "kpc"
+
+        if distances == "Rvir":
+            defaultsphere = 2,12,12,0.5,200
+        else:
+            defaultsphere = 40,12,12,10,200
+        defaultions = "[O VI, Ne VIII, H I, C III, O IV, N III, Mg II, O V, "+\
+                        "O III, N IV, Mg X, N V, S IV, O II, S III, S II, S V, S VI, N II]"
+        defaultsave = 10
+
+        R,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 5, defaultsphere)
+        save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)
+        ions = read_command_line_args(sys.argv, "-i","--ions", 1,defaultions)
+        parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
+
+        parallel = (parallelint == 1)
+		q = QuasarSphere(simname = simname ,dspath = dspath, ions = ions, Rvir = Rvir,L = L)
+        q.create_QSO_endpoints(R, n_th, n_phi, n_r, rmax, length,\
+                             distances = distances)
+        q.get_coldens(save = save,parallel = parallel)
+
 	elif new == "c":
 		filename = sys.argv[2]
 		simparams,scanparams,ions,data = read_values(filename)
 
-		q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions,data)
-		simparams,scanparams,ions,data
+		q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions=ions,data=data)
+
+        defaultsave = 10
+        save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)
+        parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
+        parallel = (parallelint == 1)
+
+        q.get_coldens(save = save,parallel = parallel)
+
+    else: 
+        print("Run this program with arguement 'n' (new) or 'c' (continue).")
 
 
 
