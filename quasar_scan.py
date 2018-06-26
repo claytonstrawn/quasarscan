@@ -7,7 +7,7 @@ from multiprocessing import Pool,current_process,cpu_count
 import itertools
 import logging
 
-import parse_vela_metadata
+from quasarscan import parse_vela_metadata
 from sys import platform as _platform
 
 yt.funcs.mylog.setLevel(50)
@@ -73,11 +73,20 @@ def ion_to_field_name(ion):
 
 class QuasarSphere(object):
     def __init__(self,ions=None,sim_name=None,dspath=None,data = None,\
-                 simparams = None,scanparams = None,Rvir = None,L = None):
+                 simparams = None,scanparams = None,Rvir = None,L = None, ytlevel = "quiet"):
+        if ytlevel == "loud":
+            yt.funcs.mylog.setLevel(1)
         if simparams == None:
             #need to load simulation from filename
             if dspath:
-                self.ds = yt.load(dspath)
+                projectdir = dspath.split("10MpcBox")[0]
+                a0 = dspath.split("a0.")[1][:3]
+                file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
+                file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
+                file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
+                self.ds = yt.load(dspath,file_particle_header=file_particle_header,\
+                                  file_particle_data=file_particle_data,\
+                                  file_particle_stars=file_particle_stars)
                 z = self.ds.current_redshift
                 c = self.ds.find_max("density")[1].value
             else:
@@ -85,9 +94,9 @@ class QuasarSphere(object):
                 self.ds = None
                 z = -1.0
                 c = np.zeros(3)
-            if L == None:
+            if type(L) is None:
                 L = np.array([0,0,1])
-            self.simparams = [None]*7
+            self.simparams = [None]*10
             self.simparams[0] = sim_name
             self.simparams[1] = z
             self.simparams[2] = c[0]
@@ -139,7 +148,7 @@ class QuasarSphere(object):
         self.info = np.zeros((int(length),11+len(self.ions)+1))-1.0
         weightth = weights(th_arr, "sin")
         weightr = weights(r_arr, "lin")
-        L = np.simparams[7:10]
+        L = self.simparams[7:10]
         rot_matrix = get_rotation_matrix(L)
         for i in range(int(length)):
             theta = np.random.choice(th_arr,p = weightth)
@@ -298,14 +307,10 @@ def _get_coldens_helper(dsparamsvectorions):
             #vector[12+3*i+2] = incdens
         Z = np.average(field_data[('gas',"metallicity")],weights=field_data['dl'])
         vector[-1] = Z
-        if _platform == 'darwin':
-            foldername = "/Users/claytonstrawn/Desktop/astroresearch/code/ready_for_pleiades/quasarlines"
-        else:
-            foldername = "/u/cstrawn/quasarlines/galaxy_catalogs/"
     except Exception:
         logging.exception("failed")
     try:
-        os.remove(foldername+"/"+"ray"+ident+".h5")
+        os.remove(+"~/"+"ray"+ident+".h5")
     except:
         pass 
     print("vector = "+str(vector))
@@ -346,7 +351,6 @@ def plot2dhist(ion,xvars,cdens,simname,xvar = "r",ns = (42,15),zeros = "ignore",
         logdens = np.log10(cdens)
     else:
         logdens = np.log10(np.maximum(cdens,1e-15))
-    print xvars.shape,cdens.shape
     nx = ns[0]
     ny = ns[1]
     if weights:
@@ -422,7 +426,7 @@ def read_command_line_args(args, shortform,longform, tograb, defaults = 0):
         paramsstr = args[i+1:i+1+tograb]
         params = [None]*len(paramsstr)
         for i in len(defaults):
-            if type(defaults[i]) is str
+            if type(defaults[i]) is str:
                 params[i] = paramsstr[i]
             else:
                 toinsert = eval(defaults[i])
@@ -438,11 +442,11 @@ def read_command_line_args(args, shortform,longform, tograb, defaults = 0):
         return defaults
 
 if __name__ == "__main__":
-	new = sys.argv[1]
-	if new == "n":	
-		dspath = sys.argv[2]
+    new = sys.argv[1]
+    if new == "n":	
+        dspath = sys.argv[2]
         a0 = "0"+dspath.split("a0.")[1][:3]
-		simname = sys.argv[3]
+        simname = sys.argv[3]
         if simname.lower().startswith("vela"):
             Rvir, L = get_vela_metadata(simname,a0)
             distances = "Rvir"
@@ -470,16 +474,16 @@ if __name__ == "__main__":
         parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
 
         parallel = (parallelint == 1)
-		q = QuasarSphere(simname = simname ,dspath = dspath, ions = ions, Rvir = Rvir,L = L)
+        q = QuasarSphere(simname = simname ,dspath = dspath, ions = ions, Rvir = Rvir,L = L)
         q.create_QSO_endpoints(R, n_th, n_phi, n_r, rmax, length,\
                              distances = distances)
         q.get_coldens(save = save,parallel = parallel)
 
-	elif new == "c":
-		filename = sys.argv[2]
-		simparams,scanparams,ions,data = read_values(filename)
+    elif new == "c":
+        filename = sys.argv[2]
+        simparams,scanparams,ions,data = read_values(filename)
 
-		q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions=ions,data=data)
+        q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions=ions,data=data)
 
         defaultsave = 10
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)

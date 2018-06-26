@@ -16,33 +16,38 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35)):
         numvals = 3        
     ret_dict = {}
     basepath = "/Users/claytonstrawn/Desktop/astroresearch/misc_resources/galaxy_catalogs/"
-    for i in range(len(iarr)):
-        folder = "VELA_v2_%02i"%iarr[i]
-        ret_dict[folder] = {}
-        if numvals == 1:
-            pathname = basepath + folder + "/galaxy_catalogue/Mstar.txt"
-        else:
-            pathname = basepath + folder + "/galaxy_catalogue/Nir_disc_cat.txt"
-        try:
-            f = file(pathname)
-        except:
-            print("Error reading %s"%pathname)
-            continue
-        f.readline()
-        line = f.readline()
-        a = line.split()[0]
-        while 1:
+    for version in (1,2):
+        if version == 1:
+            folderstart = "VELA"
+        elif version == 1:
+            folderstart = "VELA_v2_"
+        for i in range(len(iarr)):
+            folder = folderstart+"%02i"%iarr[i]
+            ret_dict[folder] = {}
             if numvals == 1:
-                ret_dict[folder][a] = line.split()[index]
+                pathname = basepath + folder + "/galaxy_catalogue/Mstar.txt"
             else:
-                ret_dict[folder][a] = [line.split()[index[0]],line.split()[index[1]],line.split()[index[2]]]
-            line = f.readline()[1:]
+                pathname = basepath + folder + "/galaxy_catalogue/Nir_disc_cat.txt"
             try:
-                a = line.split()[0]
+                f = file(pathname)
             except:
-                break
-                f.close()
-    return ret_dict
-
+                print("Error reading %s"%pathname)
+                continue
+            f.readline()
+            line = f.readline()
+            a = line.split()[0]
+            while 1:
+                if numvals == 1:
+                    ret_dict[folder][a] = line.split()[index]
+                else:
+                    ret_dict[folder][a] = [line.split()[index[0]],line.split()[index[1]],line.split()[index[2]]]
+                line = f.readline()[1:]
+                try:
+                    a = line.split()[0]
+                except:
+                    break
+                    f.close()
+        return ret_dict
+    
 Rdict = dict_of_vela_info("Rvir",iarr = np.arange(6,16))
 Ldict = dict_of_vela_info("Rvir",iarr = np.arange(6,16))
