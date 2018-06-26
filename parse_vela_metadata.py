@@ -1,7 +1,7 @@
 def get_a0(z):
     return [1.0/(1+z[0]),1.0/(1+z[1])]
 import numpy as np
-def dict_of_vela_info(quantity, iarr= np.arange(1,35)):
+def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = True):
     quantity_dict_single = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
                     "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
                     "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
@@ -31,7 +31,8 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35)):
             try:
                 f = file(pathname)
             except:
-                print("Error reading %s"%pathname)
+                if loud:
+                    print("Error reading %s"%pathname)
                 continue
             f.readline()
             line = f.readline()
