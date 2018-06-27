@@ -1,5 +1,5 @@
 import numpy as np
-def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = True):
+def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
     quantity_dict_single = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
                     "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
                     "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
@@ -13,9 +13,8 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = True):
         index = quantity_dict_triple[quantity]
         numvals = 3        
     ret_dict = {}
-    basepath = "~/quasarscan/galaxy_catalogs/"
+    basepath = "quasarscan/galaxy_catalogs/"
     for version in range(1,3):
-        print(version)
         if version == 1:
             folderstart = "VELA"
         elif version == 2:
@@ -28,7 +27,7 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = True):
             else:
                 pathname = basepath + folder + "/galaxy_catalogue/Nir_disc_cat.txt"
             try:
-                f = file(pathname)
+                f = open(pathname)
             except:
                 if loud:
                     print("Error reading %s"%pathname)
