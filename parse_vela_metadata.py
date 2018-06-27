@@ -48,5 +48,5 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
                     f.close()
         return ret_dict
     
-Rdict = dict_of_vela_info("Rvir",iarr = np.arange(6,16))
-Ldict = dict_of_vela_info("Rvir",iarr = np.arange(6,16))
+Rdict = dict_of_vela_info("Rvir",iarr = np.arange(1,35))
+Ldict = dict_of_vela_info("Rvir",iarr = np.arange(1,35))
