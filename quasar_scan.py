@@ -311,7 +311,7 @@ def _get_coldens_helper(dsparamsvectorions):
     except Exception:
         logging.exception("failed")
     try:
-        os.remove(+"~/"+"ray"+ident+".h5")
+        os.remove("ray"+ident+".h5")
     except:
         pass 
     print("vector = "+str(vector))

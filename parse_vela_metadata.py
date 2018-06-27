@@ -1,7 +1,5 @@
-def get_a0(z):
-    return [1.0/(1+z[0]),1.0/(1+z[1])]
 import numpy as np
-def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = True):
+def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
     quantity_dict_single = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
                     "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
                     "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
