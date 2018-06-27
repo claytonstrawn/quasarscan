@@ -445,9 +445,9 @@ def read_command_line_args(args, shortform,longform, tograb, defaults = 0):
 
 if __name__ == "__main__":
     new = sys.argv[1]
-    if new == "n":	
+    if new == "n":
         dspath = sys.argv[2]
-        a0 = "0"+dspath.split("a0.")[1][:3]
+        a0 = "0."+dspath.split("a0.")[1][:3]
         simname = sys.argv[3]
         if simname.lower().startswith("vela"):
             Rvir, L = get_vela_metadata(simname,a0)
@@ -495,7 +495,7 @@ if __name__ == "__main__":
         q.get_coldens(save = save,parallel = parallel)
 
     else: 
-        print("Run this program with arguement 'n' (new) or 'c' (continue).")
+        print("Run this program with argument 'n' (new) or 'c' (continue).")
 
 
 

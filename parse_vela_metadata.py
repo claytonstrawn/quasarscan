@@ -13,7 +13,7 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
         index = quantity_dict_triple[quantity]
         numvals = 3        
     ret_dict = {}
-    basepath = "/Users/claytonstrawn/Desktop/astroresearch/misc_resources/galaxy_catalogs/"
+    basepath = "~/quasarscan/galaxy_catalogs/"
     for version in (1,2):
         if version == 1:
             folderstart = "VELA"
