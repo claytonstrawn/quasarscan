@@ -188,6 +188,8 @@ class QuasarSphere(object):
                 self.scanparams[6]+=save
                 output = self.save_values()
                 print("file saved to "+output+".")
+                pool.join()
+            pool.close()
         output = self.save_values()
         print("file saved to "+output+".")
         return self.info
