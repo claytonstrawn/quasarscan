@@ -33,6 +33,8 @@ def rotation_matrix(axis, theta):
 
 def get_rotation_matrix(L):
     zhat = np.array([0,0,1])
+    if np.array_equal(L,zhat):
+        return np.diag([1,1,1])
     theta = np.arccos(L[2]/np.linalg.norm(L))
     axis = np.cross(zhat,L)
     return rotation_matrix(axis,theta)
@@ -73,7 +75,8 @@ def ion_to_field_name(ion):
 
 class QuasarSphere(object):
     def __init__(self,ions=None,sim_name=None,dspath=None,data = None,\
-                 simparams = None,scanparams = None,Rvir = None,L = None, ytlevel = "quiet"):
+                 simparams = None,scanparams = None,Rvir = None,L=np.array([0,0,1]),\
+                 ytlevel = "quiet"):
         if ytlevel == "loud":
             yt.funcs.mylog.setLevel(1)
         if simparams == None:
@@ -94,8 +97,6 @@ class QuasarSphere(object):
                 self.ds = None
                 z = -1.0
                 c = np.zeros(3)
-            if type(L) is None:
-                L = np.array([0,0,1])
             self.simparams = [None]*10
             self.simparams[0] = sim_name
             self.simparams[1] = z
