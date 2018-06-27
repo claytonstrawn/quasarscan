@@ -1,5 +1,5 @@
 import numpy as np
-def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
+def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = True):
     quantity_dict_single = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
                     "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
                     "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
@@ -14,10 +14,11 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
         numvals = 3        
     ret_dict = {}
     basepath = "~/quasarscan/galaxy_catalogs/"
-    for version in (1,2):
+    for version in range(1,3):
+        print(version)
         if version == 1:
             folderstart = "VELA"
-        elif version == 1:
+        elif version == 2:
             folderstart = "VELA_v2_"
         for i in range(len(iarr)):
             folder = folderstart+"%02i"%iarr[i]
@@ -46,7 +47,7 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
                 except:
                     break
                     f.close()
-        return ret_dict
+    return ret_dict
     
 Rdict = dict_of_vela_info("Rvir",iarr = np.arange(1,35))
-Ldict = dict_of_vela_info("Rvir",iarr = np.arange(1,35))
+Ldict = dict_of_vela_info("L",iarr = np.arange(1,35))
