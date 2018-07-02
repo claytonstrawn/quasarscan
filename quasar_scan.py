@@ -422,9 +422,12 @@ def get_vela_metadata(simname,a0):
     L[0] = float(Lstrings[0])
     L[1] = float(Lstrings[1])
     L[2] = float(Lstrings[2])
-    if np.isnan(L).any() or Rvir == 0:
-        print("VELA metadata not found, returning None.")
-        return None,None
+    if np.isnan(L).any():
+        print("VELA L data not found, returning None.")
+        L = None
+    elif Rvir == 0.0:
+        print("VELA Rvir data not found, returning None.")
+        Rvir = None
     return Rvir,L
 
 def read_command_line_args(args, shortform,longform, tograb, defaults = 0):
