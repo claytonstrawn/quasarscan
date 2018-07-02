@@ -254,7 +254,7 @@ class QuasarSphere(object):
             end = self.scanparams[6]
             plot2dhist(self.ions[i],self.info[:end,vardict[xvariable]]*conversion,\
                        self.info[:end,11+i],simname,xvar = xvariable, ns = ns,zeros = zeros,\
-                       weights = weights,save_fig = save_fig)
+                       weights = weights,save_fig = save_fig,z = self.simparams[1])
 
 def read_values(filename):
     """ firstline = "[dsname, z, center[0], center[1], center[2], Rvir, pathname]\n"
@@ -351,7 +351,7 @@ cdict = {'red':   ((0.0,  255/f, 255/f),
 hotcustom = LinearSegmentedColormap('HotCustom', cdict)
 plt.register_cmap(cmap=hotcustom)
 
-def plot2dhist(ion,xvars,cdens,simname,xvar = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None):
+def plot2dhist(ion,xvars,cdens,simname,xvar = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None, z = None):
     if zeros == "ignore":
         xvars = xvars[cdens>0]
         cdens = cdens[cdens>0]
@@ -384,6 +384,8 @@ def plot2dhist(ion,xvars,cdens,simname,xvar = "r",ns = (42,15),zeros = "ignore",
     plt.xlabel(xlabels[xvar])
     plt.ylabel("log col dens")
     if save_fig:
+        if save_fig == "default" :
+            save_fig = simname + "_" + xvar + "_z" + z
         name = save_fig+"_"+ion.replace(" ","")
         if weights:
             name +="_w"
