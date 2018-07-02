@@ -79,6 +79,8 @@ class QuasarSphere(object):
                  ytlevel = "quiet",readonly = False):
         if ytlevel == "loud":
             yt.funcs.mylog.setLevel(1)
+        elif ytlevel == "medium":
+            yt.funcs.mylog.setLevel(10)
         if simparams == None:
             #need to load simulation from filename
             if dspath:
