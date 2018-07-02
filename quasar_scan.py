@@ -190,7 +190,7 @@ class QuasarSphere(object):
                 print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
                 new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions)))
                 self.info[bins[i]:bins[i+1]] = new_info
-                self.scanparams[6]+= bins[i+1] - bins[i]
+                self.scanparams[6]+=save
                 output = self.save_values()
                 print("file saved to "+output+".")
             output = self.save_values()
@@ -241,18 +241,22 @@ class QuasarSphere(object):
         f.close()
         return filename
     
-    def plot_hist(self,simname = None,xvariable = "r",zeros = "ignore",weights = True,save_fig = None,ns = (42,15)):
+    def plot_hist(self,simname = None,xvariable = "r",zeros = "ignore",weights = True,save_fig = None,ns = (42,15),do_ions = "all"):
         if not simname:
             simname = self.simparams[0]
         if xvariable == "r":
             conversion = self.simparams[10]
         else:
             conversion = 1
+        if do_ions == "all":
+            ions = self.ions
+        else:
+            ions = do_ions
         vardict = {"theta":1,"phi":2,"r":3}
         #ion,xvars,cdens,simname
-        for i in range(len(self.ions)):
+        for i in range(len(ions)):
             end = self.scanparams[6]
-            plot2dhist(self.ions[i],self.info[:end,vardict[xvariable]]*conversion,\
+            plot2dhist(ions[i],self.info[:end,vardict[xvariable]]*conversion,\
                        self.info[:end,11+i],simname,xvar = xvariable, ns = ns,zeros = zeros,\
                        weights = weights,save_fig = save_fig,z = self.simparams[1])
 
