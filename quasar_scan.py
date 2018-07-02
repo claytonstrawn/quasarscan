@@ -206,7 +206,7 @@ class QuasarSphere(object):
         if dest:
             filename = dest
         else:
-            foldername = "output/"+simname+"coldensinfo"
+            foldername = "quasarscan/output/"+simname+"coldensinfo"
             if not os.path.exists(foldername):
                 os.makedirs(foldername)
             specificfilename = "%s_of_%s-"%(str(linesfinished),str(numlines)) +ionsstr+"_z"+str(redshift)[:4]+".txt"
