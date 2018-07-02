@@ -76,7 +76,7 @@ def ion_to_field_name(ion):
 class QuasarSphere(object):
     def __init__(self,ions=None,sim_name=None,dspath=None,data = None,\
                  simparams = None,scanparams = None,Rvir = None,L=np.array([0,0,1]),\
-                 ytlevel = "quiet"):
+                 ytlevel = "quiet",readonly = False):
         if ytlevel == "loud":
             yt.funcs.mylog.setLevel(1)
         if simparams == None:
@@ -92,25 +92,28 @@ class QuasarSphere(object):
                                   file_particle_stars=file_particle_stars)
                 z = self.ds.current_redshift
                 c = self.ds.find_max("density")[1].value
+                convert = self.ds.length_unit.in_units('kpc').value
             else:
                 #for testing without loading real sim
                 self.ds = None
                 z = -1.0
                 c = np.zeros(3)
-            self.simparams = [None]*10
-            self.simparams[0] = sim_name
-            self.simparams[1] = z
-            self.simparams[2] = c[0]
-            self.simparams[3] = c[1]
-            self.simparams[4] = c[2]
-            self.simparams[5] = Rvir
-            self.simparams[6] = dspath
-            self.simparams[7] = L[0]
-            self.simparams[8] = L[1]
-            self.simparams[9] = L[2]
+            self.simparams = [None]*11
+            self.simparams[0]  = sim_name
+            self.simparams[1]  = z
+            self.simparams[2]  = c[0]
+            self.simparams[3]  = c[1]
+            self.simparams[4]  = c[2]
+            self.simparams[5]  = Rvir
+            self.simparams[6]  = dspath
+            self.simparams[7]  = L[0]
+            self.simparams[8]  = L[1]
+            self.simparams[9]  = L[2]
+            self.simparams[10] = convert
         else:
             self.simparams = simparams
-            self.ds = yt.load(simparams[6])
+            if not readonly:
+                self.ds = yt.load(simparams[6])
         if type(ions) is list:
             self.ions = ions
         elif type(ions) is str:
@@ -240,7 +243,7 @@ class QuasarSphere(object):
         if not simname:
             simname = self.simparams[0]
         if xvariable == "r":
-            conversion = self.ds.length_unit.in_units('kpc').value
+            conversion = self.simparams[10]
         else:
             conversion = 1
         vardict = {"theta":1,"phi":2,"r":3}
