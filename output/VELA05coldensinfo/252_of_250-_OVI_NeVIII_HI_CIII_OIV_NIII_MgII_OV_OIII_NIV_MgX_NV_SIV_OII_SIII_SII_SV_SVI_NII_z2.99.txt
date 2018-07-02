@@ -1,5 +1,5 @@
 [dsname, z, center[0], center[1], center[2], Rvir, pathname]
-['VELA05', 2.9998040295295554, 0.5688896179199219, 0.5360450744628906, 0.4827003479003906, 31.25, '/project/projectdirs/mp363/VELA_ANALYSIS/VELA05/10MpcBox_csf512_a0.250.d', 0, 0, 1]
+['VELA05', 2.9998040295295554, 0.5688896179199219, 0.5360450744628906, 0.4827003479003906, 31.25, '/project/projectdirs/mp363/VELA_ANALYSIS/VELA05/10MpcBox_csf512_a0.250.d', 0, 0, 1, 3571.60361446]
 [R, n_th, n_phi, n_r, r_max, num_lines, line_reached]
 [0.017499142331183184, 8, 8, 10, 0.5, 250, 252]
 ions
