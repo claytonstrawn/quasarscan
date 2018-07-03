@@ -254,9 +254,10 @@ class QuasarSphere(object):
             ions = do_ions
         vardict = {"theta":1,"phi":2,"r":3}
         #ion,xvars,cdens,simname
-        for i in range(len(ions)):
+        for i in range(len(self.ions)):
             end = self.scanparams[6]
-            plot2dhist(ions[i],self.info[:end,vardict[xvariable]]*conversion,\
+            if self.ions[i] in ions:
+                plot2dhist(self.ions[i],self.info[:end,vardict[xvariable]]*conversion,\
                        self.info[:end,11+i],simname,xvar = xvariable, ns = ns,zeros = zeros,\
                        weights = weights,save_fig = save_fig,z = self.simparams[1])
 
@@ -376,7 +377,7 @@ def plot2dhist(ion,xvars,cdens,simname,xvar = "r",ns = (42,15),zeros = "ignore",
     H = H.T
     X, Y = np.meshgrid(xedges, yedges)
     plt.pcolormesh(X,Y, H, cmap=hotcustom)
-    plt.title("distribution of "+ion+" in "+simname)
+    plt.title("distribution of "+ion+" in "+simname+" at z="+str(z)[:4])
     # set the limits of the plot to the limits of the data
     #plt.axis([x.min(), x.max(), y.min(), y.max()])
     plt.colorbar(label = cbarlabel)
@@ -480,9 +481,9 @@ if __name__ == "__main__":
             distances = "kpc"
 
         if distances == "Rvir":
-            defaultsphere = 2,12,12,0.5,200
+            defaultsphere = 6,12,12,1.5,200
         else:
-            defaultsphere = 40,12,12,10,200
+            defaultsphere = 1000,12,12,250,200
         defaultions = "[O VI, Ne VIII, H I, C III, O IV, N III, Mg II, O V, "+\
                         "O III, N IV, Mg X, N V, S IV, O II, S III, S II, S V, S VI, N II]"
         defaultsave = 10
