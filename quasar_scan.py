@@ -241,10 +241,11 @@ class QuasarSphere(object):
         f.close()
         return filename
     
-    def plot_hist(self,simname = None,xvariable = "r",zeros = "ignore",weights = True,save_fig = None,ns = (42,15),do_ions = "all"):
+    def plot_hist(self,simname = None,xvariable = "r",zeros = "ignore",\
+                  weights = True,save_fig = None,ns = (42,15),do_ions = "all"):
         if not simname:
             simname = self.simparams[0]
-        if xvariable == "r":
+        if xvariable == "r" or xvariable == "r>0":
             conversion = self.simparams[10]
         else:
             conversion = 1
@@ -252,13 +253,13 @@ class QuasarSphere(object):
             ions = self.ions
         else:
             ions = do_ions
-        vardict = {"theta":1,"phi":2,"r":3}
+        vardict = {"theta":1,"phi":2,"r":3,"r>0":3}
         #ion,xvars,cdens,simname
         for i in range(len(self.ions)):
             end = self.scanparams[6]
             if self.ions[i] in ions:
                 plot2dhist(self.ions[i],self.info[:end,vardict[xvariable]]*conversion,\
-                       self.info[:end,11+i],simname,xvar = xvariable, ns = ns,zeros = zeros,\
+                       self.info[:end,11+i],simname,xvariable = xvariable, ns = ns,zeros = zeros,\
                        weights = weights,save_fig = save_fig,z = self.simparams[1])
 
 def read_values(filename):
@@ -356,13 +357,16 @@ cdict = {'red':   ((0.0,  255/f, 255/f),
 hotcustom = LinearSegmentedColormap('HotCustom', cdict)
 plt.register_cmap(cmap=hotcustom)
 
-def plot2dhist(ion,xvars,cdens,simname,xvar = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None, z = None):
+def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None, z = None):
     if zeros == "ignore":
         xvars = xvars[cdens>0]
         cdens = cdens[cdens>0]
         logdens = np.log10(cdens)
     else:
         logdens = np.log10(np.maximum(cdens,1e-15))
+    if xvariable == "r>0":
+        logdens = logdens[xvars>0.0]
+        xvars = xvars[xvars>0.0]
     nx = ns[0]
     ny = ns[1]
     if weights:
@@ -370,9 +374,9 @@ def plot2dhist(ion,xvars,cdens,simname,xvar = "r",ns = (42,15),zeros = "ignore",
         for i in range(len(xvars)):
             weight[i] = 1.0/len(xvars[xvars==xvars[i]])
         H, xedges, yedges = np.histogram2d(xvars, logdens, bins=[nx,ny],weights = weight)
-        cbarlabel = "Fraction of lines for fixed %s"%(xvar)
+        cbarlabel = "Fraction of lines for fixed %s"%(xvariable)
     else:
-        H, xedges, yedges = np.histogram2d(rs, logdens, bins=[nx,ny])
+        H, xedges, yedges = np.histogram2d(xvars, logdens, bins=[nx,ny])
         cbarlabel = "Total number of lines"
     H = H.T
     X, Y = np.meshgrid(xedges, yedges)
@@ -385,12 +389,12 @@ def plot2dhist(ion,xvars,cdens,simname,xvar = "r",ns = (42,15),zeros = "ignore",
     dx = x2-x1
     dy = y2-y1
     plt.axis((x1-dx*0.1,x2+dx*0.1,y1-dy*0.1,y2+dy*0.1))
-    xlabels = {"r":"r (kpc)","theta":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
-    plt.xlabel(xlabels[xvar])
+    xlabels = {"r":"r (kpc)","r>0":"r (kpc)","theta":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
+    plt.xlabel(xlabels[xvariable])
     plt.ylabel("log col dens")
     if save_fig:
         if save_fig == "default" :
-            save_fig = simname + "_" + xvar + "_z" + z
+            save_fig = simname + "_" + xvariable + "_z" +str(z)[:4]
         name = save_fig+"_"+ion.replace(" ","")
         if weights:
             name +="_w"
@@ -481,14 +485,14 @@ if __name__ == "__main__":
             distances = "kpc"
 
         if distances == "Rvir":
-            defaultsphere = 6,12,12,1.5,200
+            defaultsphere = 6,12,12,12,1.5,200
         else:
-            defaultsphere = 1000,12,12,250,200
+            defaultsphere = 1000,12,12,12,250,200
         defaultions = "[O VI, Ne VIII, H I, C III, O IV, N III, Mg II, O V, "+\
                         "O III, N IV, Mg X, N V, S IV, O II, S III, S II, S V, S VI, N II]"
         defaultsave = 10
 
-        R,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 5, defaultsphere)
+        R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 5, defaultsphere)
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)
         ions = read_command_line_args(sys.argv, "-i","--ions", 1,defaultions)
         parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
