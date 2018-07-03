@@ -7,7 +7,10 @@ from multiprocessing import Pool,current_process,cpu_count
 import itertools
 import logging
 
-from quasarscan import parse_vela_metadata
+try:
+    from quasarscan import parse_vela_metadata
+except:
+    import parse_vela_metadata
 from sys import platform as _platform
 
 yt.funcs.mylog.setLevel(50)
@@ -74,7 +77,7 @@ def ion_to_field_name(ion):
     return "%s_p%s_number_density"%(atom,ionization)
 
 class QuasarSphere(object):
-    def __init__(self,ions=None,sim_name=None,dspath=None,data = None,\
+    def __init__(self,ions=None,simname=None,dspath=None,data = None,\
                  simparams = None,scanparams = None,Rvir = None,L=np.array([0,0,1]),\
                  ytlevel = "quiet",readonly = False):
         if ytlevel == "loud":
@@ -94,14 +97,14 @@ class QuasarSphere(object):
                                   file_particle_stars=file_particle_stars)
                 z = self.ds.current_redshift
                 c = self.ds.find_max("density")[1].value
-                convert = self.ds.length_unit.in_units('kpc').value
+                convert = self.ds.length_unit.in_units('kpc').value.item()
             else:
                 #for testing without loading real sim
                 self.ds = None
                 z = -1.0
                 c = np.zeros(3)
             self.simparams = [None]*11
-            self.simparams[0]  = sim_name
+            self.simparams[0]  = simname
             self.simparams[1]  = z
             self.simparams[2]  = c[0]
             self.simparams[3]  = c[1]
@@ -485,14 +488,14 @@ if __name__ == "__main__":
             distances = "kpc"
 
         if distances == "Rvir":
-            defaultsphere = 6,12,12,12,1.5,200
+            defaultsphere = 6,12,12,12,1.5,400
         else:
-            defaultsphere = 1000,12,12,12,250,200
+            defaultsphere = 1000,12,12,12,250,400
         defaultions = "[O VI, Ne VIII, H I, C III, O IV, N III, Mg II, O V, "+\
                         "O III, N IV, Mg X, N V, S IV, O II, S III, S II, S V, S VI, N II]"
         defaultsave = 10
 
-        R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 5, defaultsphere)
+        R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 6, defaultsphere)
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)
         ions = read_command_line_args(sys.argv, "-i","--ions", 1,defaultions)
         parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
