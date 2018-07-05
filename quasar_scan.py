@@ -250,13 +250,15 @@ class QuasarSphere(object):
             simname = self.simparams[0]
         if xvariable == "r" or xvariable == "r>0":
             conversion = self.simparams[10]
+        elif xvariable == "rdivR":
+            conversion = self.simparams[10]/self.simparams[5]
         else:
             conversion = 1
         if do_ions == "all":
             ions = self.ions
         else:
             ions = do_ions
-        vardict = {"theta":1,"phi":2,"r":3,"r>0":3}
+        vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3}
         #ion,xvars,cdens,simname
         for i in range(len(self.ions)):
             end = self.scanparams[6]
@@ -372,12 +374,14 @@ def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ign
         xvars = xvars[xvars>0.0]
     nx = ns[0]
     ny = ns[1]
+    plotvars = {"r":"r","r>0":"r","rdivR":"r","theta":"theta","phi":"phi"}
+    plotvar = plotvars[xvariable]
     if weights:
         weight = xvars*0.0
         for i in range(len(xvars)):
             weight[i] = 1.0/len(xvars[xvars==xvars[i]])
         H, xedges, yedges = np.histogram2d(xvars, logdens, bins=[nx,ny],weights = weight)
-        cbarlabel = "Fraction of lines for fixed %s"%(xvariable)
+        cbarlabel = "Fraction of lines for fixed %s"%(plotvar)
     else:
         H, xedges, yedges = np.histogram2d(xvars, logdens, bins=[nx,ny])
         cbarlabel = "Total number of lines"
@@ -392,12 +396,12 @@ def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ign
     dx = x2-x1
     dy = y2-y1
     plt.axis((x1-dx*0.1,x2+dx*0.1,y1-dy*0.1,y2+dy*0.1))
-    xlabels = {"r":"r (kpc)","r>0":"r (kpc)","theta":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
+    xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","theta":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
     plt.xlabel(xlabels[xvariable])
     plt.ylabel("log col dens")
     if save_fig:
         if save_fig == "default" :
-            save_fig = simname + "_" + xvariable + "_z" +str(z)[:4]
+            save_fig = simname + "_" + plotvar + "_z" +str(z)[:4]
         name = save_fig+"_"+ion.replace(" ","")
         if weights:
             name +="_w"
@@ -497,7 +501,7 @@ if __name__ == "__main__":
 
         R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 6, defaultsphere)
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)
-        ions = read_command_line_args(sys.argv, "-i","--ions", 1,defaultions)
+        ions = read_command_line_args(sys.argv, "-i","--ions", 1, defaultions)
         parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
 
         parallel = (parallelint == 1)
