@@ -193,7 +193,7 @@ class QuasarSphere(object):
                 print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
                 new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions)))
                 self.info[bins[i]:bins[i+1]] = new_info
-                self.scanparams[6]+=save
+                self.scanparams[6]+=bins[i+1] - bins[i]
                 output = self.save_values()
                 print("file saved to "+output+".")
             output = self.save_values()
