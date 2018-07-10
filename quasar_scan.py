@@ -11,7 +11,6 @@ try:
     from quasarscan import parse_vela_metadata
 except:
     import parse_vela_metadata
-from sys import platform as _platform
 
 yt.funcs.mylog.setLevel(50)
 
@@ -193,7 +192,7 @@ class QuasarSphere(object):
                 print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
                 new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions)))
                 self.info[bins[i]:bins[i+1]] = new_info
-                self.scanparams[6]+=bins[i+1] - bins[i]
+                self.scanparams[6]+=save
                 output = self.save_values()
                 print("file saved to "+output+".")
             output = self.save_values()
@@ -251,8 +250,14 @@ class QuasarSphere(object):
         if xvariable == "r" or xvariable == "r>0":
             conversion = self.simparams[10]
         elif xvariable == "rdivR":
-            conversion = self.simparams[10]/self.simparams[5]
+            if self.simparams[5] > 0:
+                conversion = self.simparams[10]/self.simparams[5]
+            else:
+                print("No virial radius found")
+                return
         else:
+            if self.simparams[5] < 0:
+                print("No metadata, angle plots will be arbitrary axis.")
             conversion = 1
         if do_ions == "all":
             ions = self.ions
@@ -432,8 +437,12 @@ def read_Choi_metadata():
     return files,all_data_dict
 
 def get_vela_metadata(simname,a0):
-    Rvir = float(parse_vela_metadata.Rdict[simname][a0])
-    Lstrings = parse_vela_metadata.Ldict[simname][a0]
+    try:
+        Rvir = float(parse_vela_metadata.Rdict[simname][a0])
+        Lstrings = parse_vela_metadata.Ldict[simname][a0]
+    except KeyError:
+        Rvir = -1.0
+        Lstrings = [0,0,1]
     L = np.zeros(3)
     L[0] = float(Lstrings[0])
     L[1] = float(Lstrings[1])
@@ -480,7 +489,11 @@ if __name__ == "__main__":
         simname = sys.argv[3]
         if simname.lower().startswith("vela"):
             Rvir, L = get_vela_metadata(simname,a0)
-            distances = "Rvir"
+            if Rvir > 0:
+                distances = "Rvir"
+            else:
+                print("metadata not found in table! Assuming r_arr, L")
+                distances = "kpc"
         elif simname.lower().startswith("choi"):
             Rvir = read_Choi_metadata()[1]["Rvir"]
             L = read_Choi_metadata()[1]["L"]
