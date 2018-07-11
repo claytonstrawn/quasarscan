@@ -30,7 +30,7 @@ cd ..
 module load python
 source activate myenv
 
-python quasarscan/quasar_scan.py 'n' 'VELA'$v$i'/10MpcBox_csf512_a0.'$a'.d' 'VELA'$v$i '-p'
+python quasarscan/quasar_scan.py 'n' 'VELA'$v$i'/10MpcBox_csf512_a0.'$a'.d' 'VELA'$v$i '-p' '-s' 250
 
 rm -rf 'VELA'$v$i
 source deactivate

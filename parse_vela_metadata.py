@@ -13,6 +13,7 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
         index = quantity_dict_triple[quantity]
         numvals = 3        
     ret_dict = {}
+    #change to account for use both inside and outside quasarscan folder
     basepath = "quasarscan/galaxy_catalogs/"
     for version in range(1,3):
         if version == 1:

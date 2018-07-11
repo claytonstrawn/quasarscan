@@ -192,7 +192,7 @@ class QuasarSphere(object):
                 print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
                 new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions)))
                 self.info[bins[i]:bins[i+1]] = new_info
-                self.scanparams[6]+=save
+                self.scanparams[6]+=bins[i+1]-bins[i]
                 output = self.save_values()
                 print("file saved to "+output+".")
             output = self.save_values()
@@ -449,13 +449,13 @@ def get_vela_metadata(simname,a0):
     L[2] = float(Lstrings[2])
     if np.isnan(L).any():
         print("VELA L data not found, returning None.")
-        L = None
+        L = np.array([0,0,1])
     elif Rvir == 0.0:
         print("VELA Rvir data not found, returning None.")
-        Rvir = None
+        Rvir = -1.0
     return Rvir,L
 
-def read_command_line_args(args, shortform,longform, tograb, defaults = 0):
+def read_command_line_args(args, shortform,longform, tograb, defaults = None):
     if shortform in args or longform in args:
         if tograb == 0:
             return 1
@@ -465,11 +465,11 @@ def read_command_line_args(args, shortform,longform, tograb, defaults = 0):
             i = args.index(longform)
         paramsstr = args[i+1:i+1+tograb]
         params = [None]*len(paramsstr)
-        for i in len(defaults):
+        for i in range(len(defaults)):
             if type(defaults[i]) is str:
                 params[i] = paramsstr[i]
             else:
-                toinsert = eval(defaults[i])
+                toinsert = eval(paramsstr[i])
                 if type(defaults[i]) is type(toinsert):
                     params[i] = toinsert
                 else:
@@ -508,13 +508,13 @@ if __name__ == "__main__":
             defaultsphere = 6,12,12,12,1.5,400
         else:
             defaultsphere = 1000,12,12,12,250,400
-        defaultions = "[O VI, Ne VIII, H I, C III, O IV, N III, Mg II, O V, "+\
-                        "O III, N IV, Mg X, N V, S IV, O II, S III, S II, S V, S VI, N II]"
-        defaultsave = 10
+        defaultions = ["[O VI, Ne VIII, H I, C III, O IV, N III, Mg II, O V, "+\
+                        "O III, N IV, Mg X, N V, S IV, O II, S III, S II, S V, S VI, N II]"]
+        defaultsave = [10]
 
         R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 6, defaultsphere)
-        save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)
-        ions = read_command_line_args(sys.argv, "-i","--ions", 1, defaultions)
+        save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)[0]
+        ions = read_command_line_args(sys.argv, "-i","--ions", 1, defaultions)[0]
         parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
 
         parallel = (parallelint == 1)
