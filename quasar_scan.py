@@ -88,6 +88,7 @@ class QuasarSphere(object):
             if dspath:
                 projectdir = dspath.split("10MpcBox")[0]
                 a0 = dspath.split("a0.")[1][:3]
+                self.a0 = a0
                 file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
                 file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
                 file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
@@ -114,6 +115,7 @@ class QuasarSphere(object):
             self.simparams[8]  = L[1]
             self.simparams[9]  = L[2]
             self.simparams[10] = convert
+            self.add_extra_fields()
         else:
             self.simparams = simparams
             if not readonly:
@@ -126,6 +128,20 @@ class QuasarSphere(object):
             self.ions = []
         self.scanparams = scanparams
         self.info = data
+   
+    #finds and saves stellar mass, total mass (virial mass), and the star formation rate
+    def add_extra_fields(self):
+        
+        self.Mvir = parse_vela_metadata.dict_of_vela_info("Mvir")[self.simparams[0]][self.a0]
+        print (self.Mvir)
+        self.gas_Rvir = parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simparams[0]][self.a0]
+        print gas_Rvir
+        self.star_Rvir = parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simparams[0]][self.a0]
+        print star_Rvir
+        self.dm_Rvir = parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simparams[0]][self.a0]
+        print dm_Rvir
+        
+                                                           
 
     def create_QSO_endpoints(self, R, n_th, n_phi, n_r, rmax, length,\
                              distances = "kpc", overwrite = False, endonsph = False):
@@ -169,7 +185,7 @@ class QuasarSphere(object):
         print(str(length)+" LOSs to scan.")
         return length
 
-    def get_coldens(self, save = 10, parallel = False):
+    def get_coldens(self, save = 10, parallel = False, test = False):
         tosave = save
         starting_point = self.scanparams[6]
         if not parallel:
@@ -178,7 +194,7 @@ class QuasarSphere(object):
                 print("%s/%s"%(self.scanparams[6],self.scanparams[5]))
                 vector = _get_coldens_helper((self.ds,self.scanparams,vector,self.ions))
                 tosave -= 1
-                if tosave == 0:
+                if tosave == 0 and not test :
                     output = self.save_values()
                     print("file saved to "+output+".")
                     tosave = save
@@ -193,11 +209,14 @@ class QuasarSphere(object):
                 new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions)))
                 self.info[bins[i]:bins[i+1]] = new_info
                 self.scanparams[6]+=bins[i+1]-bins[i]
+                if not test:
+                    output = self.save_values()
+                    print("file saved to "+output+".")
+            if not test:
                 output = self.save_values()
-                print("file saved to "+output+".")
-            output = self.save_values()
             pool.close()
-        print("file saved to "+output+".")
+        if not test:
+            print("file saved to "+output+".")
         return self.info
     
     def save_values(self,dest = None):
