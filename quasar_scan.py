@@ -88,7 +88,7 @@ class QuasarSphere(object):
             if dspath:
                 projectdir = dspath.split("10MpcBox")[0]
                 a0 = dspath.split("a0.")[1][:3]
-                self.a0 = a0
+                self.a0 = "0." + a0
                 file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
                 file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
                 file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
@@ -115,9 +115,10 @@ class QuasarSphere(object):
             self.simparams[8]  = L[1]
             self.simparams[9]  = L[2]
             self.simparams[10] = convert
-            self.add_extra_fields()
         else:
             self.simparams = simparams
+            self.scanparams = scanparams
+            self.add_extra_scanparam_fields()
             if not readonly:
                 self.ds = yt.load(simparams[6])
         if type(ions) is list:
@@ -126,22 +127,35 @@ class QuasarSphere(object):
             self.ions = ions[1:-1].split(", ")
         else:
             self.ions = []
-        self.scanparams = scanparams
         self.info = data
+        self.add_extra_simparam_fields()
    
+    #renames basic simparams data into new instance variables,
     #finds and saves stellar mass, total mass (virial mass), and the star formation rate
-    def add_extra_fields(self):
+    def add_extra_simparam_fields(self):
+        self.simname = self.simparams[0]
+        self.redshift = self.simparams[1]
+        self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
+        self.Rvir = self.simparams[5]
+        self.dspath = self.simparams[6]
+        self.a0 = "0."+self.dspath.split("a0.")[1][:3]
+
+        self.L = np.array([self.simparams[7], self.simparams[8], self.simparams[9]])
+        self.kiloparsec_in_code_units = self.simparams[10]
         
         self.Mvir = parse_vela_metadata.dict_of_vela_info("Mvir")[self.simparams[0]][self.a0]
-        print (self.Mvir)
         self.gas_Rvir = parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simparams[0]][self.a0]
-        print gas_Rvir
         self.star_Rvir = parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simparams[0]][self.a0]
-        print star_Rvir
         self.dm_Rvir = parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simparams[0]][self.a0]
-        print dm_Rvir
         
-                                                           
+    #renames basic scanparams data into new instance variables
+    def add_extra_scanparam_fields(self):
+        self.R = self.scanparams[0]
+        self.len_th_arr = self.scanparams[1]
+        self.len_phi_arr = self.scanparams[2]
+        self.len_r_arr = self.scanparams[3]
+        self.rmax = self.scanparams[4]
+        self.length = self.scanparams[5] 
 
     def create_QSO_endpoints(self, R, n_th, n_phi, n_r, rmax, length,\
                              distances = "kpc", overwrite = False, endonsph = False):
@@ -168,6 +182,7 @@ class QuasarSphere(object):
         self.scanparams[4] = rmax
         self.scanparams[5] = length
         self.scanparams[6] = 0
+        self.add_extra_scanparam_fields()
         
         self.info = np.zeros((int(length),11+len(self.ions)+1))-1.0
         weightth = weights(th_arr, "sin")
