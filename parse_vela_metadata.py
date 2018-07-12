@@ -1,32 +1,43 @@
 import numpy as np
-def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
-    quantity_dict_single = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
+import os
+def dict_of_vela_info(quantity,loud = False):
+    quantity_dict_Mstar = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
                     "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
                     "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
                     "gas_10kpc":8,"star_10kpc":9,"dm_10kpc":10,\
                     "gas_Rdisk":11,"star_Rdisk":12,"dm_Rdisk":13}
-    quantity_dict_triple = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7]}
-    if quantity in quantity_dict_single.keys():
-        index = quantity_dict_single[quantity]
+    quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7]}
+    quantity_dict_Nir_spherical_galaxy_cat = {"SFR":13}
+    if quantity in quantity_dict_Mstar.keys():
+        index = quantity_dict_Mstar[quantity]
         numvals = 1
-    elif quantity in quantity_dict_triple.keys():
-        index = quantity_dict_triple[quantity]
+    elif quantity in quantity_dict_Nir_spherical_galaxy_cat.keys():
+        index = quantity_dict_Nir_spherical_galaxy_cat[quantity]
+        numvals = 1
+    elif quantity in quantity_dict_Nir_disc_cat.keys():
+        index = quantity_dict_Nir_disc_cat[quantity]
         numvals = 3        
     ret_dict = {}
-    #change to account for use both inside and outside quasarscan folder
-    basepath = "quasarscan/galaxy_catalogs/"
+    if os.path.isdir("galaxy_catalogs"):
+        basepath = "galaxy_catalogs/"
+    else: 
+        basepath = "quasarscan/galaxy_catalogs/"
     for version in range(1,3):
         if version == 1:
             folderstart = "VELA"
         elif version == 2:
             folderstart = "VELA_v2_"
-        for i in range(len(iarr)):
-            folder = folderstart+"%02i"%iarr[i]
+        for i in range(35):
+            folder = folderstart+"%02i"%i
             ret_dict[folder] = {}
-            if numvals == 1:
+            if quantity in quantity_dict_Mstar.keys():
                 pathname = basepath + folder + "/galaxy_catalogue/Mstar.txt"
-            else:
+            elif quantity in quantity_dict_Nir_disc_cat.keys():
                 pathname = basepath + folder + "/galaxy_catalogue/Nir_disc_cat.txt"
+            elif quantity in quantity_dict_Nir_spherical_galaxy_cat.keys():
+                pathname = basepath + folder + "/galaxy_catalogue/Nir_spherical_galaxy_cat.txt"
+            else: 
+                print("where is %s stored? We don't know :("%quantity)
             try:
                 f = open(pathname)
             except:
@@ -49,5 +60,5 @@ def dict_of_vela_info(quantity, iarr= np.arange(1,35),loud = False):
                     f.close()
     return ret_dict
     
-Rdict = dict_of_vela_info("Rvir",iarr = np.arange(1,35))
-Ldict = dict_of_vela_info("L",iarr = np.arange(1,35))
+Rdict = dict_of_vela_info("Rvir")
+Ldict = dict_of_vela_info("L")
