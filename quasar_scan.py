@@ -115,6 +115,7 @@ class QuasarSphere(object):
             self.simparams[8]  = L[1]
             self.simparams[9]  = L[2]
             self.simparams[10] = convert
+            self.scanparams = None
         else:
             self.simparams = simparams
             self.scanparams = scanparams
@@ -143,10 +144,10 @@ class QuasarSphere(object):
         self.L = np.array([self.simparams[7], self.simparams[8], self.simparams[9]])
         self.kiloparsec_in_code_units = self.simparams[10]
         
-        self.Mvir = parse_vela_metadata.dict_of_vela_info("Mvir")[self.simparams[0]][self.a0]
-        self.gas_Rvir = parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simparams[0]][self.a0]
-        self.star_Rvir = parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simparams[0]][self.a0]
-        self.dm_Rvir = parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simparams[0]][self.a0]
+        self.Mvir = parse_vela_metadata.dict_of_vela_info("Mvir")[self.simname][self.a0]
+        self.gas_Rvir = parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0]
+        self.star_Rvir = parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simname][self.a0]
+        self.dm_Rvir = parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simname][self.a0]
         
     #renames basic scanparams data into new instance variables
     def add_extra_scanparam_fields(self):
@@ -169,7 +170,7 @@ class QuasarSphere(object):
             convert = self.ds.length_unit.in_units('kpc').value
         elif distances == "Rvir":
             convert = self.ds.length_unit.in_units('kpc').value
-            convert /= self.simparams[5]
+            convert /= self.Rvir
         else:
             convert = 1
         R /= convert
@@ -187,7 +188,7 @@ class QuasarSphere(object):
         self.info = np.zeros((int(length),11+len(self.ions)+1))-1.0
         weightth = weights(th_arr, "sin")
         weightr = weights(r_arr, "lin")
-        L = self.simparams[7:10]
+        L = self.L
         rot_matrix = get_rotation_matrix(L)
         for i in range(int(length)):
             theta = np.random.choice(th_arr,p = weightth)
@@ -195,8 +196,8 @@ class QuasarSphere(object):
             phi= np.random.choice(phi_arr)
             alpha = 2*np.pi*np.random.random()
             self.info[i][:5] = np.array([i,theta,phi,r,alpha])
-            self.info[i][5:8] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[0]) + self.simparams[2:5]
-            self.info[i][8:11] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]) + self.simparams[2:5] 
+            self.info[i][5:8] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[0]) + self.center
+            self.info[i][8:11] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]) + self.center 
         print(str(length)+" LOSs to scan.")
         return length
 
@@ -238,9 +239,9 @@ class QuasarSphere(object):
         if len(self.info[0]) <= 11:
             print("No ions!")
         linesfinished = self.scanparams[6]
-        numlines = self.scanparams[5]
-        redshift = self.simparams[1]
-        simname = self.simparams[0]
+        numlines = self.length
+        redshift = self.redshift
+        simname = self.simname
         ionsstr = ""
         for ion in self.ions:
             ionsstr += "_"+ion.replace(" ","")
@@ -280,17 +281,17 @@ class QuasarSphere(object):
     def plot_hist(self,simname = None,xvariable = "r",zeros = "ignore",\
                   weights = True,save_fig = None,ns = (42,15),do_ions = "all"):
         if not simname:
-            simname = self.simparams[0]
+            simname = self.simname
         if xvariable == "r" or xvariable == "r>0":
-            conversion = self.simparams[10]
+            conversion = self.kiloparsec_in_code_units
         elif xvariable == "rdivR":
-            if self.simparams[5] > 0:
-                conversion = self.simparams[10]/self.simparams[5]
+            if self.Rvir > 0:
+                conversion = self.Rvir/self.kiloparsec_in_code_units
             else:
                 print("No virial radius found")
                 return
         else:
-            if self.simparams[5] < 0:
+            if self.Rvir < 0:
                 print("No metadata, angle plots will be arbitrary axis.")
             conversion = 1
         if do_ions == "all":
@@ -304,7 +305,7 @@ class QuasarSphere(object):
             if self.ions[i] in ions:
                 plot2dhist(self.ions[i],self.info[:end,vardict[xvariable]]*conversion,\
                        self.info[:end,11+i],simname,xvariable = xvariable, ns = ns,zeros = zeros,\
-                       weights = weights,save_fig = save_fig,z = self.simparams[1])
+                       weights = weights,save_fig = save_fig,z = self.redshift)
 
 def read_values(filename):
     """ firstline = "[dsname, z, center[0], center[1], center[2], Rvir, pathname]\n"
