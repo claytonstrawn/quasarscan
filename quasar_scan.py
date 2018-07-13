@@ -142,7 +142,7 @@ class QuasarSphere(object):
         self.a0 = "0."+self.dspath.split("a0.")[1][:3]
 
         self.L = np.array([self.simparams[7], self.simparams[8], self.simparams[9]])
-        self.kiloparsec_in_code_units = self.simparams[10]
+        self.code_unit_in_kpc = self.simparams[10]
         
         self.Mvir = parse_vela_metadata.dict_of_vela_info("Mvir")[self.simname][self.a0]
         self.gas_Rvir = parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0]
@@ -283,10 +283,10 @@ class QuasarSphere(object):
         if not simname:
             simname = self.simname
         if xvariable == "r" or xvariable == "r>0":
-            conversion = self.kiloparsec_in_code_units
+            conversion = self.code_unit_in_kpc
         elif xvariable == "rdivR":
             if self.Rvir > 0:
-                conversion = self.Rvir/self.kiloparsec_in_code_units
+                conversion = self.Rvir/self.code_unit_in_kpc
             else:
                 print("No virial radius found")
                 return
