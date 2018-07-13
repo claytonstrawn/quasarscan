@@ -75,7 +75,73 @@ def ion_to_field_name(ion):
     ionization = trident.roman.from_roman(ion.split(" ")[1])-1
     return "%s_p%s_number_density"%(atom,ionization)
 
-class QuasarSphere(object):
+class GeneralizedQuasarSphere(object):
+    def __init__(self, list_of_quasar_spheres, distance = "kpc"):
+        self.info = 0.0
+        self.number = len(list_of_quasar_spheres)
+        self.distance = distance
+        
+        ions_lists = []
+        sum_of_lengths = 0
+        
+        for i in range(self.number):
+            q = list_of_quasar_spheres[i]
+            ions_lists.append(q.ions) 
+            sum_of_lengths += q.length
+        ions_in_all = list(reduce(set.intersection, map(set, ions_lists)))
+        
+        self.ions = ions_in_all
+        self.length = sum_of_lengths
+        self.info = np.zeros((self.length,11+len(self.ions)+1))
+        self.simname_arr = []
+        self.redshift_arr = []
+        self.center_arr = []
+        self.Rvir_arr = []
+        self.a0_arr = []
+        self.L_arr = []
+        self.conversion_arr = []
+        self.Mvir_arr = []
+        self.gas_Rvir_arr = []
+        self.star_Rvir_arr = []
+        self.dm_Rvir_arr = []
+        self.sfr_arr = []
+
+        
+        currentpos = 0
+        for i in range(self.number):
+            q = list_of_quasar_spheres[i]
+            size = min(q.length_reached,q.length)
+            self.info[currentpos:currentpos+size,:11] = q.info[:size,:11]
+            for ion in self.ions:
+                pos_in_q = q.get_ion_column_num(ion)
+                pos_in_self = self.get_ion_column_num(ion)
+                self.info[currentpos:currentpos+size,pos_in_self] = q.info[:size,pos_in_q]
+                if distance == "kpc":
+                    convert = q.code_unit_in_kpc
+                elif distance == "Rvir":
+                    convert = q.code_unit_in_kpc/q.Rvir
+                else:
+                    print("not sure what distance = %s means..."%distance)
+            self.info[currentpos:currentpos+size,3]*=convert
+            currentpos += size
+                
+            self.simname_arr+=q.simname_arr
+            self.redshift_arr+=q.redshift_arr
+            self.center_arr+=q.center_arr
+            self.Rvir_arr+=q.Rvir_arr
+            self.a0_arr+=q.a0_arr
+            self.L_arr+=q.L_arr
+            self.conversion_arr+=q.conversion_arr
+            self.Mvir_arr+=q.Mvir_arr
+            self.gas_Rvir_arr+=q.gas_Rvir_arr
+            self.star_Rvir_arr+=q.star_Rvir_arr
+            self.dm_Rvir_arr+=q.dm_Rvir_arr
+            self.sfr_arr+=q.sfr_arr
+            
+    def get_ion_column_num(self,ion):
+        return 11 + self.ions.index(ion)
+
+class QuasarSphere(GeneralizedQuasarSphere):
     def __init__(self,ions=None,simname=None,dspath=None,data = None,\
                  simparams = None,scanparams = None,Rvir = None,L=np.array([0,0,1]),\
                  ytlevel = "quiet",readonly = False):
@@ -130,24 +196,40 @@ class QuasarSphere(object):
             self.ions = []
         self.info = data
         self.add_extra_simparam_fields()
+        
+    def get_ion_column_num(self,ion):
+        return 11 + self.ions.index(ion)
    
     #renames basic simparams data into new instance variables,
     #finds and saves stellar mass, total mass (virial mass), and the star formation rate
     def add_extra_simparam_fields(self):
         self.simname = self.simparams[0]
+        self.simname_arr = [self.simname]
         self.redshift = self.simparams[1]
+        self.redshift_arr = [self.redshift]
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
+        self.center_arr = [self.center]
         self.Rvir = self.simparams[5]
+        self.Rvir_arr = [self.Rvir]
         self.dspath = self.simparams[6]
+        self.dspath_arr = [self.dspath]
         self.a0 = "0."+self.dspath.split("a0.")[1][:3]
-
+        self.a0_arr = [self.a0]
         self.L = np.array([self.simparams[7], self.simparams[8], self.simparams[9]])
+        self.L_arr = [self.L]
         self.code_unit_in_kpc = self.simparams[10]
-        
+        self.conversion_arr = [self.code_unit_in_kpc]
         self.Mvir = parse_vela_metadata.dict_of_vela_info("Mvir")[self.simname][self.a0]
+        self.Mvir_arr = [self.Mvir]
         self.gas_Rvir = parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0]
+        self.gas_Rvir_arr = [self.gas_Rvir]
         self.star_Rvir = parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simname][self.a0]
+        self.star_Rvir_arr = [self.star_Rvir]
         self.dm_Rvir = parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simname][self.a0]
+        self.dm_Rvir_arr = [self.dm_Rvir]
+        self.sfr = parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0]
+        self.sfr_arr = [self.sfr]
+
         
     #renames basic scanparams data into new instance variables
     def add_extra_scanparam_fields(self):
@@ -157,6 +239,7 @@ class QuasarSphere(object):
         self.len_r_arr = self.scanparams[3]
         self.rmax = self.scanparams[4]
         self.length = self.scanparams[5] 
+        self.length_reached = self.scanparams[6]
 
     def create_QSO_endpoints(self, R, n_th, n_phi, n_r, rmax, length,\
                              distances = "kpc", overwrite = False, endonsph = False):
@@ -207,7 +290,8 @@ class QuasarSphere(object):
         if not parallel:
             for vector in self.info[starting_point:]:
                 self.scanparams[6]+=1
-                print("%s/%s"%(self.scanparams[6],self.scanparams[5]))
+                self.length_reached = self.scanparams[6]
+                print("%s/%s"%(self.length_reached,self.length))
                 vector = _get_coldens_helper((self.ds,self.scanparams,vector,self.ions))
                 tosave -= 1
                 if tosave == 0 and not test :
@@ -215,7 +299,7 @@ class QuasarSphere(object):
                     print("file saved to "+output+".")
                     tosave = save
         if parallel:
-            bins = np.append(np.arange(0,self.scanparams[5],save),self.scanparams[5])
+            bins = np.append(np.arange(0,self.length,save),self.length)
             pool = Pool(processes = save,maxtasksperchild = 3)
             for i in range(0, len(bins)-1):
                 current_info = self.info[bins[i]:bins[i+1]]
@@ -225,6 +309,7 @@ class QuasarSphere(object):
                 new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions)))
                 self.info[bins[i]:bins[i+1]] = new_info
                 self.scanparams[6]+=bins[i+1]-bins[i]
+                self.length_reached = self.scanparams[6]
                 if not test:
                     output = self.save_values()
                     print("file saved to "+output+".")
