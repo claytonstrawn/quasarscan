@@ -208,6 +208,13 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.simname_arr = [self.simname]
         self.redshift = self.simparams[1]
         self.redshift_arr = [self.redshift]
+        self.rounded_redshift = self.redshift
+        if abs(self.redshift - 1) <= .05: self.rounded_redshift = 1
+        if abs(self.redshift - 1.5) <= .05: self.rounded_redshift = 1.5
+        if abs(self.redshift - 2) <= .05: self.rounded_redshift = 2
+        if abs(self.redshift - 3) <= .05: self.rounded_redshift = 3
+        if abs(self.redshift - 4) <= .05: self.rounded_redshift = 4
+        self.rounded_redshift_arr = [self.rounded_redshift]
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
         self.center_arr = [self.center]
         self.Rvir = self.simparams[5]
