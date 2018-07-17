@@ -226,15 +226,15 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.L_arr = [self.L]
         self.code_unit_in_kpc = self.simparams[10]
         self.conversion_arr = [self.code_unit_in_kpc]
-        self.Mstar = self.Mvir = parse_vela_metadata.dict_of_vela_info("Mvir")[self.simname][self.a0]
+        self.Mstar = self.Mvir = float(parse_vela_metadata.dict_of_vela_info("Mvir")[self.simname][self.a0])
         self.Mstar_arr = self.Mvir_arr = [self.Mvir]
-        self.gas_Rvir = parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0]
+        self.gas_Rvir = float(parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0])
         self.gas_Rvir_arr = [self.gas_Rvir]
-        self.star_Rvir = parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simname][self.a0]
+        self.star_Rvir = float(parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simname][self.a0])
         self.star_Rvir_arr = [self.star_Rvir]
-        self.dm_Rvir = parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simname][self.a0]
+        self.dm_Rvir = float(parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simname][self.a0])
         self.dm_Rvir_arr = [self.dm_Rvir]
-        self.sfr = parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0]
+        self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
         self.sfr_arr = [self.sfr]
 
         
