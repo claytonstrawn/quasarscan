@@ -205,6 +205,14 @@ class QuasarSphere(GeneralizedQuasarSphere):
     def add_extra_simparam_fields(self):
         self.simname = self.simparams[0]
         self.simname_arr = [self.simname]
+        self.version = "v1.0"
+        if self.simname.find("v2") != -1:
+            self.version = "v2.0"
+        elif self.simname.find("v3") != -1:
+            self.version = "v3.0"
+        elif self.simname.find("v3.1") != -1:
+            self.version = "v3.1"
+        self.version_arr = [self.version]
         self.redshift = self.simparams[1]
         self.redshift_arr = [self.redshift]
         self.rounded_redshift = self.redshift
