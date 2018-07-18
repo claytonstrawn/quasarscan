@@ -301,13 +301,13 @@ class QuasarSphere(GeneralizedQuasarSphere):
 
     def get_coldens(self, save = 10, parallel = False, test = False):
         tosave = save
-        starting_point = self.scanparams[6]
+        starting_point = self.length_reached
         if not parallel:
             for vector in self.info[starting_point:]:
                 self.scanparams[6]+=1
                 self.length_reached = self.scanparams[6]
                 print("%s/%s"%(self.length_reached,self.length))
-                vector = _get_coldens_helper((self.ds,self.scanparams,vector,self.ions))
+                vector = _get_coldens_helper((self.ds,self.scanparams,vector,self.ions,self.simname))
                 tosave -= 1
                 if tosave == 0 and not test :
                     output = self.save_values()
@@ -321,7 +321,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
                 if current_info[-1,0] < starting_point:
                     continue
                 print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
-                new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions)))
+                new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions),itertools.repeat(self.simname)))
                 self.info[bins[i]:bins[i+1]] = new_info
                 self.scanparams[6]+=bins[i+1]-bins[i]
                 self.length_reached = self.scanparams[6]
@@ -340,7 +340,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
             print("No ions!")
         linesfinished = self.scanparams[6]
         numlines = self.length
-        redshift = self.redshift
+        redshift = self.rounded_redshift
         simname = self.simname
         ionsstr = ""
         for ion in self.ions:
@@ -433,18 +433,19 @@ def read_values(filename):
     return simparams,scanparams,ions,data
 
 
-def _get_coldens_helper(dsparamsvectorions):
+def _get_coldens_helper(dsparamsvectorionsname):
     try:
-        ds = dsparamsvectorions[0]
-        scanparams = dsparamsvectorions[1]
-        vector = dsparamsvectorions[2]
-        ions = dsparamsvectorions[3]
+        ds = dsparamsvectorionsname[0]
+        scanparams = dsparamsvectorionsname[1]
+        vector = dsparamsvectorionsname[2]
+        ions = dsparamsvectorionsname[3]
+        name = dsparamsvectorionsname[4]
         print(str(current_process()))
         ident = str(current_process()).split(",")[0]
         if ident[-2:] == "ss":
-            ident = ""
+            ident = ""+name
         else:
-            ident = ident.split("-")[1]
+            ident = ident.split("-")[1]+name
         start = vector[5:8]
         end = vector[8:11]        
         ray = trident.make_simple_ray(ds,
@@ -609,13 +610,27 @@ def read_command_line_args(args, shortform,longform, tograb, defaults = None):
                     params[i] = toinsert
                 else:
                     print("Called with incorrect arguments: \
-                        The %dth argument after '%s' or '%s' should be type: %s",\
+                        The %dth argument after '%s' or '%s' should be type: %s"%
                         (i, shortform, longform, type(defaults[i])))
                     return None
         return params
     else: 
         return defaults
 
+def get_filename_from_simname(simname,redshift):
+    dirname = 'quasarscan/output/%scoldensinfo/'%simname
+    for _, _, filenames in os.walk(dirname):
+        for file in filenames:
+            z = file[-8:-4]
+            if z[0] == "z":
+                z = z[1:]
+            if redshift == -1:
+                progress = file[:10]
+                print z, progress
+            elif abs(redshift - float(z))< .05:
+                filename = dirname+file
+    return filename
+    
 if __name__ == "__main__":
     new = sys.argv[1]
     if new == "n":
@@ -659,13 +674,18 @@ if __name__ == "__main__":
         q.get_coldens(save = save,parallel = parallel)
 
     elif new == "c":
-        filename = sys.argv[2]
+        filename = read_command_line_args(sys.argv, "-fn","--filename", 1, ["None"])[0]
+        simname, redshift = read_command_line_args(sys.argv, "-sz","--simnameredshift", 2, ["None",-1.0])
+        if filename == "None" and simname == "None":
+            print "no file to load"
+        elif filename == "None":
+            filename = get_filename_from_simname(simname, redshift)
         simparams,scanparams,ions,data = read_values(filename)
 
         q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions=ions,data=data)
 
-        defaultsave = 10
-        save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)
+        defaultsave = [10]
+        save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)[0]
         parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
         parallel = (parallelint == 1)
 
