@@ -10,8 +10,6 @@ SOURCEDIR2="/project/projectdirs/mp363/VELA_ANALYSIS"
 i=$2
 a=$3
 
-mkdir "VELA"$v$i
-cd "VELA"$v$i
 
 if [[ $1 = "1" ]]
 then
@@ -20,7 +18,9 @@ then
     scp $DIRNAME/VELA$i/*a0.$a* .
 else
     v="_v"$1"_"
-    DIRNAME=$SOURCEDIR"_v"$1
+    DIRNAME=$SOURCEDIR1"_v"$1
+    mkdir "VELA"$v$i
+    cd "VELA"$v$i
     hsi "cd "$DIRNAME"/VELA"$i"; get *a0.$a*"
 fi
 cd ..
