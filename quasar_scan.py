@@ -76,7 +76,7 @@ def ion_to_field_name(ion):
     return "%s_p%s_number_density"%(atom,ionization)
 
 class GeneralizedQuasarSphere(object):
-    def __init__(self, list_of_quasar_spheres, name, distance = "Rvir"):
+    def __init__(self, list_of_quasar_spheres, name, distance = "kpc"):
         self.number = len(list_of_quasar_spheres)
         self.distance = distance
         self.simname = name
@@ -632,6 +632,7 @@ def get_filename_from_simname(simname,redshift):
     return filename
     
 if __name__ == "__main__":
+    print("Starting quasar_scan.py script")
     new = sys.argv[1]
     if new == "n":
         dspath = sys.argv[2]
