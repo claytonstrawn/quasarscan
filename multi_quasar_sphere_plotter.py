@@ -1,22 +1,3 @@
-
-# coding: utf-8
-
-# In[2]:
-
-
-import numpy as np
-import trident
-import yt
-import os
-import sys
-import matplotlib.pyplot as plt
-from quasar_scan import *
-from parse_vela_metadata import Rdict, Ldict
-
-
-# In[20]:
-
-
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
 def get_all_textfiles():
@@ -34,8 +15,22 @@ def get_all_textfiles():
             folderDirs = os.listdir(folderPath)
             for fileName in folderDirs:
                 textfiles.append(os.path.join(folderPath,fileName))
+    print ("All textfiles loaded!")
     return textfiles
-        
+
+def get_VELA_folder_textfiles(folderName):
+    
+    #pathname by default starts in output
+    path = "output/" + folderName + "coldensinfo"
+    
+    textfiles = []
+    
+    #gets all folders in output
+    dirs = os.listdir(path)
+    for fileName in dirs:
+        folderPath = path + "/"
+        textfiles.append(os.path.join(path,fileName))
+    return textfiles
     
 
 
@@ -48,40 +43,52 @@ class MultiQuasarSpherePlotter():
     #                     all textfiles in output are loaded
     def __init__(self, textfiles = None):
         self.quasarLineup = []
-        if not textfiles:
+        if textfiles is None:
             textfiles = get_all_textfiles()
         for textfile in textfiles:
             try:
                 simparams,scanparams,ions,data = read_values(textfile)
                 q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions = ions,data = data, readonly = True)
-                if q.scanparams[5] > 100:
+                if self.pass_safety_check(q):
                     self.quasarLineup.append(q)
             except:
                 print(":(")
-                print(textfile + " could not load.")
+                print(textfile + " could not load or did not pass safety checks.")
         self.quasarArray = np.array(self.quasarLineup)
         self.currentQuasarArray = []
         for q in self.quasarArray:
             self.currentQuasarArray.append(q)
         self.currentQuasarArray = np.array(self.currentQuasarArray)
+
+    #tests each condition, each condition is a safety check
+    def pass_safety_check(self, q):
+        if q.length < 100:
+            print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
+            return False
+        elif abs(q.Mstar - 0.0) < 1.0e-6:
+            print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
+            return False
+        elif abs(q.Rvir - 0.0) < 1.0e-6:
+            print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
+            return False
+        return True
     
     #summary: uses param simname and param redshift (and param ions) to search through instance variable quasarArray and 
     #         return the matching quasar if found
     def get_quasar(self, simname, redshift, ions = None):
         result = None
         for quasar in self.quasarArray:
-            tempSimName = quasar.simparams[0]
-            tempRedshift = round(quasar.simparams[1], 2)
+            tempSimName = quasar.simname
             if ions:
                 tempIons = quasar.ions
-                if tempSimName == simname and tempRedshift == redshift and tempIons == ions:
+                if tempSimName == simname and quasar.rounded_redshift == redshift and tempIons == ions:
                     return quasar
             else:
-                if tempSimName == simname and tempRedshift == redshift:
+                if tempSimName == simname and quasar.rounded_redshift == redshift:
                     return quasar
         print ("Quasar with inputted characteristics not found.")
         
-    def reset_current_Quasar_Array():
+    def reset_current_Quasar_Array(self):
         self.currentQuasarArray = []
         for q in self.quasarArray:
             self.currentQuasarArray.append(q)
@@ -91,22 +98,30 @@ class MultiQuasarSpherePlotter():
     #follows array indexing exclusivity and inclusivity rules
     def sort_by(self, criteria, bins, reset = True):
         if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
-            print ("Criteria " + criteria + "does not exist. Please re-enter a valid criteria.")
+            print ("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
             return
-        if isinstance(bins, float):
+        if isinstance(bins, float) or (len(bins) == 1 and isinstance(bins[0], float)) or \
+           isinstance(bins, int) or (len(bins) == 1 and isinstance(bins[0], int)):
+            if isinstance(bins, list):
+                bins = bins[0]
             bins = np.array([0.0, bins, np.inf]) #not sure how to judge upper bounds -- ask CLAYTON
-        elif isinstance(bins, str):
+        elif isinstance(bins, str) or (len(bins) == 1 and isinstance(bins[0], str)):
             if criteria == "simname":
-                bins = np.array(["VELA_01", bins, "VELA_v2_35"])
+                if isinstance(bins, list):
+                    bins = bins[0]
+                bins = np.array(["VELA01", bins, "VELA_v2_35"])
 
         sorter = MultiSphereSorter()
-        quasarBins = sorter.sort(sorter, self.currentQuasarArray, criteria, bins)
+        quasarBins = sorter.sort(self.currentQuasarArray, criteria, bins)
         labels = []
-        for index in range(len(quasarBins)):
-            uniqueName = criteria + "[" + str(bins[index]) + ", " + str(bins[index+1]) + "]"
-            labels.append(uniqueName)
+        if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
+            for index in range(len(quasarBins)):
+                uniqueName = criteria + "[" + str(bins[index]) + ", " + str(bins[index+1]) + "]"
+                labels.append(uniqueName)
         if reset == True:
             self.reset_current_Quasar_Array()
+        if len(quasarBins) == 0:
+            print "Bins are empty." 
         return labels, quasarBins
         
     def constrain_current_Quasar_Array(self, constrainCriteria, bins):
@@ -122,22 +137,27 @@ class MultiQuasarSpherePlotter():
         plt.figure()
         #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
 
-        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","theta":"viewing angle (rad)","phi"                    :"azimuthal viewing angle (rad)"}
+        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","theta":"viewing angle (rad)","phi" \
+                   :"azimuthal viewing angle (rad)"}
         
         plt.xlabel(xlabels[xVar])
         plt.ylabel("log col dens")
         plt.title('%s Column Density Averages vs %s' % (ion, xVar) )
         
         
-        if not quasarArray:
+        if quasarArray is None:
             quasarArray = self.quasarArray
-            print quasarArray
 
         for index in range(len(quasarArray)):
                 
             q = quasarArray[index]
             #list of all possibles xVals, with no repeats
-            allX = self.find_xVars_info(q, xVar)
+            allX = None
+            if isinstance(q, GeneralizedQuasarSphere):
+                vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3}
+                allX = q.info[:, vardict[xVar]]
+            else:
+                allX = self.find_xVars_info(q, xVar)
             x = np.unique(allX)
 
 
@@ -221,7 +241,8 @@ class MultiQuasarSpherePlotter():
     
     #summary: plots histogram(s) of ion column density vs incrementing xvariable, 
     #         uses a color bar to show the percentage of sightlines for a certain column density at a specific x value
-    def plot_hist(self, q, simname = None,xvariable = "r",zeros = "ignore",                  weights = True,save_fig = None,ns = (42,15),do_ions = "all"):
+    def plot_hist(self, q, simname = None,xvariable = "r",zeros = "ignore",\
+                  weights = True,save_fig = None,ns = (42,15),do_ions = "all"):
         if not simname:
             simname = q.simparams[0]
         if do_ions == "all":
@@ -233,7 +254,9 @@ class MultiQuasarSpherePlotter():
         for i in range(len(q.ions)):
             end = q.scanparams[6]
             if q.ions[i] in ions:
-                plot2dhist(q.ions[i],xVarsArray,                       q.info[:end,11+i],simname,xvariable = xvariable, ns = ns,zeros = zeros,                       weights = weights,save_fig = save_fig,z = q.simparams[1])
+                plot2dhist(q.ions[i],xVarsArray,\
+                       q.info[:end,11+i],simname,xvariable = xvariable, ns = ns,zeros = zeros,\
+                       weights = weights,save_fig = save_fig,z = q.simparams[1])
 
 #summary: helper method for plot_hist                
 def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None, z = None):
@@ -292,10 +315,11 @@ class MultiSphereSorter(object):
             return getattr(MultiSphereSorter, "sort_by_simname")(self, currentArray, criteria, bins)
         elif criteria == "ions":
             return getattr(MultiSphereSorter, "sort_by_ions")(self, currentArray, criteria, bins)
-        elif criteria == "Lmag":
-            return getattr(MultiSphereSorter, "sort_by_default")(self, currentArray, criteria, bins)
+        elif criteria == "version":
+            return getattr(MultiSphereSorter, "sort_by_version")(self, currentArray, criteria, bins)
         else:
             return getattr(MultiSphereSorter, "sort_by_default")(self, currentArray, criteria, bins)
+    #will return a 1D Array
     def sort_by_simname(self, currentArray, criteria, bins):
         resultBins = [None] * (len(currentArray))
         criteriaArray = self.get_criteria_array(currentArray, criteria)
@@ -304,7 +328,9 @@ class MultiSphereSorter(object):
             intersection = np.intersect1d(bins, criteriaArray[index])
             if len(intersection) > 0:
                 resArray.append(currentArray[index]) 
-        return resArray       
+        return resArray  
+    
+    #will return a 1D Array
     def sort_by_ions(self, currentArray, criteria, bins):
         resultBins = [None] * (len(currentArray))
         criteriaArray = self.get_criteria_array(currentArray, criteria)
@@ -314,6 +340,16 @@ class MultiSphereSorter(object):
             if all(boolComparison):
                 resArray.append(currentArray[index]) 
         return resArray
+    
+    def sort_by_version(self, currentArray, criteria, bins):
+        resultBins = [None] * (len(currentArray))
+        criteriaArray = self.get_criteria_array(currentArray, criteria)
+        resArray = []
+        for index in range(len(criteriaArray)):
+            intersection = np.intersect1d(bins, criteriaArray[index])
+            if len(intersection) > 0:
+                resArray.append(currentArray[index]) 
+        return resArray  
     '''These are all the same as sort_by_default
     def sort_by_redshift(self, mq, criteria, bins):
     def sort_by_rmax(self, mq, criteria, bins):
@@ -329,6 +365,7 @@ class MultiSphereSorter(object):
     def sort_by_star_Rvir(self, mq, criteria, bins):
     def sort_by_sfr(self, mq, criteria, bins):
     '''
+    
     def sort_by_default(self, currentArray, criteria, bins):
         resultBins = [None] * (len(bins)-1)
         criteriaArray = self.get_criteria_array(currentArray, criteria)
@@ -336,7 +373,7 @@ class MultiSphereSorter(object):
             booleanindices = np.logical_and(criteriaArray >= bins[index], criteriaArray < bins[index+1]) 
             toadd =  currentArray[booleanindices]
             resultBins[index] = toadd
-        return resultBins         
+        return resultBins  
     
     
     def get_criteria_array(self, currentArray, criteria):
@@ -345,6 +382,3 @@ class MultiSphereSorter(object):
             criteria_vals = eval("q." + criteria)
             res.append(criteria_vals)
         return np.array(res)
-
-
-
