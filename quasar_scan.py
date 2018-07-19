@@ -88,8 +88,10 @@ class GeneralizedQuasarSphere(object):
             q = list_of_quasar_spheres[i]
             ions_lists.append(q.ions) 
             sum_of_lengths += q.length
-        ions_in_all = list(reduce(set.intersection, map(set, ions_lists)))
-        
+        if self.number > 0:
+            ions_in_all = list(reduce(set.intersection, map(set, ions_lists)))
+        else:
+            ions_in_all = []
         self.ions = ions_in_all
         self.length = sum_of_lengths
         self.info = np.zeros((self.length,11+len(self.ions)+1))
@@ -145,6 +147,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
     def __init__(self,ions=None,simname=None,dspath=None,data = None,\
                  simparams = None,scanparams = None,Rvir = None,L=np.array([0,0,1]),\
                  ytlevel = "quiet",readonly = False):
+        self.number = 1
         if ytlevel == "loud":
             yt.funcs.mylog.setLevel(1)
         elif ytlevel == "medium":

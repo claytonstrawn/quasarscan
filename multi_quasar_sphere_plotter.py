@@ -169,7 +169,7 @@ class MultiQuasarSpherePlotter():
     #summary: plots an a pyplot errorbar graph with the x-axis being either theta, phi, or the radius; 
     #         the y-axis points are the mean column densities with a spread of +/- the error
     #         quasarArray is the array of quasars to be plotted
-    def plot_coldens_error_bars(self, ion, quasarArray = None, xVar = "r", more_info = "medium", save_fig = False):
+    def plot_coldens_error_bars(self, ion, quasarArray = None, xVar = "r", more_info = "medium", save_fig = False, labels = None):
 
         plt.figure()
         #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
@@ -186,6 +186,12 @@ class MultiQuasarSpherePlotter():
             quasarArray = self.quasarArray
             if more_info == "loud":
                 print "Parameter quasarArray has been assigned to instance variable self.quasarArray."
+        if not isinstance(quasarArray[0],GeneralizedQuasarSphere):
+            gqary = []
+            for ary in quasarArray:
+                distance = "Rvir" if xVar == "rdivR" else "kpc"
+                gqary.append(GeneralizedQuasarSphere(ary,labels[len(gqary)],distance = distance))
+            quasarArray = np.array(gqary)
         for index in range(len(quasarArray)):
                 
             q = quasarArray[index]
@@ -209,7 +215,7 @@ class MultiQuasarSpherePlotter():
             for index in range(len(q.ions)):
                 if q.ions[index] == ion:
                     ionIndex = index
-            if ionIndex == -1:
+            if ionIndex == -1 and q.number > 0:
                 print ("Ion not found. Please enter a different ion.")
                 return
             if more_info == "loud":
