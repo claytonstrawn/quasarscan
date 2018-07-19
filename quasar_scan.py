@@ -244,6 +244,11 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.dm_Rvir_arr = [self.dm_Rvir]
         self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
         self.sfr_arr = [self.sfr]
+        
+        redshiftDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
+        redshiftDict.sort()
+        self.final_redshift_arr = float(redshiftDict[-1])
+        self.final_redshift_arr = [self.final_redshift]
 
         
     #renames basic scanparams data into new instance variables
