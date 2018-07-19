@@ -234,8 +234,8 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.L_arr = [self.L]
         self.code_unit_in_kpc = self.simparams[10]
         self.conversion_arr = [self.code_unit_in_kpc]
-        self.Mstar = self.Mvir = float(parse_vela_metadata.dict_of_vela_info("Mvir")[self.simname][self.a0])
-        self.Mstar_arr = self.Mvir_arr = [self.Mvir]
+        self.Mvir = float(parse_vela_metadata.dict_of_vela_info("Mvir")[self.simname][self.a0])
+        self.Mvir_arr = [self.Mvir]
         self.gas_Rvir = float(parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0])
         self.gas_Rvir_arr = [self.gas_Rvir]
         self.star_Rvir = float(parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simname][self.a0])
@@ -245,12 +245,17 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
         self.sfr_arr = [self.sfr]
         
-        redshiftDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
-        redshiftDict.sort()
-        self.final_a0 = float(redshiftDict[-1])
+        
+        aDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
+        aDict.sort()
+        self.final_a0 = float(aDict[-1])
         self.final_a0_arr = [self.final_a0]
 
-        
+    def get_Mvir_at_a(self, a):
+        if a > self.final_a0:
+            print "Inputted a value that exceeds the greatest a value in %s" %(self.simname)
+        Mvirdict = parse_vela_metadata.dict_of_vela_info('Mvir')
+        return float(Mvirdict[self.simname][a])
     #renames basic scanparams data into new instance variables
     def add_extra_scanparam_fields(self):
         self.R = self.scanparams[0]
