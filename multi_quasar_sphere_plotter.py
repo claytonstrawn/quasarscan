@@ -1,3 +1,12 @@
+import numpy as np
+import trident
+import yt
+import os
+import sys
+import matplotlib.pyplot as plt
+from quasar_scan import *
+from parse_vela_metadata import Rdict, Ldict
+
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
 def get_all_textfiles():
@@ -144,6 +153,7 @@ class MultiQuasarSpherePlotter():
             
         sorter = MultiSphereSorter()
         temp = sorter.sort(self.currentQuasarArray, constrainCriteria, bins)
+        self.currentQuasarArray = temp
         
         if temp.ndim > 1:
             self.currentQuasarArray = temp[0]
@@ -290,6 +300,36 @@ class MultiQuasarSpherePlotter():
                 plot2dhist(q.ions[i],xVarsArray,\
                        q.info[:end,11+i],simname,xvariable = xvariable, ns = ns,zeros = zeros,\
                        weights = weights,save_fig = save_fig,z = q.simparams[1])
+    def plot_by_galaxy_parameter (self, ion, multi_quasar_array, names, rlims, xVar = "redshift"):
+        for j in range(len(multi_quasar_array)):
+            ary = multi_quasar_array[j]
+            avgColdens = np.zeros(len(ary))
+            x_variable = np.zeros(len(ary))
+            error = np.zeros(len(ary))
+            for i in range(len(ary)):
+                q = ary[i]
+                x_variable[i] = eval("q."+xVar)
+                ionIndex = -1
+                for index in range(len(q.ions)):
+                    if q.ions[index] == ion:
+                        ionIndex = index
+                if ionIndex == -1:
+                    print ("Ion not found. Please enter a different ion.")
+                    return
+                r = q.info[:,3]
+                kpcsize = q.simparams[10]
+                rconverted = r * kpcsize
+                Rvir = q.Rvir
+                allColdens = q.info[:,11 + ionIndex]
+                filteredColdens = allColdens[np.logical_and(rconverted > rlims[0]*Rvir, rconverted < rlims[1]*Rvir)]
+                logfilteredColdens = np.log10(filteredColdens)
+                avgColdens[i] = np.mean(logfilteredColdens)
+                std = np.std(logfilteredColdens)
+                error[i] = std/np.sqrt(len(logfilteredColdens))
+            print(j)
+            plt.errorbar(x_variable,avgColdens,yerr = error, fmt=',', capsize = 5, label = names[j])
+            plt.xlabel(xVar)
+            plt.legend()
 
 #summary: helper method for plot_hist                
 def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None, z = None):
@@ -379,7 +419,7 @@ class MultiSphereSorter(object):
             intersection = np.intersect1d(bins, criteriaArray[index])
             if len(intersection) > 0:
                 resArray.append(currentArray[index]) 
-        return np.array(resArray)
+        return np.array(resArray)  
     '''These are all the same as sort_by_default
     def sort_by_redshift(self, mq, criteria, bins):
     def sort_by_rmax(self, mq, criteria, bins):
