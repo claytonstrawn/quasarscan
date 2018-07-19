@@ -61,8 +61,8 @@ class MultiQuasarSpherePlotter():
                 q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions = ions,data = data, readonly = True)
                 if self.pass_safety_check(q):
                     self.quasarLineup.append(q)
-            except:
-                print(":(")
+            except Exception as e:
+                print(e)
                 print(textfile + " could not load or did not pass safety checks.")
         self.quasarArray = np.array(self.quasarLineup)
         self.currentQuasarArray = []
@@ -79,7 +79,7 @@ class MultiQuasarSpherePlotter():
         if q.length < 100:
             print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
-        elif abs(q.Mstar - 0.0) < 1.0e-6:
+        elif abs(q.Mvir - 0.0) < 1.0e-6:
             print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
         elif abs(q.Rvir - 0.0) < 1.0e-6:
@@ -253,8 +253,8 @@ class MultiQuasarSpherePlotter():
         if save_fig == True:
             ionNameNoSpaces = ion.replace(" ","")
             if isinstance(quasarArray[0], GeneralizedQuasarSphere):
-                binVariable = self.currentQuasarArray
-                name = "%s_ErrorBar_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
+                binVariable = quasarArray[0].simname.split(" ")[0]
+                name = "%s_ErrorBar_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, binVariable)
             else:
                 name = "%s_z%0.2f_ErrorBar_%s_%s" % (quasarArray[0].simparams[0], quasarArray[0].simparams[1], ionNameNoSpaces, xVar)
             plt.savefig(name + ".png")

@@ -252,8 +252,8 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.final_a0_arr = [self.final_a0]
 
     def get_Mvir_at_a(self, a):
-        if a > self.final_a0:
-            print "Inputted a value that exceeds the greatest a value in %s" %(self.simname)
+        if float(self.final_a0) < float(a):
+            print "Inputted a value that exceeds the greatest 'a' value in %s" %(self.simname)
         Mvirdict = parse_vela_metadata.dict_of_vela_info('Mvir')
         return float(Mvirdict[self.simname][a])
     #renames basic scanparams data into new instance variables
