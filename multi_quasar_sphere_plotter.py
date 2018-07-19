@@ -102,7 +102,7 @@ class MultiQuasarSpherePlotter():
     
     #param bins either serves as an array with each element being as a cutpoint, or a single value
     #follows array indexing exclusivity and inclusivity rules
-    def sort_by(self, criteria, bins, reset = False, exploration_mode = "off"):
+    def sort_by(self, criteria, bins, reset = False, exploration_mode = False):
         if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -123,7 +123,7 @@ class MultiQuasarSpherePlotter():
             for index in range(len(bins)-1):
                 uniqueName = criteria + " [" + str(bins[index]) + ", " + str(bins[index+1]) + "]"
                 labels.append(uniqueName)
-        if exploration_mode == "on":
+        if exploration_mode:
             fakeArray = np.copy(self.currentQuasarArray)
             fakeBins = sorter.sort(fakeArray, criteria, bins)
             if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
