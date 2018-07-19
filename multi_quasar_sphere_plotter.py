@@ -1,12 +1,3 @@
-import numpy as np
-import trident
-import yt
-import os
-import sys
-import matplotlib.pyplot as plt
-from quasar_scan import *
-from parse_vela_metadata import Rdict, Ldict
-
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
 def get_all_textfiles():
@@ -111,7 +102,7 @@ class MultiQuasarSpherePlotter():
     
     #param bins either serves as an array with each element being as a cutpoint, or a single value
     #follows array indexing exclusivity and inclusivity rules
-    def sort_by(self, criteria, bins, reset = False):
+    def sort_by(self, criteria, bins, reset = False, exploration_mode = "off"):
         if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -127,19 +118,38 @@ class MultiQuasarSpherePlotter():
                 bins = np.array(["VELA01", bins, "VELA_v2_35"])
 
         sorter = MultiSphereSorter()
-        quasarBins = sorter.sort(self.currentQuasarArray, criteria, bins)
         labels = []
         if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
-            for index in range(len(quasarBins)):
+            for index in range(len(bins)-1):
                 uniqueName = criteria + " [" + str(bins[index]) + ", " + str(bins[index+1]) + "]"
                 labels.append(uniqueName)
+        if exploration_mode == "on":
+            fakeArray = np.copy(self.currentQuasarArray)
+            fakeBins = sorter.sort(fakeArray, criteria, bins)
+            if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
+                print "Bins will be categorized in the following structure: \n"
+                for index in range(len(fakeBins)):
+                    oneBin = fakeBins[index]
+                    print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
+            else:
+                print "Bin will be categorized in the following structure: \n"
+                print criteria+ " at " + str(bins) + " has " + str(len(fakeBins)) + " elements out of " + str(len(fakeArray)) + "\n"
+            response = raw_input("Continue? (Y/N) \n")
+            if response == "N" or response == "n":
+                return
+            elif response == "Y" or response =="y" or response == "":
+                exploration_mode = False
+            else:
+                bins = eval(response)
+        quasarBins = sorter.sort(self.currentQuasarArray, criteria, bins)
+
         if reset == True:
             self.reset_current_Quasar_Array()
         if len(quasarBins) == 0:
             print "Bins are empty." 
         return labels, quasarBins
         
-    def constrain_current_Quasar_Array(self, constrainCriteria, bins):
+    def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False):
         if not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -152,8 +162,30 @@ class MultiQuasarSpherePlotter():
             bins = [bins]
             
         sorter = MultiSphereSorter()
+        labels = []
+        if not (constrainCriteria == 'simname' or constrainCriteria == 'ions' or constrainCriteria == "version"):
+            for index in range(len(bins)-1):
+                uniqueName = constrainCriteria + " [" + str(bins[index]) + ", " + str(bins[index+1]) + "]"
+                labels.append(uniqueName)
+        while exploration_mode:
+            fakeArray = np.copy(self.currentQuasarArray)
+            fakeBins = sorter.sort(fakeArray, constrainCriteria, bins)
+            if not (constrainCriteria == 'simname' or constrainCriteria == 'ions' or constrainCriteria == "version"):
+                print "Bins will be categorized in the following structure: \n"
+                for index in range(len(fakeBins)):
+                    oneBin = fakeBins[index]
+                    print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
+            else:
+                print "Bin will be categorized in the following structure: \n"
+                print constrainCriteria + " at " + str(bins) + " has " + str(len(fakeBins)) + " elements out of " + str(len(fakeArray)) + "\n"
+            response = raw_input("Continue? (Y/N) \n")
+            if response == "N" or response == "n":
+                return
+            elif response == "Y" or response =="y" or response == "":
+                exploration_mode = False
+            else:
+                bins = eval(response)
         temp = sorter.sort(self.currentQuasarArray, constrainCriteria, bins)
-        self.currentQuasarArray = temp
         
         if temp.ndim > 1:
             self.currentQuasarArray = temp[0]
@@ -169,7 +201,8 @@ class MultiQuasarSpherePlotter():
     #summary: plots an a pyplot errorbar graph with the x-axis being either theta, phi, or the radius; 
     #         the y-axis points are the mean column densities with a spread of +/- the error
     #         quasarArray is the array of quasars to be plotted
-    def plot_coldens_error_bars(self, ion, quasarArray = None, xVar = "r", more_info = "medium", save_fig = False, labels = None):
+
+    def plot_coldens_error_bars(self, ion, quasarArray = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None):
 
         plt.figure()
         #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
@@ -264,6 +297,10 @@ class MultiQuasarSpherePlotter():
             else:
                 name = "%s_z%0.2f_ErrorBar_%s_%s" % (quasarArray[0].simparams[0], quasarArray[0].simparams[1], ionNameNoSpaces, xVar)
             plt.savefig(name + ".png")
+        
+        if reset:
+            self.reset_current_Quasar_Array()
+        
     
     #summary: calculates the right index corresponding to xvariable, then finds (in 'info') and returns that array
     #precondition: xVar must be "theta","phi","r","r>0","rdivR"
@@ -306,36 +343,6 @@ class MultiQuasarSpherePlotter():
                 plot2dhist(q.ions[i],xVarsArray,\
                        q.info[:end,11+i],simname,xvariable = xvariable, ns = ns,zeros = zeros,\
                        weights = weights,save_fig = save_fig,z = q.simparams[1])
-    def plot_by_galaxy_parameter (self, ion, multi_quasar_array, names, rlims, xVar = "redshift"):
-        for j in range(len(multi_quasar_array)):
-            ary = multi_quasar_array[j]
-            avgColdens = np.zeros(len(ary))
-            x_variable = np.zeros(len(ary))
-            error = np.zeros(len(ary))
-            for i in range(len(ary)):
-                q = ary[i]
-                x_variable[i] = eval("q."+xVar)
-                ionIndex = -1
-                for index in range(len(q.ions)):
-                    if q.ions[index] == ion:
-                        ionIndex = index
-                if ionIndex == -1:
-                    print ("Ion not found. Please enter a different ion.")
-                    return
-                r = q.info[:,3]
-                kpcsize = q.simparams[10]
-                rconverted = r * kpcsize
-                Rvir = q.Rvir
-                allColdens = q.info[:,11 + ionIndex]
-                filteredColdens = allColdens[np.logical_and(rconverted > rlims[0]*Rvir, rconverted < rlims[1]*Rvir)]
-                logfilteredColdens = np.log10(filteredColdens)
-                avgColdens[i] = np.mean(logfilteredColdens)
-                std = np.std(logfilteredColdens)
-                error[i] = std/np.sqrt(len(logfilteredColdens))
-            print(j)
-            plt.errorbar(x_variable,avgColdens,yerr = error, fmt=',', capsize = 5, label = names[j])
-            plt.xlabel(xVar)
-            plt.legend()
 
 #summary: helper method for plot_hist                
 def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None, z = None):
@@ -425,7 +432,7 @@ class MultiSphereSorter(object):
             intersection = np.intersect1d(bins, criteriaArray[index])
             if len(intersection) > 0:
                 resArray.append(currentArray[index]) 
-        return np.array(resArray)  
+        return np.array(resArray)
     '''These are all the same as sort_by_default
     def sort_by_redshift(self, mq, criteria, bins):
     def sort_by_rmax(self, mq, criteria, bins):
