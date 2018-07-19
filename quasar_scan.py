@@ -247,8 +247,8 @@ class QuasarSphere(GeneralizedQuasarSphere):
         
         redshiftDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
         redshiftDict.sort()
-        self.final_redshift_arr = float(redshiftDict[-1])
-        self.final_redshift_arr = [self.final_redshift]
+        self.final_a0 = float(redshiftDict[-1])
+        self.final_a0_arr = [self.final_a0]
 
         
     #renames basic scanparams data into new instance variables
