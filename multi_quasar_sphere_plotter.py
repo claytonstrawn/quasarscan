@@ -160,12 +160,17 @@ class MultiQuasarSpherePlotter():
                 oneBin = fakeBins[index]
                 print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
             response = raw_input("Continue? ([Y]/N) or type new 'bins' value.\n")
-            if response == "N" or response == "n":
+            if response.lower() == "n":
                 return
-            elif response == "Y" or response =="y" or response == "":
+            elif response.lower() == "y" or response == "":
                 exploration_mode = False
             else:
-                bins = eval(response)
+                while True:
+                    try:
+                        bins = eval(response)
+                        break
+                    except:
+                        response = raw_input("Could not evaluate %s. Please re-enter."%response)
                 labels = self.make_labels(criteria,bins)
         quasarBins = sorter.sort(self.currentQuasarArray, criteria, bins)
 
@@ -196,12 +201,18 @@ class MultiQuasarSpherePlotter():
                 oneBin = fakeBins[index]
                 print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
             response = raw_input("Continue? ([Y]/N) or enter new 'bin' parameter.\n")
-            if response == "N" or response == "n":
+            if response.lower() == "n":
                 return
-            elif response == "Y" or response =="y" or response == "":
+            elif response.lower() == "y" or response == "":
                 exploration_mode = False
             else:
-                bins = eval(response)
+                while True:
+                    try:
+                        bins = eval(response)
+                        break
+                    except:
+                        response = raw_input("Could not evaluate %s. Please re-enter."%response)
+                        
                 labels = self.make_labels(constrainCriteria, bins)
         temp = sorter.sort(self.currentQuasarArray, constrainCriteria, bins)
         
