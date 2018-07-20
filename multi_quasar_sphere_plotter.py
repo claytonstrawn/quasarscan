@@ -108,6 +108,14 @@ class MultiQuasarSpherePlotter():
             self.currentQuasarArray.append(q)
         self.currentQuasarArray = np.array(self.currentQuasarArray)
         self.currentQuasarArrayName = ''
+        
+    def make_labels(self,criteria, bins):
+        labels = []
+        if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
+            for index in range(len(bins)-1):
+                uniqueName = criteria + " [" + str(bins[index]) + ", " + str(bins[index+1]) + "]"
+                labels.append(uniqueName)
+        return labels
     
     #param bins either serves as an array with each element being as a cutpoint, or a single value
     #follows array indexing exclusivity and inclusivity rules
@@ -127,12 +135,8 @@ class MultiQuasarSpherePlotter():
                 bins = np.array(["VELA01", bins, "VELA_v2_35"])
 
         sorter = MultiSphereSorter()
-        labels = []
-        if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
-            for index in range(len(bins)-1):
-                uniqueName = criteria + " [" + str(bins[index]) + ", " + str(bins[index+1]) + "]"
-                labels.append(uniqueName)
-        if exploration_mode:
+        labels = self.make_labels(criteria,bins)
+        while exploration_mode:
             fakeArray = np.copy(self.currentQuasarArray)
             fakeBins = sorter.sort(fakeArray, criteria, bins)
             if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
@@ -143,13 +147,14 @@ class MultiQuasarSpherePlotter():
             else:
                 print "Bin will be categorized in the following structure: \n"
                 print criteria+ " at " + str(bins) + " has " + str(len(fakeBins)) + " elements out of " + str(len(fakeArray)) + "\n"
-            response = raw_input("Continue? (Y/N) \n")
+            response = raw_input("Continue? ([Y]/N) or type new 'bins' value.\n")
             if response == "N" or response == "n":
                 return
             elif response == "Y" or response =="y" or response == "":
                 exploration_mode = False
             else:
                 bins = eval(response)
+                labels = self.make_labels(criteria,bins)
         quasarBins = sorter.sort(self.currentQuasarArray, criteria, bins)
 
         if reset == True:
@@ -171,11 +176,7 @@ class MultiQuasarSpherePlotter():
             bins = [bins]
             
         sorter = MultiSphereSorter()
-        labels = []
-        if not (constrainCriteria == 'simname' or constrainCriteria == 'ions' or constrainCriteria == "version"):
-            for index in range(len(bins)-1):
-                uniqueName = constrainCriteria + " [" + str(bins[index]) + ", " + str(bins[index+1]) + "]"
-                labels.append(uniqueName)
+        labels = self.make_labels(constrainCriteria, bins)
         while exploration_mode:
             fakeArray = np.copy(self.currentQuasarArray)
             fakeBins = sorter.sort(fakeArray, constrainCriteria, bins)
@@ -187,13 +188,14 @@ class MultiQuasarSpherePlotter():
             else:
                 print "Bin will be categorized in the following structure: \n"
                 print constrainCriteria + " at " + str(bins) + " has " + str(len(fakeBins)) + " elements out of " + str(len(fakeArray)) + "\n"
-            response = raw_input("Continue? (Y/N) \n")
+            response = raw_input("Continue? ([Y]/N) or enter new 'bin' parameter.\n")
             if response == "N" or response == "n":
                 return
             elif response == "Y" or response =="y" or response == "":
                 exploration_mode = False
             else:
                 bins = eval(response)
+                labels = self.make_labels(constrainCriteria, bins)
         temp = sorter.sort(self.currentQuasarArray, constrainCriteria, bins)
         
         if temp.ndim > 1:
@@ -212,7 +214,8 @@ class MultiQuasarSpherePlotter():
     #         quasarArray is the array of quasars to be plotted
 
     def plot_coldens_error_bars(self, ion, quasarArray = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None):
-
+        if more_info != 'quiet':
+            print("Current constraints (name): "+self.currentQuasarArrayName)
         plt.figure()
         #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
 
@@ -280,7 +283,7 @@ class MultiQuasarSpherePlotter():
                 avg = np.mean(logYTemp)
                 y[index] = avg
 
-                if more_info != "quiet":
+                if more_info == "loud":
                     print ("Column density mean at %5f %s is %5f" % (x[index], xVar, avg))
 
                 stdev = np.std(logYTemp)
