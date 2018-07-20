@@ -1,3 +1,12 @@
+import numpy as np
+import trident
+import yt
+import os
+import sys
+import matplotlib.pyplot as plt
+from quasar_scan import *
+from parse_vela_metadata import Rdict, Ldict
+
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
 def get_all_textfiles():
