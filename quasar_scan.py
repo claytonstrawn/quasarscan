@@ -328,10 +328,11 @@ class QuasarSphere(GeneralizedQuasarSphere):
                     tosave = save
         if parallel:
             bins = np.append(np.arange(0,self.length,save),self.length)
-            pool = Pool(processes = save,maxtasksperchild = 3)
             for i in range(0, len(bins)-1):
+                pool = Pool(processes = save)
                 current_info = self.info[bins[i]:bins[i+1]]
                 if current_info[-1,0] < starting_point:
+                    pool.close()
                     continue
                 print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
                 new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions),itertools.repeat(self.simname)))
@@ -341,9 +342,9 @@ class QuasarSphere(GeneralizedQuasarSphere):
                 if not test:
                     output = self.save_values()
                     print("file saved to "+output+".")
+                pool.close()
             if not test:
                 output = self.save_values()
-            pool.close()
         if not test:
             print("file saved to "+output+".")
         return self.info

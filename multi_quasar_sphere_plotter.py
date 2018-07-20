@@ -51,7 +51,7 @@ class MultiQuasarSpherePlotter():
     
     #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
     #                     all textfiles in output are loaded
-    def __init__(self, textfiles = None):
+    def __init__(self, textfiles = None, cleanup = False):
         self.quasarLineup = []
         if textfiles is None:
             textfiles = get_all_textfiles()
@@ -61,9 +61,12 @@ class MultiQuasarSpherePlotter():
                 q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions = ions,data = data, readonly = True)
                 if self.pass_safety_check(q):
                     self.quasarLineup.append(q)
+                elif cleanup:
+                    todo = raw_input("file %s did not pass safety check. Remove it? (y/n)"%textfile).lower()
+                    os.remove(textfile) if todo == 'y' else None
             except Exception as e:
                 print(e)
-                print(textfile + " could not load or did not pass safety checks.")
+                print(textfile + " could not load.")
         self.quasarArray = np.array(self.quasarLineup)
         self.currentQuasarArray = []
         for q in self.quasarArray:
@@ -80,10 +83,10 @@ class MultiQuasarSpherePlotter():
             print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
         elif abs(q.Mvir - 0.0) < 1.0e-6:
-            print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
+            print "Mass for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
         elif abs(q.Rvir - 0.0) < 1.0e-6:
-            print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
+            print "Rvir for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
         return True
     
@@ -113,7 +116,16 @@ class MultiQuasarSpherePlotter():
         labels = []
         if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
             for index in range(len(bins)-1):
-                uniqueName = criteria + " [" + str(bins[index]) + ", " + str(bins[index+1]) + "]"
+                low = bins[index]
+                high = bins[index+1]
+                lowstr = "%.1e"%low if low < 0.1 or low > 100.0 else str(low)
+                highstr = "%.1e"%high if high < 0.1 or high > 100.0 else str(high)
+                if low == 0.0:
+                    uniqueName = "%s < %s"%(criteria, highstr)
+                elif high == np.inf:
+                    uniqueName = "%s > %s"%(criteria, lowstr)
+                else:
+                    uniqueName = "%s < %s < %s"%(lowstr,criteria,highstr)
                 labels.append(uniqueName)
         return labels
     
