@@ -44,8 +44,9 @@ def get_VELA_folder_textfiles(folderName):
     
 
 
-
+stringcriteria = ["ions","version","simname","simnum"]
 class MultiQuasarSpherePlotter():
+    
     #USER MUST EXPLICITLY CALL GET_QUASAR TO INPUT INTO ALL OTHER MULTIQUASARSPHEREPLOTTER METHODS AS NECESSARY
     
     
@@ -114,7 +115,9 @@ class MultiQuasarSpherePlotter():
         
     def make_labels(self,criteria, bins):
         labels = []
-        if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
+        if criteria in stringcriteria:
+            labels = bins
+        else:
             for index in range(len(bins)-1):
                 low = bins[index]
                 high = bins[index+1]
@@ -135,30 +138,27 @@ class MultiQuasarSpherePlotter():
         if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
             return
+        elif criteria == "ions":
+            print("You cannot sort by 'ions'")
+            return
         if isinstance(bins, float) or isinstance(bins, int) or \
-           (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
-            if isinstance(bins, list):
+            (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
+            if isinstance(bins, list) or isinstance(bins,np.ndarray):
                 bins = bins[0]
             bins = np.array([0.0, bins, np.inf])
         elif isinstance(bins, str) or (len(bins) == 1 and isinstance(bins[0], str)):
-            if criteria == "simname":
-                if isinstance(bins, list):
-                    bins = bins[0]
-                bins = np.array(["VELA01", bins, "VELA_v2_35"])
+            if criteria in stringcriteria:
+                if not isinstance(bins, list):
+                    bins = [bins]
 
         sorter = MultiSphereSorter()
         labels = self.make_labels(criteria,bins)
         while exploration_mode:
             fakeArray = np.copy(self.currentQuasarArray)
             fakeBins = sorter.sort(fakeArray, criteria, bins)
-            if not (criteria == 'simname' or criteria == 'ions' or criteria == "version"):
-                print "Bins will be categorized in the following structure: \n"
-                for index in range(len(fakeBins)):
-                    oneBin = fakeBins[index]
-                    print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
-            else:
-                print "Bin will be categorized in the following structure: \n"
-                print criteria+ " at " + str(bins) + " has " + str(len(fakeBins)) + " elements out of " + str(len(fakeArray)) + "\n"
+            for index in range(len(fakeBins)):
+                oneBin = fakeBins[index]
+                print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
             response = raw_input("Continue? ([Y]/N) or type new 'bins' value.\n")
             if response == "N" or response == "n":
                 return
@@ -179,27 +179,22 @@ class MultiQuasarSpherePlotter():
         if not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
-        if isinstance(bins, list):
-            if len(bins) > 2:
+        if isinstance(bins, list):                
+            if len(bins) > 2 and constrainCriteria not in stringcriteria:
                 print ("Length of bins cannot be greater than 2. " + 
                        "Can either have one value to search or an upper and lower bound.")
                 return
-        elif isinstance(bins, int) or isinstance(bins, float):
+        elif isinstance(bins,str) and constrainCriteria in stringcriteria:
             bins = [bins]
-            
         sorter = MultiSphereSorter()
         labels = self.make_labels(constrainCriteria, bins)
         while exploration_mode:
             fakeArray = np.copy(self.currentQuasarArray)
             fakeBins = sorter.sort(fakeArray, constrainCriteria, bins)
-            if not (constrainCriteria == 'simname' or constrainCriteria == 'ions' or constrainCriteria == "version"):
-                print "Bins will be categorized in the following structure: \n"
-                for index in range(len(fakeBins)):
-                    oneBin = fakeBins[index]
-                    print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
-            else:
-                print "Bin will be categorized in the following structure: \n"
-                print constrainCriteria + " at " + str(bins) + " has " + str(len(fakeBins)) + " elements out of " + str(len(fakeArray)) + "\n"
+            print "Bins will be categorized in the following structure: \n"
+            for index in range(len(fakeBins)):
+                oneBin = fakeBins[index]
+                print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
             response = raw_input("Continue? ([Y]/N) or enter new 'bin' parameter.\n")
             if response == "N" or response == "n":
                 return
@@ -210,17 +205,15 @@ class MultiQuasarSpherePlotter():
                 labels = self.make_labels(constrainCriteria, bins)
         temp = sorter.sort(self.currentQuasarArray, constrainCriteria, bins)
         
-        if temp.ndim > 1:
-            self.currentQuasarArray = temp[0]
-        else:
-            self.currentQuasarArray = temp
+        self.currentQuasarArray = np.unique(np.concatenate(temp))
         
         self.currentQuasarArrayName += constrainCriteria 
-        tempNumericalConstraints = ''
-        for index in range(len(bins) - 1):
-            tempNumericalConstraints += str(bins[index]) + "-"
-        tempNumericalConstraints += str(bins[-1])
-        self.currentQuasarArrayName += tempNumericalConstraints
+        if not constrainCriteria in stringcriteria:
+            tempNumericalConstraints = str(bins[0]) + "-" + str(bins[1])
+            self.currentQuasarArrayName += tempNumericalConstraints
+        else:
+            for acceptedValue in bins:
+                self.currentQuasarArrayName += acceptedValue
     #summary: plots an a pyplot errorbar graph with the x-axis being either theta, phi, or the radius; 
     #         the y-axis points are the mean column densities with a spread of +/- the error
     #         quasarArray is the array of quasars to be plotted
@@ -421,42 +414,27 @@ class MultiSphereSorter(object):
     
     #param bins the lower parameter is inclusive, the upper parameter is exclusive
     def sort(self, currentArray, criteria, bins):
-        if criteria == "simname":
-            return getattr(MultiSphereSorter, "sort_by_simname")(self, currentArray, criteria, bins)
-        elif criteria == "ions":
-            return getattr(MultiSphereSorter, "sort_by_ions")(self, currentArray, criteria, bins)
-        elif criteria == "version":
-            return getattr(MultiSphereSorter, "sort_by_version")(self, currentArray, criteria, bins)
+        if criteria in stringcriteria:
+            return self.sort_by_strparam(currentArray, criteria, bins)
         else:
-            return getattr(MultiSphereSorter, "sort_by_default")(self, currentArray, criteria, bins)
-    #will return a 1D Array
-    def sort_by_simname(self, currentArray, criteria, bins):
+            return self.sort_by_default(currentArray, criteria, bins)
+
+    def sort_by_strparam(self, currentArray, criteria, acceptedValues):
         criteriaArray = self.get_criteria_array(currentArray, criteria)
-        resArray = []
-        for index in range(len(criteriaArray)):
-            intersection = np.intersect1d(bins, criteriaArray[index])
-            if len(intersection) > 0:
-                resArray.append(currentArray[index]) 
-        return np.array(resArray)  
+        resArray = np.empty(len(acceptedValues),dtype = 'object')
+        for i in range(len(acceptedValues)):
+            toAdd = []
+            for j in range(len(criteriaArray)):
+                add = False
+                if criteria == "ions" and acceptedValues[i] in criteriaArray[j]:
+                    add = True
+                elif acceptedValues[i] == criteriaArray[j]:
+                    add = True
+                if add:
+                    toAdd.append(currentArray[j])
+            resArray[i] = np.array(toAdd)
+        return np.array(resArray)   
     
-    #will return a 1D Array
-    def sort_by_ions(self, currentArray, criteria, bins):
-        criteriaArray = self.get_criteria_array(currentArray, criteria)
-        resArray = []
-        for index in range(len(criteriaArray)):
-            boolComparison = np.isin(bins, criteriaArray[index])
-            if all(boolComparison):
-                resArray.append(currentArray[index]) 
-        return np.array(resArray)
-    
-    def sort_by_version(self, currentArray, criteria, bins):
-        criteriaArray = self.get_criteria_array(currentArray, criteria)
-        resArray = []
-        for index in range(len(criteriaArray)):
-            intersection = np.intersect1d(bins, criteriaArray[index])
-            if len(intersection) > 0:
-                resArray.append(currentArray[index]) 
-        return np.array(resArray)
     '''These are all the same as sort_by_default
     def sort_by_redshift(self, mq, criteria, bins):
     def sort_by_rmax(self, mq, criteria, bins):

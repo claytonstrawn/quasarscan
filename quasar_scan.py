@@ -207,7 +207,9 @@ class QuasarSphere(GeneralizedQuasarSphere):
     #finds and saves stellar mass, total mass (virial mass), and the star formation rate
     def add_extra_simparam_fields(self):
         self.simname = self.simparams[0]
+        self.simnum = self.simname[-2:]
         self.simname_arr = [self.simname]
+        self.simnum_arr = [self.simnum]
         self.version = "v1.0"
         if self.simname.find("v2") != -1:
             self.version = "v2.0"
