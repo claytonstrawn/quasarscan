@@ -112,25 +112,6 @@ class MultiQuasarSpherePlotter():
             self.currentQuasarArray.append(q)
         self.currentQuasarArray = np.array(self.currentQuasarArray)
         self.currentQuasarArrayName = ''
-        
-    def make_labels(self,criteria, bins):
-        labels = []
-        if criteria in stringcriteria:
-            labels = bins
-        else:
-            for index in range(len(bins)-1):
-                low = bins[index]
-                high = bins[index+1]
-                lowstr = "%.1e"%low if low < 0.1 or low > 100.0 else str(low)
-                highstr = "%.1e"%high if high < 0.1 or high > 100.0 else str(high)
-                if low == 0.0:
-                    uniqueName = "%s < %s"%(criteria, highstr)
-                elif high == np.inf:
-                    uniqueName = "%s > %s"%(criteria, lowstr)
-                else:
-                    uniqueName = "%s < %s < %s"%(lowstr,criteria,highstr)
-                labels.append(uniqueName)
-        return labels
     
     #param bins either serves as an array with each element being as a cutpoint, or a single value
     #follows array indexing exclusivity and inclusivity rules
@@ -146,38 +127,20 @@ class MultiQuasarSpherePlotter():
             if isinstance(bins, list) or isinstance(bins,np.ndarray):
                 bins = bins[0]
             bins = np.array([0.0, bins, np.inf])
-        elif isinstance(bins, str) or (len(bins) == 1 and isinstance(bins[0], str)):
-            if criteria in stringcriteria:
-                if not isinstance(bins, list):
-                    bins = [bins]
+        elif isinstance(bins, str) and criteria in stringcriteria:
+             bins = [bins]
 
-        sorter = MultiSphereSorter()
-        labels = self.make_labels(criteria,bins)
-        while exploration_mode:
-            fakeArray = np.copy(self.currentQuasarArray)
-            fakeBins = sorter.sort(fakeArray, criteria, bins)
-            for index in range(len(fakeBins)):
-                oneBin = fakeBins[index]
-                print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
-            response = raw_input("Continue? ([Y]/N) or type new 'bins' value.\n")
-            if response.lower() == "n":
-                return
-            elif response.lower() == "y" or response == "":
-                exploration_mode = False
-            else:
-                while True:
-                    try:
-                        bins = eval(response)
-                        break
-                    except:
-                        response = raw_input("Could not evaluate %s. Please re-enter."%response)
-                labels = self.make_labels(criteria,bins)
-        quasarBins = sorter.sort(self.currentQuasarArray, criteria, bins)
-
+        sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
+        labels, _, quasarBins = sorter.sort(criteria,bins)
+        if quasarBins == None:
+            return
         if reset == True:
             self.reset_current_Quasar_Array()
-        if len(quasarBins) == 0:
-            print "Bins are empty." 
+        empty = True
+        for item in quasarBins:
+            if len(item)>0:
+                empty = False
+        print "Bins are empty." if empty else ""
         return labels, quasarBins
         
     def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False):
@@ -185,36 +148,15 @@ class MultiQuasarSpherePlotter():
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
         if isinstance(bins, list):                
-            if len(bins) > 2 and constrainCriteria not in stringcriteria:
-                print ("Length of bins cannot be greater than 2. " + 
-                       "Can either have one value to search or an upper and lower bound.")
+            if len(bins) != 2 and constrainCriteria not in stringcriteria:
+                print ("Length of bins must be 2: [lower,upper]")
                 return
         elif isinstance(bins,str) and constrainCriteria in stringcriteria:
             bins = [bins]
-        sorter = MultiSphereSorter()
-        labels = self.make_labels(constrainCriteria, bins)
-        while exploration_mode:
-            fakeArray = np.copy(self.currentQuasarArray)
-            fakeBins = sorter.sort(fakeArray, constrainCriteria, bins)
-            print "Bins will be categorized in the following structure: \n"
-            for index in range(len(fakeBins)):
-                oneBin = fakeBins[index]
-                print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(fakeArray)) + "\n")
-            response = raw_input("Continue? ([Y]/N) or enter new 'bin' parameter.\n")
-            if response.lower() == "n":
-                return
-            elif response.lower() == "y" or response == "":
-                exploration_mode = False
-            else:
-                while True:
-                    try:
-                        bins = eval(response)
-                        break
-                    except:
-                        response = raw_input("Could not evaluate %s. Please re-enter."%response)
-                        
-                labels = self.make_labels(constrainCriteria, bins)
-        temp = sorter.sort(self.currentQuasarArray, constrainCriteria, bins)
+        sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
+        labels, bins, temp = sorter.sort(constrainCriteria,bins)
+        if temp == None:
+            return
         
         self.currentQuasarArray = np.unique(np.concatenate(temp))
         
@@ -422,16 +364,46 @@ def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ign
     plt.show()
 
 class MultiSphereSorter(object):
-    
+    def __init__(self,myArray,exploration_mode = False):
+        self.array = myArray
+        self.exploration_mode = exploration_mode
     #param bins the lower parameter is inclusive, the upper parameter is exclusive
-    def sort(self, currentArray, criteria, bins):
+    def sort(self, criteria, bins):
+        labels = self.make_labels(criteria, bins)
         if criteria in stringcriteria:
-            return self.sort_by_strparam(currentArray, criteria, bins)
+            sortfn = self.sort_by_strparam
         else:
-            return self.sort_by_default(currentArray, criteria, bins)
+            sortfn = self.sort_by_default
+        while self.exploration_mode:
+            fakeBins = sortfn(criteria, bins)
+            print "Bins will be categorized in the following structure: \n"
+            for index in range(len(fakeBins)):
+                oneBin = fakeBins[index]
+                print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(self.array)) + "\n")
+            response = raw_input("Continue? ([Y]/N) or enter new 'bin' parameter.\n")
+            if response.lower() == "n":
+                return None, None, None
+            elif response.lower() == "y" or response == "":
+                self.exploration_mode = False
+            else:
+                while True:
+                    try:
+                        bins = eval(response)
+                        if isinstance(bins, float) or isinstance(bins, int) or \
+                            (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
+                            if isinstance(bins, list) or isinstance(bins,np.ndarray):
+                                bins = bins[0]
+                            bins = np.array([0.0, bins, np.inf])
+                        elif isinstance(bins, str) and criteria in stringcriteria:
+                            bins = [bins]
+                        break
+                    except:
+                        response = raw_input("Could not evaluate %s. Please re-enter.\n"%response)       
+            labels = self.make_labels(criteria, bins)
+        return labels, bins, sortfn(criteria, bins)
 
-    def sort_by_strparam(self, currentArray, criteria, acceptedValues):
-        criteriaArray = self.get_criteria_array(currentArray, criteria)
+    def sort_by_strparam(self, criteria, acceptedValues):
+        criteriaArray = self.get_criteria_array(criteria)
         resArray = np.empty(len(acceptedValues),dtype = 'object')
         for i in range(len(acceptedValues)):
             toAdd = []
@@ -442,7 +414,7 @@ class MultiSphereSorter(object):
                 elif acceptedValues[i] == criteriaArray[j]:
                     add = True
                 if add:
-                    toAdd.append(currentArray[j])
+                    toAdd.append(self.array[j])
             resArray[i] = np.array(toAdd)
         return np.array(resArray)   
     
@@ -462,28 +434,47 @@ class MultiSphereSorter(object):
     def sort_by_sfr(self, mq, criteria, bins):
     '''
     
-    def sort_by_default(self, currentArray, criteria, bins):
+    def sort_by_default(self, criteria, bins):
         if len(bins) == 1:
-            criteriaArray = self.get_criteria_array(currentArray, criteria)
+            criteriaArray = self.get_criteria_array(criteria)
             resArray = []
             for index in range(len(criteriaArray)):
                 intersection = np.intersect1d(bins, criteriaArray[index])
                 if len(intersection) > 0:
-                    resArray.append(currentArray[index]) 
+                    resArray.append(self.array[index]) 
             return resArray 
         resultBins = [None] * (len(bins)-1)
-        criteriaArray = self.get_criteria_array(currentArray, criteria)
+        criteriaArray = self.get_criteria_array(criteria)
         for index in range(len(bins)-1):
             booleanindices = np.logical_and(criteriaArray >= bins[index], criteriaArray < bins[index+1]) 
-            toadd =  currentArray[booleanindices]
+            toadd = self.array[booleanindices]
             resultBins[index] = toadd
         return np.array(resultBins)
     
     
-    def get_criteria_array(self, currentArray, criteria):
+    def get_criteria_array(self, criteria):
         res = []
-        for q in currentArray:
+        for q in self.array:
             criteria_vals = eval("q." + criteria)
             res.append(criteria_vals)
         return np.array(res)
+    
+    def make_labels(self,criteria, bins):
+        labels = []
+        if criteria in stringcriteria:
+            labels = bins
+        else:
+            for index in range(len(bins)-1):
+                low = bins[index]
+                high = bins[index+1]
+                lowstr = "%.1e"%low if low < 0.1 or low > 100.0 else str(low)
+                highstr = "%.1e"%high if high < 0.1 or high > 100.0 else str(high)
+                if low == 0.0:
+                    uniqueName = "%s < %s"%(criteria, highstr)
+                elif high == np.inf:
+                    uniqueName = "%s > %s"%(criteria, lowstr)
+                else:
+                    uniqueName = "%s < %s < %s"%(lowstr,criteria,highstr)
+                labels.append(uniqueName)
+        return labels
     
