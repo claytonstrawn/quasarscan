@@ -77,6 +77,8 @@ def ion_to_field_name(ion):
 
 class GeneralizedQuasarSphere(object):
     def __init__(self, list_of_quasar_spheres, name, distance = "kpc"):
+        if isinstance(list_of_quasar_spheres, GeneralizedQuasarSphere):
+            list_of_quasar_spheres = [list_of_quasar_spheres]
         self.number = len(list_of_quasar_spheres)
         self.distance = distance
         self.simname = name
@@ -339,7 +341,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
                 print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
                 new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions),itertools.repeat(self.simname)))
                 self.info[bins[i]:bins[i+1]] = new_info
-                self.scanparams[6]+=bins[i+1]-bins[i]
+                self.scanparams[6]+=(bins[i+1]-bins[i])
                 self.length_reached = self.scanparams[6]
                 if not test:
                     output = self.save_values()
@@ -354,7 +356,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
     def save_values(self,dest = None):
         if len(self.info[0]) <= 11:
             print("No ions!")
-        linesfinished = self.scanparams[6]
+        linesfinished = self.length_reached
         numlines = self.length
         redshift = self.rounded_redshift
         simname = self.simname

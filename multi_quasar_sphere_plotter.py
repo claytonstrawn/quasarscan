@@ -42,7 +42,35 @@ def get_VELA_folder_textfiles(folderName):
         textfiles.append(os.path.join(path,fileName))
     return textfiles
     
-
+def sort_ions(ions,flat = True):
+    def sort_ions_one_element(ions,element):
+        from trident import from_roman,to_roman
+        nums = [None]*len(ions)
+        toreturn = []
+        for i in range(len(ions)):
+            nums[i] = from_roman(ions[i].split(" ")[1])
+        nums.sort()
+        for val in nums:
+            toreturn.append("%s %s"%(element,to_roman(val)))
+        return toreturn
+    ions = list(ions)
+    ions.sort()
+    index = 0
+    element = ions[index].split(" ")[0]
+    tosort = []
+    toreturn = []
+    while index < len(ions):
+        if ions[index].split(" ")[0] == element:
+            tosort.append(ions[index])
+            index += 1
+        else:
+            toreturn.append(sort_ions_one_element(tosort,element))
+            element = ions[index].split(" ")[0]
+            tosort = []
+    toreturn.append(sort_ions_one_element(tosort,element))
+    if flat:
+        toreturn = [item for sublist in toreturn for item in sublist]
+    return toreturn
 
 stringcriteria = ["ions","version","simname","simnum"]
 class MultiQuasarSpherePlotter():
@@ -122,6 +150,9 @@ class MultiQuasarSpherePlotter():
         elif criteria == "ions":
             print("You cannot sort by 'ions'")
             return
+        if criteria in self.currentQuasarArrayName:
+            print("Already constrained by %s. Please reset instead of further constraining."%criteria)
+            return
         if isinstance(bins, float) or isinstance(bins, int) or \
             (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
             if isinstance(bins, list) or isinstance(bins,np.ndarray):
@@ -132,7 +163,7 @@ class MultiQuasarSpherePlotter():
 
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
         labels, _, quasarBins = sorter.sort(criteria,bins)
-        if quasarBins == None:
+        if quasarBins is None:
             return
         if reset == True:
             self.reset_current_Quasar_Array()
@@ -147,6 +178,9 @@ class MultiQuasarSpherePlotter():
         if not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
+        if constrainCriteria in self.currentQuasarArrayName:
+            print("Already constrained by %s. Please reset instead of further constraining."%criteria)
+            return
         if isinstance(bins, list):                
             if len(bins) != 2 and constrainCriteria not in stringcriteria:
                 print ("Length of bins must be 2: [lower,upper]")
@@ -155,7 +189,7 @@ class MultiQuasarSpherePlotter():
             bins = [bins]
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
         labels, bins, temp = sorter.sort(constrainCriteria,bins)
-        if temp == None:
+        if temp is None:
             return
         
         self.currentQuasarArray = np.unique(np.concatenate(temp))
@@ -171,13 +205,13 @@ class MultiQuasarSpherePlotter():
     #         the y-axis points are the mean column densities with a spread of +/- the error
     #         quasarArray is the array of quasars to be plotted
 
-    def plot_coldens_error_bars(self, ion, quasarArray = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None):
+    def ploterr_one_galaxy_param(self, ion, quasarArray = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None):
         if more_info != 'quiet':
             print("Current constraints (name): "+self.currentQuasarArrayName)
         plt.figure()
         #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
 
-        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","theta":"viewing angle (rad)","phi" \
+        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir","theta":"viewing angle (rad)","phi" \
                    :"azimuthal viewing angle (rad)"}
         
         plt.xlabel(xlabels[xVar])
@@ -192,7 +226,7 @@ class MultiQuasarSpherePlotter():
         if not isinstance(quasarArray[0],GeneralizedQuasarSphere):
             gqary = []
             for ary in quasarArray:
-                distance = "Rvir" if xVar == "rdivR" else "kpc"
+                distance = "Rvir" if xVar in ["rdivR","rdivR>0"] else "kpc"
                 gqary.append(GeneralizedQuasarSphere(ary,labels[len(gqary)],distance = distance))
             quasarArray = np.array(gqary)
         for index in range(len(quasarArray)):
@@ -201,7 +235,7 @@ class MultiQuasarSpherePlotter():
             #list of all possibles xVals, with no repeats
             allX = None
             if isinstance(q, GeneralizedQuasarSphere):
-                vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3}
+                vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
                 allX = q.info[:, vardict[xVar]]
             else:
                 allX = self.find_xVars_info(q, xVar)
@@ -249,7 +283,7 @@ class MultiQuasarSpherePlotter():
                 yerr[index] = error
                 if more_info == "loud":
                     print("+/- error value is %5f \n" %error) 
-            if xVar == "r>0" and x[0] == 0.0:
+            if (xVar in ["r>0","rdivR>0"]) and x[0] == 0.0:
                 x = x[1:]
                 y = y[1:]
                 yerr = yerr[1:]
@@ -259,14 +293,114 @@ class MultiQuasarSpherePlotter():
             plt.legend()
 
 
-        if save_fig == True:
+        if save_fig:
             ionNameNoSpaces = ion.replace(" ","")
             if isinstance(quasarArray[0], GeneralizedQuasarSphere):
-                binVariable = quasarArray[0].simname.split(" ")[0]
+                binVariables = quasarArray[0].simname.split(" ")
+                for binVariable in binVariables:
+                    if binVariable in ["<",">"]:
+                        continue
+                    try:
+                        number = float(binVariable)
+                        continue
+                    except:
+                        break
                 name = "%s_ErrorBar_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, binVariable)
             else:
                 name = "%s_z%0.2f_ErrorBar_%s_%s" % (quasarArray[0].simparams[0], quasarArray[0].simparams[1], ionNameNoSpaces, xVar)
-            plt.savefig(name + ".png")
+            plt.savefig("plots/"+name + ".png")
+        
+        if reset:
+            self.reset_current_Quasar_Array()
+        
+    def ploterr_zero_galaxy_param(self, ions, gq = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None):
+        if more_info != 'quiet':
+            print("Current constraints (name): "+self.currentQuasarArrayName)
+        plt.figure()
+        #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
+
+        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir","theta":"viewing angle (rad)","phi" \
+                   :"azimuthal viewing angle (rad)"}
+        
+        plt.xlabel(xlabels[xVar])
+        plt.ylabel("log col dens")
+        plt.title('%s Column Density Averages vs %s' % (str(ions).strip("[]").replace("'",""), xVar) )
+        
+        
+        if gq is None:
+            gq = self.currentQuasarArray
+            if more_info == "loud":
+                print "Parameter quasarArray has been assigned to instance variable self.quasarArray."
+        if not isinstance(gq,GeneralizedQuasarSphere):
+            distance = "Rvir" if xVar in ["rdivR","rdivR>0"] else "kpc"
+            gq = GeneralizedQuasarSphere(gq,name = "None",distance = distance)
+        if isinstance(ions,str) :
+            ions = [ions]
+        ions = sort_ions(ions)
+        for index in range(len(ions)):
+            ion = ions[index]
+            
+            #list of all possibles xVals, with no repeats
+            vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
+            allX = gq.info[:, vardict[xVar]]
+            x = np.unique(allX)
+
+
+            #list of column density AVERAGES corresponding to the respective xVal
+            
+            y = np.zeros(len(x))
+            yerr = np.zeros(len(x))
+
+
+            ionIndex = -1
+            for index in range(len(gq.ions)):
+                if gq.ions[index] == ion:
+                    ionIndex = index
+            if ionIndex == -1 and gq.number > 0:
+                print ("Ion not found. Please enter a different ion.")
+                return
+            if more_info == "loud":
+                print ("Ion index found at %d \n" %ionIndex)
+
+
+            allColdens = gq.info[:,11 + ionIndex] 
+
+
+            #loops to find column density (y) mean and +/- error
+            
+            for index in range(len(x)):
+                yTemp = allColdens[np.isclose(allX, x[index])]
+                yTemp = yTemp[yTemp > 0]
+                logYTemp = np.log10(yTemp)
+                if more_info == "loud":
+                    print ("At x value %f, log y is %s" % (x[index], logYTemp))
+
+                #finds mean at given xVar  
+                avg = np.mean(logYTemp)
+                y[index] = avg
+
+                if more_info == "loud":
+                    print ("Column density mean at %5f %s is %5f" % (x[index], xVar, avg))
+
+                stdev = np.std(logYTemp)
+                error = stdev / np.sqrt(len(logYTemp))
+                yerr[index] = error
+                if more_info == "loud":
+                    print("+/- error value is %5f \n" %error) 
+            if (xVar in ["r>0","rdivR>0"]) and x[0] == 0.0:
+                x = x[1:]
+                y = y[1:]
+                yerr = yerr[1:]
+            
+            #change fmt to . or _ for a dot or a horizontal line
+            plt.errorbar(x, y, yerr=yerr, fmt=',', capsize = 5, label = ion)
+            plt.legend()
+
+
+        if save_fig == True:
+            ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","")
+            name = "%s_ErrorBar_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
+            plt.savefig("plots/"+name + ".png")
         
         if reset:
             self.reset_current_Quasar_Array()
@@ -275,9 +409,9 @@ class MultiQuasarSpherePlotter():
     #summary: calculates the right index corresponding to xvariable, then finds (in 'info') and returns that array
     #precondition: xVar must be "theta","phi","r","r>0","rdivR"
     def find_xVars_info(self, q, xvariable):
-        if xvariable == "r" or xvariable == "r>0":
+        if xvariable in ["r","r>0"]:
             conversion = q.simparams[10]
-        elif xvariable == "rdivR":
+        elif xvariable in ["rdivR","rdivR>0"]:
             if q.simparams[5] > 0:
                 conversion = q.simparams[10]/q.simparams[5]
             else:
@@ -288,7 +422,7 @@ class MultiQuasarSpherePlotter():
                 print("No metadata, angle plots will be arbitrary axis.")
             conversion = 1
 
-        vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3}
+        vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
         if not (xvariable in vardict):
             print ("Inputted xvariable not found. Please enter a valid xvariable.")
             return
@@ -322,12 +456,12 @@ def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ign
         logdens = np.log10(cdens)
     else:
         logdens = np.log10(np.maximum(cdens,1e-15))
-    if xvariable == "r>0":
+    if xvariable == "r>0" or xvariable == "rdivR>0":
         logdens = logdens[xvars>0.0]
         xvars = xvars[xvars>0.0]
     nx = ns[0]
     ny = ns[1]
-    plotvars = {"r":"r","r>0":"r","rdivR":"r","theta":"theta","phi":"phi"}
+    plotvars = {"r":"r","r>0":"r","rdivR":"r","rdivR>0":"r","theta":"theta","phi":"phi"}
     plotvar = plotvars[xvariable]
     if weights:
         weight = xvars*0.0
@@ -349,7 +483,7 @@ def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ign
     dx = x2-x1
     dy = y2-y1
     plt.axis((x1-dx*0.1,x2+dx*0.1,y1-dy*0.1,y2+dy*0.1))
-    xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","theta":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
+    xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir","theta":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
     plt.xlabel(xlabels[xvariable])
     plt.ylabel("log col dens")
     if save_fig:
@@ -397,7 +531,8 @@ class MultiSphereSorter(object):
                         elif isinstance(bins, str) and criteria in stringcriteria:
                             bins = [bins]
                         break
-                    except:
+                    except Exception as e:
+                        print e
                         response = raw_input("Could not evaluate %s. Please re-enter.\n"%response)       
             labels = self.make_labels(criteria, bins)
         return labels, bins, sortfn(criteria, bins)

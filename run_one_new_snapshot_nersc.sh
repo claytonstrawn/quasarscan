@@ -9,7 +9,7 @@ SOURCEDIR2="/project/projectdirs/mp363/VELA_ANALYSIS"
 
 i=$2
 a=$3
-
+srun=$4
 
 if [[ $1 = "1" ]]
 then
@@ -29,8 +29,15 @@ cd ..
 
 module load python
 source activate myenv
+if [[ $srun = "srun" ]]
+then
+    srun -c 50 python quasarscan/quasar_scan.py 'n' 'VELA'$v$i'/10MpcBox_csf512_a0.'$a'.d' 'VELA'$v$i '-p' '-s' 12
+elif [[ $srun = "test" ]]
+then
+    echo "srun -c 50 python quasarscan/quasar_scan.py 'n' 'VELA'$v$i'/10MpcBox_csf512_a0.'$a'.d' 'VELA'$v$i '-p' '-s' 12"
+else
+    python quasarscan/quasar_scan.py 'n' 'VELA'$v$i'/10MpcBox_csf512_a0.'$a'.d' 'VELA'$v$i '-p' '-s' 12
+fi
 
-python quasarscan/quasar_scan.py 'n' 'VELA'$v$i'/10MpcBox_csf512_a0.'$a'.d' 'VELA'$v$i '-p' '-s' 12
-
-rm -rf 'VELA'$v$i
+echo "remember to rm -rf 'VELA'$v$i"
 source deactivate
