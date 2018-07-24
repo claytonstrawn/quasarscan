@@ -404,6 +404,37 @@ class MultiQuasarSpherePlotter():
         
         if reset:
             self.reset_current_Quasar_Array()
+            
+    def ploterr_two_galaxy_param (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", save_fig = None):
+        for j in range(len(multi_quasar_array)):
+            ary = multi_quasar_array[j]
+            avgColdens = np.zeros(len(ary))
+            x_variable = np.zeros(len(ary))
+            error = np.zeros(len(ary))
+            for i in range(len(ary)):
+                q = ary[i]
+                x_variable[i] = eval("q."+xVar)
+                ionIndex = -1
+                for index in range(len(q.ions)):
+                    if q.ions[index] == ion:
+                        ionIndex = index
+                if ionIndex == -1:
+                    print ("Ion not found. Please enter a different ion.")
+                    return
+                r = q.info[:,3]
+                kpcsize = q.simparams[10]
+                rconverted = r * kpcsize
+                Rvir = q.Rvir
+                allColdens = q.info[:,11 + ionIndex]
+                filteredColdens = allColdens[np.logical_and(rconverted > rlims[0]*Rvir, rconverted < rlims[1]*Rvir)]
+                logfilteredColdens = np.log10(filteredColdens)
+                avgColdens[i] = np.mean(logfilteredColdens)
+                std = np.std(logfilteredColdens)
+                error[i] = std/np.sqrt(len(logfilteredColdens))
+            print(j)
+            plt.errorbar(x_variable,avgColdens,yerr = error, fmt=',', capsize = 5, label = names[j])
+            plt.xlabel(xVar)
+            plt.legend()
         
     
     #summary: calculates the right index corresponding to xvariable, then finds (in 'info') and returns that array
