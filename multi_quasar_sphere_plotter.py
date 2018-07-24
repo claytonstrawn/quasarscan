@@ -193,7 +193,8 @@ class MultiQuasarSpherePlotter():
             return
         
         self.currentQuasarArray = np.unique(np.concatenate(temp))
-        
+        if constrainCriteria == "ions":
+            return
         self.currentQuasarArrayName += constrainCriteria 
         if not constrainCriteria in stringcriteria:
             tempNumericalConstraints = str(bins[0]) + "-" + str(bins[1])
@@ -398,7 +399,7 @@ class MultiQuasarSpherePlotter():
 
 
         if save_fig == True:
-            ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","")
+            ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","").replace(",","_")
             name = "%s_ErrorBar_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
             plt.savefig("plots/"+name + ".png")
         

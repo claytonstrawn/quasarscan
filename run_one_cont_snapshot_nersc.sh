@@ -14,9 +14,11 @@ source activate myenv
 echo VELA$v$i
 if [[ $srun = "srun" ]]
 then
-    srun -c 50 python quasarscan/quasar_scan.py 'c' '-sz' VELA$v$i $z '-p' '-s' 36
+    echo "using srun"
+    srun -c 50 -u python -u quasarscan/quasar_scan.py 'c' '-sz' VELA$v$i $z '-p' '-s' 36
 else
-    python quasarscan/quasar_scan.py 'c' '-sz' VELA$v$i $z '-p' '-s' 36
+    echo "not using srun"
+    -u python -u quasarscan/quasar_scan.py 'c' '-sz' VELA$v$i $z '-p' '-s' 36
 fi
 
 echo "be sure to rm -rf VELA$v$i"
