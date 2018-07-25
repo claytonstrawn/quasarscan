@@ -432,10 +432,58 @@ class MultiQuasarSpherePlotter():
                 avgColdens[i] = np.mean(logfilteredColdens)
                 std = np.std(logfilteredColdens)
                 error[i] = std/np.sqrt(len(logfilteredColdens))
-            print(j)
             plt.errorbar(x_variable,avgColdens,yerr = error, fmt=',', capsize = 5, label = names[j])
             plt.xlabel(xVar)
             plt.legend()
+
+    def ploterr_two_galaxy_param_avg (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", save_fig = None):
+        for j in range(len(multi_quasar_array)):
+            ary = multi_quasar_array[j]
+            avgColdens = np.zeros(len(ary))
+            x_variable = np.zeros(len(ary))
+            logallColdens = np.empty(len(ary),dtype="object")
+            error = np.zeros(len(ary))
+            for i in range(len(ary)):
+                q = ary[i]
+                x_variable[i] = eval("q."+xVar)
+                ionIndex = -1
+                for index in range(len(q.ions)):
+                    if q.ions[index] == ion:
+                        ionIndex = index
+                if ionIndex == -1:
+                    print ("Ion not found. Please enter a different ion.")
+                    return
+                r = q.info[:,3]
+                kpcsize = q.simparams[10]
+                rconverted = r * kpcsize
+                Rvir = q.Rvir
+                allColdens = q.info[:,11 + ionIndex]
+                filteredColdens = allColdens[np.logical_and(rconverted > rlims[0]*Rvir, rconverted < rlims[1]*Rvir)]
+                logfilteredColdens = np.log10(filteredColdens)
+                logallColdens[i] = logfilteredColdens
+                """avgColdens[i] = np.mean(logfilteredColdens)
+                std = np.std(logfilteredColdens)
+                error[i] = std/np.sqrt(len(logfilteredColdens))"""
+
+
+            x_values = np.unique(x_variable)
+            y_values = np.zeros(len(x_values))
+            y_errors = np.zeros(len(x_values))
+            for h in range(len(x_values)):
+                all_y = logallColdens[abs(x_variable - x_values[h])<.1]
+                all_y = np.concatenate(all_y)
+                y_values[h] = np.mean(all_y)
+                all_std = np.std(all_y)
+                y_errors[h] = all_std/np.sqrt(len(all_y))
+                
+
+
+            #CHANGED ERROR
+            plt.errorbar(x_values,y_values, yerr = y_errors, fmt = ',', capsize = 5, label = names[j])
+        plt.xlabel(xVar)
+        plt.ylabel("Avg Log Coldens of " + ion)
+        plt.title("Avg Log Coldens of "+ion+" vs "+xVar)
+        plt.legend()
         
     
     #summary: calculates the right index corresponding to xvariable, then finds (in 'info') and returns that array
