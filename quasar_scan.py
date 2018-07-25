@@ -1,11 +1,14 @@
+#!/usr/bin/env python
+
 import numpy as np
 import trident
 import yt
 import os
 import sys
-from multiprocessing import Pool,current_process,cpu_count
 import itertools
 import logging
+
+from mpi4py import MPI
 
 try:
     from quasarscan import parse_vela_metadata
@@ -167,7 +170,8 @@ class QuasarSphere(GeneralizedQuasarSphere):
                                   file_particle_data=file_particle_data,\
                                   file_particle_stars=file_particle_stars)
                 z = self.ds.current_redshift
-                c = self.ds.find_max("density")[1].value
+                cstrings = parse_vela_metadata.dict_of_vela_info("cm")[simname][self.a0]
+                c = np.array([float(cstrings[0]),float(cstrings[1]),float(cstrings[2])])
                 convert = self.ds.length_unit.in_units('kpc').value.item()
             else:
                 #for testing without loading real sim
@@ -241,22 +245,25 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.L_arr = [self.L]
         self.code_unit_in_kpc = self.simparams[10]
         self.conversion_arr = [self.code_unit_in_kpc]
-        self.Mvir = float(parse_vela_metadata.dict_of_vela_info("Mvir")[self.simname][self.a0])
-        self.Mvir_arr = [self.Mvir]
-        self.gas_Rvir = float(parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0])
-        self.gas_Rvir_arr = [self.gas_Rvir]
-        self.star_Rvir = float(parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simname][self.a0])
-        self.star_Rvir_arr = [self.star_Rvir]
-        self.dm_Rvir = float(parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simname][self.a0])
-        self.dm_Rvir_arr = [self.dm_Rvir]
-        self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
-        self.sfr_arr = [self.sfr]
-        
-        
-        aDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
-        aDict.sort()
-        self.final_a0 = float(aDict[-1])
-        self.final_a0_arr = [self.final_a0]
+        try:
+            self.Mvir = float(parse_vela_metadata.dict_of_vela_info("Mvir")[self.simname][self.a0])
+            self.Mvir_arr = [self.Mvir]
+            self.gas_Rvir = float(parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0])
+            self.gas_Rvir_arr = [self.gas_Rvir]
+            self.star_Rvir = float(parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simname][self.a0])
+            self.star_Rvir_arr = [self.star_Rvir]
+            self.dm_Rvir = float(parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simname][self.a0])
+            self.dm_Rvir_arr = [self.dm_Rvir]
+            self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
+            self.sfr_arr = [self.sfr]
+            
+            
+            aDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
+            aDict.sort()
+            self.final_a0 = float(aDict[-1])
+            self.final_a0_arr = [self.final_a0]
+        except:
+            "test"
 
     def get_Mvir_at_a(self, a):
         if float(self.final_a0) < float(a):
@@ -316,7 +323,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         print(str(length)+" LOSs to scan.")
         return length
 
-    def get_coldens(self, save = 10, parallel = False, test = False):
+    def get_coldens(self, save = 10, parallel = False, test = False,comm = None):
         tosave = save
         starting_point = self.length_reached
         if not parallel:
@@ -333,17 +340,25 @@ class QuasarSphere(GeneralizedQuasarSphere):
         if parallel:
             bins = np.append(np.arange(starting_point,self.length,save),self.length)
             for i in range(0, len(bins)-1):
-                pool = Pool(processes = save)
                 current_info = self.info[bins[i]:bins[i+1]]
                 print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
-                new_info = pool.map(_get_coldens_helper,itertools.izip(itertools.repeat(self.ds),itertools.repeat(self.scanparams),current_info, itertools.repeat(self.ions),itertools.repeat(self.simname)))
-                self.info[bins[i]:bins[i+1]] = new_info
+                for process in range(1,comm.Get_size()):
+                    try:
+                        infoToSend = current_info[process]
+                    except:
+                        infoToSend = None
+                    toSend = (self.scanparams,infoToSend,self.ions,self.dspath)
+                    comm.send(toSend, dest = process)
+                for process in range(1,comm.Get_size()):
+                    new_info = comm.recv(source = process)
+                    if new_info is None:
+                        continue
+                    self.info[bins[i]+process] = new_info
                 self.scanparams[6]+=(bins[i+1]-bins[i])
                 self.length_reached = self.scanparams[6]
                 if not test:
                     output = self.save_values()
                     print("file saved to "+output+".")
-                pool.close()
             if not test:
                 output = self.save_values()
         if not test:
@@ -393,35 +408,6 @@ class QuasarSphere(GeneralizedQuasarSphere):
         f.close()
         return filename
     
-    def plot_hist(self,simname = None,xvariable = "r",zeros = "ignore",\
-                  weights = True,save_fig = None,ns = (42,15),do_ions = "all"):
-        if not simname:
-            simname = self.simname
-        if xvariable == "r" or xvariable == "r>0":
-            conversion = self.code_unit_in_kpc
-        elif xvariable == "rdivR":
-            if self.Rvir > 0:
-                conversion = self.Rvir/self.code_unit_in_kpc
-            else:
-                print("No virial radius found")
-                return
-        else:
-            if self.Rvir < 0:
-                print("No metadata, angle plots will be arbitrary axis.")
-            conversion = 1
-        if do_ions == "all":
-            ions = self.ions
-        else:
-            ions = do_ions
-        vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3}
-        #ion,xvars,cdens,simname
-        for i in range(len(self.ions)):
-            end = self.scanparams[6]
-            if self.ions[i] in ions:
-                plot2dhist(self.ions[i],self.info[:end,vardict[xvariable]]*conversion,\
-                       self.info[:end,11+i],simname,xvariable = xvariable, ns = ns,zeros = zeros,\
-                       weights = weights,save_fig = save_fig,z = self.redshift)
-
 def read_values(filename):
     """ firstline = "[dsname, z, center[0], center[1], center[2], Rvir, pathname]\n"
         secondline = str(self.simparams)+"\n"
@@ -447,22 +433,13 @@ def read_values(filename):
         data[i] = np.fromstring(myline,sep = " ")
     return simparams,scanparams,ions,data
 
-
-def _get_coldens_helper(dsparamsvectorionsname):
+def _get_coldens_helper(ds,vector,ions,rank = 0):
     try:
-        ds = dsparamsvectorionsname[0]
-        scanparams = dsparamsvectorionsname[1]
-        vector = dsparamsvectorionsname[2]
-        ions = dsparamsvectorionsname[3]
-        name = dsparamsvectorionsname[4]
-        print(str(current_process()))
-        ident = str(current_process()).split(",")[0]
-        if ident[-2:] == "ss":
-            ident = ""+name
-        else:
-            ident = ident.split("-")[1]+name
+        print("<rank %d, starting process> "%rank)
+        ident = str(rank)
         start = vector[5:8]
-        end = vector[8:11]        
+        end = vector[8:11]  
+        print("saving ray to %s"%"ray"+ident+".h5") 
         ray = trident.make_simple_ray(ds,
                     start_position=start,
                     end_position=end,
@@ -490,84 +467,6 @@ def _get_coldens_helper(dsparamsvectorionsname):
     print("vector = "+str(vector))
     return vector
 
-import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
-#white (255,255,255), yellow (255,255,0), orange (255,165,0), red (255,0,0), darkred (139,0,0), black (0,0,0)
-f= 256.0
-cdict = {'red':   ((0.0,  255/f, 255/f),
-                   (0.01, 255/f, 255/f),
-                   (0.5,  255/f, 255/f),
-                   (0.6,  255/f, 255/f),
-                   (0.7,  139/f, 139/f),
-                   (1.0,  0/f, 0/f)),
-
-         'green': ((0.0,  255/f, 255/f),
-                   (0.01, 255/f, 255/f),
-                   (0.5,  165/f, 165/f),
-                   (0.6,  0/f, 0/f),
-                   (0.7,  0/f, 0/f),
-                   (1.0,  0/f, 0/f)),
-
-         'blue':  ((0.0,  255/f, 255/f),
-                   (0.01, 255/f, 0/f),
-                   (0.5,  0/f, 0/f),
-                   (0.6,  0/f, 0/f),
-                   (0.7,  0/f, 0/f),
-                   (1.0,  0/f, 0/f))}
-
-hotcustom = LinearSegmentedColormap('HotCustom', cdict)
-plt.register_cmap(cmap=hotcustom)
-
-def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None, z = None):
-    if zeros == "ignore":
-        xvars = xvars[cdens>0]
-        cdens = cdens[cdens>0]
-        logdens = np.log10(cdens)
-    else:
-        logdens = np.log10(np.maximum(cdens,1e-15))
-    if xvariable == "r>0":
-        logdens = logdens[xvars>0.0]
-        xvars = xvars[xvars>0.0]
-    nx = ns[0]
-    ny = ns[1]
-    plotvars = {"r":"r","r>0":"r","rdivR":"r","theta":"theta","phi":"phi"}
-    plotvar = plotvars[xvariable]
-    if weights:
-        weight = xvars*0.0
-        for i in range(len(xvars)):
-            weight[i] = 1.0/len(xvars[xvars==xvars[i]])
-        H, xedges, yedges = np.histogram2d(xvars, logdens, bins=[nx,ny],weights = weight)
-        cbarlabel = "Fraction of lines for fixed %s"%(plotvar)
-    else:
-        H, xedges, yedges = np.histogram2d(xvars, logdens, bins=[nx,ny])
-        cbarlabel = "Total number of lines"
-    H = H.T
-    X, Y = np.meshgrid(xedges, yedges)
-    plt.pcolormesh(X,Y, H, cmap=hotcustom)
-    plt.title("distribution of "+ion+" in "+simname+" at z="+str(z)[:4])
-    # set the limits of the plot to the limits of the data
-    #plt.axis([x.min(), x.max(), y.min(), y.max()])
-    plt.colorbar(label = cbarlabel)
-    x1,x2,y1,y2 = plt.axis()
-    dx = x2-x1
-    dy = y2-y1
-    plt.axis((x1-dx*0.1,x2+dx*0.1,y1-dy*0.1,y2+dy*0.1))
-    xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","theta":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
-    plt.xlabel(xlabels[xvariable])
-    plt.ylabel("log col dens")
-    if save_fig:
-        if save_fig == "default" :
-            save_fig = simname + "_" + plotvar + "_z" +str(z)[:4]
-        name = save_fig+"_"+ion.replace(" ","")
-        if weights:
-            name +="_w"
-        if zeros == "ignore":
-            name +="_nozeros"
-        plt.savefig(name+".png")
-    plt.show()
-
-#R,lat_n,r_n,long_dx,alpha_dx, center = None, largest_r = None,length = None,distances = "kpc",starting_guess = 50000):
-#    def create_QSO_endpoints(self,R,lat_n,r_n,long_dx,alpha_dx, largest_r, center = None, \
 
 def convert_a0_to_redshift(a0):
     return 1.0/float(a0)-1
@@ -645,9 +544,43 @@ def get_filename_from_simname(simname,redshift):
             elif abs(redshift - float(z))< .05:
                 filename = dirname+file
     return filename
-    
-if __name__ == "__main__":
-    print("Starting quasar_scan.py script")
+
+
+def main_for_other_rank(comm, rank,ds=None, cycles=-1):
+    paramsvectorionspath = comm.recv(source = 0)
+    params = paramsvectorionspath[0]
+    vector = paramsvectorionspath[1]
+    ions = paramsvectorionspath[2]
+    dspath = paramsvectorionspath[3]
+    if not ds:
+        projectdir = dspath.split("10MpcBox")[0]
+        a0 = dspath.split("a0.")[1][:3]
+        file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
+        file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
+        file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
+        ds = yt.load(dspath,file_particle_header=file_particle_header,\
+                          file_particle_data=file_particle_data,\
+                          file_particle_stars=file_particle_stars)
+        print("Loaded additional dataset for process %d"%rank)
+    size = comm.Get_size()
+    myvector = _get_coldens_helper(ds,vector,ions,rank = rank)
+    comm.send(myvector, dest = 0)
+    if cycles == -1:
+        numlines = params[5]
+        cycles = numlines//size-1 if numlines%size == 0 else numlines//size
+    for i in range(cycles):
+        paramsvectorionspath = comm.recv(source = 0)
+        params = paramsvectorionspath[0]
+        vector = paramsvectorionspath[1]
+        ions = paramsvectorionspath[2]
+        dspath = paramsvectorionspath[3]
+        if vector is None:
+            comm.send(None, dest = 0)
+        else:
+            myvector = _get_coldens_helper(ds,vector,ions,rank = rank)
+            comm.send(myvector, dest = 0)
+
+def main_for_rank_0(parallel, comm = None):
     new = sys.argv[1]
     if new == "n":
         dspath = sys.argv[2]
@@ -681,13 +614,12 @@ if __name__ == "__main__":
         R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 6, defaultsphere)
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)[0]
         ions = read_command_line_args(sys.argv, "-i","--ions", 1, defaultions)[0]
-        parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
-
-        parallel = (parallelint == 1)
         q = QuasarSphere(simname = simname ,dspath = dspath, ions = ions, Rvir = Rvir,L = L)
+        if parallel: 
+            save = comm.Get_size()
         q.create_QSO_endpoints(R, n_th, n_phi, n_r, rmax, length,\
                              distances = distances)
-        q.get_coldens(save = save,parallel = parallel)
+        q.get_coldens(save = save, parallel= parallel, comm = comm)
 
     elif new == "c":
         filename = read_command_line_args(sys.argv, "-fn","--filename", 1, ["None"])[0]
@@ -704,12 +636,25 @@ if __name__ == "__main__":
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)[0]
         parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
         parallel = (parallelint == 1)
-
-        q.get_coldens(save = save,parallel = parallel)
+        q.get_coldens(save = save, parallel= parallel, comm = comm)
 
     else: 
         print("Run this program with argument 'n' (new) or 'c' (continue).")
 
+if __name__ == "__main__":
+    parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
+    parallel = (parallelint == 1)
+    if parallel:
+        comm = MPI.COMM_WORLD
+        rank = MPI.COMM_WORLD.Get_rank()
+        if rank == 0:
+            print("Starting quasar_scan.py main script (rank 0)")
+            main_for_rank_0(parallel,comm=comm)
+        else:
+            print("rank "+str(rank)+": activating")
+            main_for_other_rank(comm, rank)
+    else:
+        main_for_rank_0(parallel)
 
 
 

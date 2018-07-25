@@ -10,4 +10,4 @@ module load python
 source activate myenv
 
 export HDF5_USE_FILE_LOCKING=FALSE
-srun -c 20 -u python -u quasarscan/./quasar_scan.py 'n' 'VELA_v2_17/10MpcBox_csf512_a0.250.d' 'VELA_v2_17' '-p' '-s' 2 -qp 6 12 12 12 1.5 4
+srun -n 10 python quasarscan/./quasar_scan.py 'n' 'VELA_v2_17/10MpcBox_csf512_a0.200.d' 'VELA_v2_17' '-p' 
