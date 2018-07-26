@@ -143,7 +143,7 @@ class MultiQuasarSpherePlotter():
     
     #param bins either serves as an array with each element being as a cutpoint, or a single value
     #follows array indexing exclusivity and inclusivity rules
-    def sort_by(self, criteria, bins, reset = False, exploration_mode = False):
+    def sort_by(self, criteria, bins, reset = False, exploration_mode = False,atEnd = False):
         if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -162,7 +162,7 @@ class MultiQuasarSpherePlotter():
              bins = [bins]
 
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
-        labels, _, quasarBins = sorter.sort(criteria,bins)
+        labels, _, quasarBins = sorter.sort(criteria,bins,atEnd = atEnd)
         if quasarBins is None:
             return
         if reset == True:
@@ -193,8 +193,7 @@ class MultiQuasarSpherePlotter():
             return
         
         self.currentQuasarArray = np.unique(np.concatenate(temp))
-        if constrainCriteria == "ions":
-            return
+        
         self.currentQuasarArrayName += constrainCriteria 
         if not constrainCriteria in stringcriteria:
             tempNumericalConstraints = str(bins[0]) + "-" + str(bins[1])
@@ -399,7 +398,7 @@ class MultiQuasarSpherePlotter():
 
 
         if save_fig == True:
-            ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","").replace(",","_")
+            ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","")
             name = "%s_ErrorBar_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
             plt.savefig("plots/"+name + ".png")
         
@@ -435,6 +434,12 @@ class MultiQuasarSpherePlotter():
             plt.errorbar(x_variable,avgColdens,yerr = error, fmt=',', capsize = 5, label = names[j])
             plt.xlabel(xVar)
             plt.legend()
+            
+            #CHANGE NAMES OF VARS
+            if save_fig == True:
+                ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","")
+                name = "%s_ErrorBar_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
+                plt.savefig("plots/"+name + ".png")
 
     def ploterr_two_galaxy_param_avg (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", save_fig = None):
         for j in range(len(multi_quasar_array)):
@@ -484,6 +489,12 @@ class MultiQuasarSpherePlotter():
         plt.ylabel("Avg Log Coldens of " + ion)
         plt.title("Avg Log Coldens of "+ion+" vs "+xVar)
         plt.legend()
+        
+        #CHANGE NAMES OF VARS
+        if save_fig == True:
+            ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","")
+            name = "%s_ErrorBar_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
+            plt.savefig("plots/"+name + ".png")
         
     
     #summary: calculates the right index corresponding to xvariable, then finds (in 'info') and returns that array
@@ -582,14 +593,14 @@ class MultiSphereSorter(object):
         self.array = myArray
         self.exploration_mode = exploration_mode
     #param bins the lower parameter is inclusive, the upper parameter is exclusive
-    def sort(self, criteria, bins):
+    def sort(self, criteria, bins,atEnd = False):
         labels = self.make_labels(criteria, bins)
         if criteria in stringcriteria:
             sortfn = self.sort_by_strparam
         else:
             sortfn = self.sort_by_default
         while self.exploration_mode:
-            fakeBins = sortfn(criteria, bins)
+            fakeBins = sortfn(criteria, bins, atEnd = atEnd)
             print "Bins will be categorized in the following structure: \n"
             for index in range(len(fakeBins)):
                 oneBin = fakeBins[index]
@@ -614,10 +625,13 @@ class MultiSphereSorter(object):
                     except Exception as e:
                         print e
                         response = raw_input("Could not evaluate %s. Please re-enter.\n"%response)       
-            labels = self.make_labels(criteria, bins)
-        return labels, bins, sortfn(criteria, bins)
+            labels = self.make_labels(criteria, bins, atEnd = atEnd)
+        return labels, bins, sortfn(criteria, bins, atEnd = atEnd)
 
-    def sort_by_strparam(self, criteria, acceptedValues):
+    def sort_by_strparam(self, criteria, acceptedValues,atEnd = False):
+        if atEnd:
+            print("dont use atEnd for string sort")
+            return
         criteriaArray = self.get_criteria_array(criteria)
         resArray = np.empty(len(acceptedValues),dtype = 'object')
         for i in range(len(acceptedValues)):
@@ -649,9 +663,9 @@ class MultiSphereSorter(object):
     def sort_by_sfr(self, mq, criteria, bins):
     '''
     
-    def sort_by_default(self, criteria, bins):
+    def sort_by_default(self, criteria, bins, atEnd = False):
         if len(bins) == 1:
-            criteriaArray = self.get_criteria_array(criteria)
+            criteriaArray = self.get_criteria_array(criteria, atEnd = atEnd)
             resArray = []
             for index in range(len(criteriaArray)):
                 intersection = np.intersect1d(bins, criteriaArray[index])
@@ -659,7 +673,7 @@ class MultiSphereSorter(object):
                     resArray.append(self.array[index]) 
             return resArray 
         resultBins = [None] * (len(bins)-1)
-        criteriaArray = self.get_criteria_array(criteria)
+        criteriaArray = self.get_criteria_array(criteria,atEnd=atEnd)
         for index in range(len(bins)-1):
             booleanindices = np.logical_and(criteriaArray >= bins[index], criteriaArray < bins[index+1]) 
             toadd = self.array[booleanindices]
@@ -667,18 +681,37 @@ class MultiSphereSorter(object):
         return np.array(resultBins)
     
     
-    def get_criteria_array(self, criteria):
-        res = []
-        for q in self.array:
-            criteria_vals = eval("q." + criteria)
-            res.append(criteria_vals)
-        return np.array(res)
+    def get_criteria_array(self, criteria,atEnd = False):
+        if atEnd == False:
+            res = []
+            for q in self.array:
+                criteria_vals = eval("q." + criteria)
+                res.append(criteria_vals)
+            return np.array(res)
+        else:
+            quasar_array = self.array
+            final_a = np.zeros(len(quasar_array))
+            for i in range(len(quasar_array)):
+                final_a[i] = quasar_array[i].final_a0
+            min_a = "%1.3f"%min(final_a)
+            criteria_final = np.zeros(len(quasar_array))
+            for index in range(len(quasar_array)):
+                q = quasar_array[index]
+                criteria_final[index] = q.get_criteria_at_a(min_a,criteria)
+            return criteria_final
     
-    def make_labels(self,criteria, bins):
+    def make_labels(self,criteria, bins, atEnd=False):
         labels = []
         if criteria in stringcriteria:
             labels = bins
         else:
+            if atEnd:
+                quasar_array = self.array
+                final_a = np.zeros(len(quasar_array))
+                for i in range(len(quasar_array)):
+                    final_a[i] = quasar_array[i].final_a0
+                min_a = "%1.3f"%min(final_a)
+                criteria = criteria + "_"+min_a 
             for index in range(len(bins)-1):
                 low = bins[index]
                 high = bins[index+1]
@@ -692,4 +725,3 @@ class MultiSphereSorter(object):
                     uniqueName = "%s < %s < %s"%(lowstr,criteria,highstr)
                 labels.append(uniqueName)
         return labels
-    
