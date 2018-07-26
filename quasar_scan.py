@@ -170,8 +170,10 @@ class QuasarSphere(GeneralizedQuasarSphere):
                                   file_particle_data=file_particle_data,\
                                   file_particle_stars=file_particle_stars)
                 z = self.ds.current_redshift
-                cstrings = parse_vela_metadata.dict_of_vela_info("cm")[simname][self.a0]
-                c = np.array([float(cstrings[0]),float(cstrings[1]),float(cstrings[2])])
+                #cstrings = parse_vela_metadata.dict_of_vela_info("cm")[simname][self.a0]
+                #c = np.array([float(cstrings[0]),float(cstrings[1]),float(cstrings[2])])
+                c = self.ds.find_max("density")[1]
+
                 convert = self.ds.length_unit.in_units('kpc').value.item()
             else:
                 #for testing without loading real sim
@@ -331,7 +333,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
                 self.scanparams[6]+=1
                 self.length_reached = self.scanparams[6]
                 print("%s/%s"%(self.length_reached,self.length))
-                vector = _get_coldens_helper((self.ds,self.scanparams,vector,self.ions,self.simname))
+                vector = _get_coldens_helper(self.ds,vector,self.ions)
                 tosave -= 1
                 if tosave == 0 and not test :
                     output = self.save_values()
@@ -342,16 +344,16 @@ class QuasarSphere(GeneralizedQuasarSphere):
             for i in range(0, len(bins)-1):
                 current_info = self.info[bins[i]:bins[i+1]]
                 print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
-                for process in range(1,comm.Get_size()):
+                for process in range(0,comm.Get_size()-1):
                     try:
                         infoToSend = current_info[process]
                     except:
                         infoToSend = None
-                    toSend = (self.scanparams,infoToSend,self.ions,self.dspath)
-                    comm.send(toSend, dest = process)
-                for process in range(1,comm.Get_size()):
-                    new_info = comm.recv(source = process)
-                    if new_info is None:
+                    toSend = (infoToSend,self.ions)
+                    comm.send(toSend, dest = process+1)
+                for process in range(0,comm.Get_size()-1):
+                    new_info = comm.recv(source = process+1)
+                    if bins[i] + process >= self.length:
                         continue
                     self.info[bins[i]+process] = new_info
                 self.scanparams[6]+=(bins[i+1]-bins[i])
@@ -546,41 +548,65 @@ def get_filename_from_simname(simname,redshift):
     return filename
 
 
-def main_for_other_rank(comm, rank,ds=None, cycles=-1):
-    paramsvectorionspath = comm.recv(source = 0)
-    params = paramsvectorionspath[0]
-    vector = paramsvectorionspath[1]
-    ions = paramsvectorionspath[2]
-    dspath = paramsvectorionspath[3]
-    if not ds:
-        projectdir = dspath.split("10MpcBox")[0]
-        a0 = dspath.split("a0.")[1][:3]
-        file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
-        file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
-        file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
-        ds = yt.load(dspath,file_particle_header=file_particle_header,\
-                          file_particle_data=file_particle_data,\
-                          file_particle_stars=file_particle_stars)
-        print("Loaded additional dataset for process %d"%rank)
+def main_for_other_rank(comm, rank, dspath):
+    projectdir = dspath.split("10MpcBox")[0]
+    a0 = dspath.split("a0.")[1][:3]
+    file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
+    file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
+    file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
+    ds = yt.load(dspath,file_particle_header=file_particle_header,\
+                      file_particle_data=file_particle_data,\
+                      file_particle_stars=file_particle_stars)
+    numlines = 40
+    print("Loaded additional dataset for process %d"%rank)
     size = comm.Get_size()
-    myvector = _get_coldens_helper(ds,vector,ions,rank = rank)
-    comm.send(myvector, dest = 0)
-    if cycles == -1:
-        numlines = params[5]
-        cycles = numlines//size-1 if numlines%size == 0 else numlines//size
+    cycles = numlines//(size-1) if numlines%(size-1) == 0 else numlines//(size-1)
     for i in range(cycles):
-        paramsvectorionspath = comm.recv(source = 0)
-        params = paramsvectorionspath[0]
-        vector = paramsvectorionspath[1]
-        ions = paramsvectorionspath[2]
-        dspath = paramsvectorionspath[3]
+        vectorions = comm.recv(source = 0)
+        vector = vectorions[0]
+        ions = vectorions[1]
+        myvector = _get_coldens_helper(ds,vector,ions,rank = rank)
+        comm.send(myvector, dest = 0)
         if vector is None:
             comm.send(None, dest = 0)
         else:
             myvector = _get_coldens_helper(ds,vector,ions,rank = rank)
             comm.send(myvector, dest = 0)
+def main_for_rank_0(simname = None, dspath = None, ions = None, Rvir = None,L = None,\
+                    R = None,n_r = None,n_th = None,n_phi = None,rmax = None,length = None,distances = None,\
+                    simparams = None,scanparams = None,data = None,\
+                    comm = None,parallel = None,save = None):
+    
+    q = QuasarSphere(simname = simname, dspath = dspath, ions = ions, Rvir = Rvir,L = L,\
+                     simparams = simparams, scanparams = scanparams,data = data)
+    if not simparams:
+        q.create_QSO_endpoints(R, n_th, n_phi, n_r, rmax, length, distances=distances)
+    q.get_coldens(parallel=parallel,comm=comm,save=save)
 
-def main_for_rank_0(parallel, comm = None):
+
+if __name__ == "__main__":
+    simname = None
+    dspath = None
+    ions = None
+    Rvir = None
+    L = None
+    R = None
+    n_r = None
+    n_th = None
+    n_phi = None
+    rmax = None
+    length = None
+    simparams = None
+    scanparams = None
+    data = None
+    comm = None
+    parallel = None
+    save = None
+    
+    if len(sys.argv) == 1:
+        print "Using defaults (testing)"
+        sys.argv = ["","n",'VELA_v2_17/10MpcBox_csf512_a0.200.d', 'VELA_v2_17',\
+                    "-qp","6", "12", "12", "12", "1.5", "40","-i","[H I]","-p"]
     new = sys.argv[1]
     if new == "n":
         dspath = sys.argv[2]
@@ -614,13 +640,6 @@ def main_for_rank_0(parallel, comm = None):
         R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 6, defaultsphere)
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)[0]
         ions = read_command_line_args(sys.argv, "-i","--ions", 1, defaultions)[0]
-        q = QuasarSphere(simname = simname ,dspath = dspath, ions = ions, Rvir = Rvir,L = L)
-        if parallel: 
-            save = comm.Get_size()
-        q.create_QSO_endpoints(R, n_th, n_phi, n_r, rmax, length,\
-                             distances = distances)
-        q.get_coldens(save = save, parallel= parallel, comm = comm)
-
     elif new == "c":
         filename = read_command_line_args(sys.argv, "-fn","--filename", 1, ["None"])[0]
         simname, redshift = read_command_line_args(sys.argv, "-sz","--simnameredshift", 2, ["None",-1.0])
@@ -629,32 +648,30 @@ def main_for_rank_0(parallel, comm = None):
         elif filename == "None":
             filename = get_filename_from_simname(simname, redshift)
         simparams,scanparams,ions,data = read_values(filename)
-
-        q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions=ions,data=data)
-
-        defaultsave = [10]
-        save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)[0]
-        parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
-        parallel = (parallelint == 1)
-        q.get_coldens(save = save, parallel= parallel, comm = comm)
-
+        dspath = simparams[0]
     else: 
         print("Run this program with argument 'n' (new) or 'c' (continue).")
-
-if __name__ == "__main__":
+        
     parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
     parallel = (parallelint == 1)
     if parallel:
         comm = MPI.COMM_WORLD
+        save = comm.Get_size()-1        
         rank = MPI.COMM_WORLD.Get_rank()
         if rank == 0:
             print("Starting quasar_scan.py main script (rank 0)")
-            main_for_rank_0(parallel,comm=comm)
+            main_for_rank_0(simname = simname, dspath = dspath, ions = ions, Rvir = Rvir,L = L,\
+                    R = R,n_r = n_r,n_th = n_th,n_phi = n_phi,rmax = rmax,length = length,distances = distances,\
+                    simparams = simparams,scanparams = scanparams,data = data,\
+                    comm = comm,parallel = parallel,save = save)
         else:
             print("rank "+str(rank)+": activating")
-            main_for_other_rank(comm, rank)
+            main_for_other_rank(comm, rank,dspath)
     else:
-        main_for_rank_0(parallel)
+        main_for_rank_0(simname = simname, dspath = dspath, ions = ions, Rvir = Rvir,L = L,\
+                    R = R,n_r = n_r,n_th = n_th,n_phi = n_phi,rmax = rmax,length = length,distances = distances,\
+                    simparams = simparams,scanparams = scanparams,data = data,\
+                    comm = comm,parallel = parallel,save = save)
 
 
 
