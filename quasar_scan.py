@@ -8,7 +8,6 @@ import sys
 import itertools
 import logging
 
-from mpi4py import MPI
 
 try:
     from quasarscan import parse_vela_metadata
@@ -655,6 +654,7 @@ if __name__ == "__main__":
     parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
     parallel = (parallelint == 1)
     if parallel:
+        from mpi4py import MPI
         comm = MPI.COMM_WORLD
         save = comm.Get_size()-1        
         rank = MPI.COMM_WORLD.Get_rank()
