@@ -6,7 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 from quasar_scan import *
 from parse_vela_metadata import Rdict, Ldict
-from scipy import stats
+#from scipy import stats
 
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
@@ -416,55 +416,8 @@ class MultiQuasarSpherePlotter():
         
         if reset:
             self.reset_current_Quasar_Array()
-            
-    def ploterr_two_galaxy_param (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", save_fig = None):
-        for j in range(len(multi_quasar_array)):
-            ary = multi_quasar_array[j]
-            avgColdens = np.zeros(len(ary))
-            x_variable = np.zeros(len(ary))
-            error = np.zeros(len(ary))
-            for i in range(len(ary)):
-                q = ary[i]
-                x_variable[i] = eval("q."+xVar)
-                ionIndex = -1
-                for index in range(len(q.ions)):
-                    if q.ions[index] == ion:
-                        ionIndex = index
-                if ionIndex == -1:
-                    print ("Ion not found. Please enter a different ion.")
-                    return
-                r = q.info[:,3]
-                kpcsize = q.simparams[10]
-                rconverted = r * kpcsize
-                Rvir = q.Rvir
-                allColdens = q.info[:,11 + ionIndex]
-                filteredColdens = allColdens[np.logical_and(rconverted > rlims[0]*Rvir, rconverted < rlims[1]*Rvir)]
-                filteredColdens = filteredColdens[filteredColdens > 0]
-                logfilteredColdens = np.log10(filteredColdens)
-                avgColdens[i] = np.mean(logfilteredColdens)
-                std = np.std(logfilteredColdens)
-                error[i] = std/np.sqrt(len(logfilteredColdens))
-            plt.errorbar(x_variable,avgColdens,yerr = error, fmt=',', capsize = 5, label = names[j])
-            plt.xlabel(xVar)
-            plt.legend()
-            
-            #CHANGE NAMES OF VARS
-            if save_fig:
-                ionNameNoSpaces = ion.replace(" ","")
-                binVariables = names[0].split(" ")
-                for binVariable in binVariables:
-                    if binVariable in ["<",">"]:
-                        continue
-                    try:
-                        number = float(binVariable)
-                        continue
-                    except:
-                        break
-                name = "%s_ErrorBar_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar,\
-                                                     binVariable.replace("_","_a"))
-                plt.savefig("plots/"+name + ".png")
 
-    def ploterr_two_galaxy_param_avg (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", tolerance = 0.1,save_fig = None):
+    def ploterr_two_galaxy_param (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", tolerance = 0.1,save_fig = None):
         for j in range(len(multi_quasar_array)):
             ary = multi_quasar_array[j]
             avgColdens = np.zeros(len(ary))
@@ -510,7 +463,7 @@ class MultiQuasarSpherePlotter():
             y_values = np.zeros(len(x_values))
             y_errors = np.zeros(len(x_values))
             for h in range(len(x_values)):
-                all_y = logallColdens[abs(x_variable - x_values[h])<tolerance]
+                all_y = logallColdens[abs(x_variable - x_values[h])<=tolerance]
                 all_y = np.concatenate(all_y)
                 y_values[h] = np.mean(all_y)
                 all_std = np.std(all_y)
@@ -729,10 +682,21 @@ class MultiSphereSorter(object):
         if criteria in stringcriteria:
             print("cannot splitEven over string criteria")
         criteriaArray = self.get_criteria_array(criteria, atEnd = atEnd)
-        bin_edges = stats.mstats.mquantiles(criteriaArray, np.linspace(0,1,num+1))
-        bin_edges[0] *= .999
-        for i in range(1,len(bin_edges)):
-            bin_edges[i]*=1.0001
+        sortedcriteriaArray = np.sort(criteriaArray)
+        quotient = len(sortedcriteriaArray) // num
+        if quotient == 0:
+            print("Warning: Number of bins exceeds length of criteria array. Not all bins will be filled.")
+        remainder = len(sortedcriteriaArray) % num
+        bin_edges = np.zeros(num + 1)
+        bin_edges[0] = 0
+        bin_edges[-1] = np.inf
+        j = 0
+        for i in range(1,num):
+            if i <= remainder:
+                bin_edges[i] = np.mean(sortedcriteriaArray[i*quotient+j : i*quotient+2+j])
+                j+=1
+            else:
+                bin_edges[i] = np.mean(sortedcriteriaArray[i*quotient-1+j : i*quotient+1+j])
         return self.sort(criteria, bin_edges,atEnd = atEnd)
     
     
