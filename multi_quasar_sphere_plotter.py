@@ -146,7 +146,7 @@ class MultiQuasarSpherePlotter():
     
     #param bins either serves as an array with each element being as a cutpoint, or a single value
     #follows array indexing exclusivity and inclusivity rules
-    def sort_by(self, criteria, bins, reset = False, exploration_mode = False,atEnd = False,onlyNonempty = False,splitEven = 0):
+    def sort_by(self, criteria, bins = [0,np.inf], reset = False, exploration_mode = False,atEnd = False,onlyNonempty = False,splitEven = 0):
         if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
             return
