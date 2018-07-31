@@ -427,6 +427,7 @@ class MultiQuasarSpherePlotter():
                 Rvir = q.Rvir
                 allColdens = q.info[:,11 + ionIndex]
                 filteredColdens = allColdens[np.logical_and(rconverted > rlims[0]*Rvir, rconverted < rlims[1]*Rvir)]
+                filteredColdens = filteredColdens[filteredColdens > 0]
                 logfilteredColdens = np.log10(filteredColdens)
                 avgColdens[i] = np.mean(logfilteredColdens)
                 std = np.std(logfilteredColdens)
@@ -436,12 +437,22 @@ class MultiQuasarSpherePlotter():
             plt.legend()
             
             #CHANGE NAMES OF VARS
-            if save_fig == True:
-                ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","")
-                name = "%s_ErrorBar_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
+            if save_fig:
+                ionNameNoSpaces = ion.replace(" ","")
+                binVariables = names[0].split(" ")
+                for binVariable in binVariables:
+                    if binVariable in ["<",">"]:
+                        continue
+                    try:
+                        number = float(binVariable)
+                        continue
+                    except:
+                        break
+                name = "%s_ErrorBar_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar,\
+                                                     binVariable.replace("_","_a"))
                 plt.savefig("plots/"+name + ".png")
 
-    def ploterr_two_galaxy_param_avg (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", save_fig = None):
+    def ploterr_two_galaxy_param_avg (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", tolerance = 0.1,save_fig = None):
         for j in range(len(multi_quasar_array)):
             ary = multi_quasar_array[j]
             avgColdens = np.zeros(len(ary))
@@ -464,18 +475,30 @@ class MultiQuasarSpherePlotter():
                 Rvir = q.Rvir
                 allColdens = q.info[:,11 + ionIndex]
                 filteredColdens = allColdens[np.logical_and(rconverted > rlims[0]*Rvir, rconverted < rlims[1]*Rvir)]
+                filteredColdens = filteredColdens[filteredColdens > 0]
                 logfilteredColdens = np.log10(filteredColdens)
                 logallColdens[i] = logfilteredColdens
-                """avgColdens[i] = np.mean(logfilteredColdens)
-                std = np.std(logfilteredColdens)
-                error[i] = std/np.sqrt(len(logfilteredColdens))"""
 
 
-            x_values = np.unique(x_variable)
+            x_values_not_averaged = np.unique(x_variable)
+            x_values = []
+            i = 0
+            while i < len(x_values_not_averaged)-1:
+                currentList = [x_values_not_averaged[i]]
+                clown=1
+                while i+clown < len(x_values_not_averaged) and x_values_not_averaged[i+clown] - x_values_not_averaged[i] <= tolerance:
+                    currentList.append(x_values_not_averaged[i+clown])
+                    clown+=1
+                i+=clown
+                x_values.append(np.mean([currentList]))
+            if i == len(x_values_not_averaged)-1:
+                x_values.append(x_values_not_averaged[-1])                
+                
+                           
             y_values = np.zeros(len(x_values))
             y_errors = np.zeros(len(x_values))
             for h in range(len(x_values)):
-                all_y = logallColdens[abs(x_variable - x_values[h])<.1]
+                all_y = logallColdens[abs(x_variable - x_values[h])<tolerance]
                 all_y = np.concatenate(all_y)
                 y_values[h] = np.mean(all_y)
                 all_std = np.std(all_y)
@@ -491,9 +514,19 @@ class MultiQuasarSpherePlotter():
         plt.legend()
         
         #CHANGE NAMES OF VARS
-        if save_fig == True:
-            ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","")
-            name = "%s_ErrorBar_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
+        if save_fig:
+            ionNameNoSpaces = ion.replace(" ","")
+            binVariables = names[0].split(" ")
+            for binVariable in binVariables:
+                if binVariable in ["<",">"]:
+                    continue
+                try:
+                    number = float(binVariable)
+                    continue
+                except:
+                    break
+            name = "%s_ErrorBar_Avg_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar,\
+                                                 binVariable.replace("_","_a"))
             plt.savefig("plots/"+name + ".png")
         
     
