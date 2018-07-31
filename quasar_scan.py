@@ -7,6 +7,7 @@ import os
 import sys
 import itertools
 import logging
+import datetime
 
 
 try:
@@ -15,6 +16,10 @@ except:
     import parse_vela_metadata
 
 yt.funcs.mylog.setLevel(50)
+
+def tprint(*args,**kwargs):
+    print(datetime.datetime.now())
+    print(args)
 
 def convert_to_xyz(r, theta, phi):
     return np.array([r*np.sin(theta)*np.cos(phi),r*np.sin(theta)*np.sin(phi),r*np.cos(theta)])
@@ -127,7 +132,7 @@ class GeneralizedQuasarSphere(object):
                 elif distance == "Rvir":
                     convert = q.code_unit_in_kpc/q.Rvir
                 else:
-                    print("not sure what distance = %s means..."%distance)
+                    tprint("not sure what distance = %s means..."%distance)
             self.info[currentpos:currentpos+size,3]*=convert
             currentpos += size
                 
@@ -158,7 +163,9 @@ class QuasarSphere(GeneralizedQuasarSphere):
             yt.funcs.mylog.setLevel(10)
         if simparams == None:
             #need to load simulation from filename
-            if dspath:
+            if dspath:    
+                tprint(dspath)
+
                 projectdir = dspath.split("10MpcBox")[0]
                 a0 = dspath.split("a0.")[1][:3]
                 self.a0 = "0." + a0
@@ -182,9 +189,9 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.simparams = [None]*11
             self.simparams[0]  = simname
             self.simparams[1]  = z
-            self.simparams[2]  = c[0]
-            self.simparams[3]  = c[1]
-            self.simparams[4]  = c[2]
+            self.simparams[2]  = c[0].value.item()
+            self.simparams[3]  = c[1].value.item()
+            self.simparams[4]  = c[2].value.item()
             self.simparams[5]  = Rvir
             self.simparams[6]  = dspath
             self.simparams[7]  = L[0]
@@ -268,7 +275,9 @@ class QuasarSphere(GeneralizedQuasarSphere):
 
     def get_criteria_at_a(self, a, criteria):
         if float(self.final_a0) < float(a):
-            print "Inputted a value that exceeds the greatest 'a' value in %s" %(self.simname)
+            tprint("Inputted a value that exceeds the greatest 'a' value in %s" %(self.simname))
+        if criteria == "sfr":
+            criteria = "SFR"
         criteria_dict = parse_vela_metadata.dict_of_vela_info(criteria)
         return float(criteria_dict[self.simname][a])
     #renames basic scanparams data into new instance variables
@@ -284,7 +293,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
     def create_QSO_endpoints(self, R, n_th, n_phi, n_r, rmax, length,\
                              distances = "kpc", overwrite = False, endonsph = False):
         if not overwrite and self.scanparams:
-            print("overwrite is FALSE, set to TRUE to create new scan.")
+            tprint("overwrite is FALSE, set to TRUE to create new scan.")
             return None
         r_arr = np.linspace(0,rmax,n_r)
         th_arr = np.linspace(0,np.pi,n_th,endpoint = False)
@@ -321,7 +330,9 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.info[i][:5] = np.array([i,theta,phi,r,alpha])
             self.info[i][5:8] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[0]) + self.center
             self.info[i][8:11] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]) + self.center 
-        print(str(length)+" LOSs to scan.")
+        tprint(str(length)+" LOSs to scan.")
+        output = self.save_values()
+        tprint("file saved to "+output+".")
         return length
 
     def get_coldens(self, save = 10, parallel = False, test = False,comm = None):
@@ -331,44 +342,36 @@ class QuasarSphere(GeneralizedQuasarSphere):
             for vector in self.info[starting_point:]:
                 self.scanparams[6]+=1
                 self.length_reached = self.scanparams[6]
-                print("%s/%s"%(self.length_reached,self.length))
+                tprint("%s/%s"%(self.length_reached,self.length))
                 vector = _get_coldens_helper(self.ds,vector,self.ions)
                 tosave -= 1
                 if tosave == 0 and not test :
                     output = self.save_values()
-                    print("file saved to "+output+".")
+                    tprint("file saved to "+output+".")
                     tosave = save
         if parallel:
             bins = np.append(np.arange(starting_point,self.length,save),self.length)
             for i in range(0, len(bins)-1):
                 current_info = self.info[bins[i]:bins[i+1]]
-                print("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
-                for process in range(0,comm.Get_size()-1):
-                    try:
-                        infoToSend = current_info[process]
-                    except:
-                        infoToSend = None
-                    toSend = (infoToSend,self.ions)
-                    comm.send(toSend, dest = process+1)
-                for process in range(0,comm.Get_size()-1):
-                    new_info = comm.recv(source = process+1)
-                    if bins[i] + process >= self.length:
-                        continue
-                    self.info[bins[i]+process] = new_info
+                tprint("%s-%s /%s"%(bins[i],bins[i+1],len(self.info)))
+                for vector in yt.parallel_objects(current_info):
+                    index = vector[0]
+                    new_info = _get_coldens_helper(self.ds,vector,self,ions)
+                    self.info[index] = new_info
                 self.scanparams[6]+=(bins[i+1]-bins[i])
                 self.length_reached = self.scanparams[6]
                 if not test:
                     output = self.save_values()
-                    print("file saved to "+output+".")
+                    tprint("file saved to "+output+".")
             if not test:
                 output = self.save_values()
         if not test:
-            print("file saved to "+output+".")
+            tprint("file saved to "+output+".")
         return self.info
     
     def save_values(self,dest = None):
         if len(self.info[0]) <= 11:
-            print("No ions!")
+            tprint("No ions!")
         linesfinished = self.length_reached
         numlines = self.length
         redshift = self.rounded_redshift
@@ -434,13 +437,14 @@ def read_values(filename):
         data[i] = np.fromstring(myline,sep = " ")
     return simparams,scanparams,ions,data
 
-def _get_coldens_helper(ds,vector,ions,rank = 0):
+def _get_coldens_helper(ds,vector,ions):
     try:
-        print("<rank %d, starting process> "%rank)
-        ident = str(rank)
+        index = vector[0]
+        tprint("<line %d, starting process> "%index)
+        ident = str(index)
         start = vector[5:8]
         end = vector[8:11]  
-        print("saving ray to %s"%"ray"+ident+".h5") 
+        tprint("saving ray to %s"%"ray"+ident+".h5") 
         ray = trident.make_simple_ray(ds,
                     start_position=start,
                     end_position=end,
@@ -465,7 +469,7 @@ def _get_coldens_helper(ds,vector,ions,rank = 0):
         os.remove("ray"+ident+".h5")
     except:
         pass 
-    print("vector = "+str(vector))
+    tprint("vector = "+str(vector))
     return vector
 
 
@@ -499,10 +503,10 @@ def get_vela_metadata(simname,a0):
     L[1] = float(Lstrings[1])
     L[2] = float(Lstrings[2])
     if np.isnan(L).any():
-        print("VELA L data not found, returning None.")
+        tprint("VELA L data not found, returning None.")
         L = np.array([0,0,1])
     elif Rvir == 0.0:
-        print("VELA Rvir data not found, returning None.")
+        tprint("VELA Rvir data not found, returning None.")
         Rvir = -1.0
     return Rvir,L
 
@@ -524,7 +528,7 @@ def read_command_line_args(args, shortform,longform, tograb, defaults = None):
                 if type(defaults[i]) is type(toinsert):
                     params[i] = toinsert
                 else:
-                    print("Called with incorrect arguments: \
+                    tprint("Called with incorrect arguments: \
                         The %dth argument after '%s' or '%s' should be type: %s"%
                         (i, shortform, longform, type(defaults[i])))
                     return None
@@ -541,36 +545,11 @@ def get_filename_from_simname(simname,redshift):
                 z = z[1:]
             if redshift == -1:
                 progress = file[:10]
-                print z, progress
+                tprint(z, progress)
             elif abs(redshift - float(z))< .05:
                 filename = dirname+file
     return filename
 
-
-def main_for_other_rank(comm, rank, dspath):
-    projectdir = dspath.split("10MpcBox")[0]
-    a0 = dspath.split("a0.")[1][:3]
-    file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
-    file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
-    file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
-    ds = yt.load(dspath,file_particle_header=file_particle_header,\
-                      file_particle_data=file_particle_data,\
-                      file_particle_stars=file_particle_stars)
-    numlines = 40
-    print("Loaded additional dataset for process %d"%rank)
-    size = comm.Get_size()
-    cycles = numlines//(size-1) if numlines%(size-1) == 0 else numlines//(size-1)
-    for i in range(cycles):
-        vectorions = comm.recv(source = 0)
-        vector = vectorions[0]
-        ions = vectorions[1]
-        myvector = _get_coldens_helper(ds,vector,ions,rank = rank)
-        comm.send(myvector, dest = 0)
-        if vector is None:
-            comm.send(None, dest = 0)
-        else:
-            myvector = _get_coldens_helper(ds,vector,ions,rank = rank)
-            comm.send(myvector, dest = 0)
 def main_for_rank_0(simname = None, dspath = None, ions = None, Rvir = None,L = None,\
                     R = None,n_r = None,n_th = None,n_phi = None,rmax = None,length = None,distances = None,\
                     simparams = None,scanparams = None,data = None,\
@@ -580,7 +559,7 @@ def main_for_rank_0(simname = None, dspath = None, ions = None, Rvir = None,L = 
                      simparams = simparams, scanparams = scanparams,data = data)
     if not simparams:
         q.create_QSO_endpoints(R, n_th, n_phi, n_r, rmax, length, distances=distances)
-    q.get_coldens(parallel=parallel,comm=comm,save=save)
+    #q.get_coldens(parallel=parallel,comm=comm,save=save)
 
 
 if __name__ == "__main__":
@@ -603,7 +582,7 @@ if __name__ == "__main__":
     save = None
     
     if len(sys.argv) == 1:
-        print "Using defaults (testing)"
+        tprint("Using defaults (testing)")
         sys.argv = ["","n",'VELA_v2_17/10MpcBox_csf512_a0.200.d', 'VELA_v2_17',\
                     "-qp","6", "12", "12", "12", "1.5", "40","-i","[H I]","-p"]
     new = sys.argv[1]
@@ -616,14 +595,14 @@ if __name__ == "__main__":
             if Rvir > 0:
                 distances = "Rvir"
             else:
-                print("metadata not found in table! Assuming r_arr, L")
+                tprint("metadata not found in table! Assuming r_arr, L")
                 distances = "kpc"
         elif simname.lower().startswith("choi"):
             Rvir = read_Choi_metadata()[1]["Rvir"]
             L = read_Choi_metadata()[1]["L"]
             distances = "Rvir"
         else: 
-            print("simulation not found! Rvir, L not set")
+            tprint("simulation not found! Rvir, L not set")
             Rvir = None
             L = None
             distances = "kpc"
@@ -634,39 +613,37 @@ if __name__ == "__main__":
             defaultsphere = 1000,12,12,12,250,400
         defaultions = ["[O VI, Ne VIII, H I, C III, O IV, N III, Mg II, O V, "+\
                         "O III, N IV, Mg X, N V, S IV, O II, S III, S II, S V, S VI, N II]"]
+        allions = ["[Al II, Al III, Ar I, Ar II, Ar VII, C I, C II, C III, C IV, "+\
+                        "Ca X, Fe II, H I, Mg II, Mg X, N I, N II, N III, N IV, N V, "+\
+                        "Na IX, Ne V, Ne VI, Ne VII, Ne VIII, O I, O II, O III, O IV, "+\
+                        "O V, O VI, P IV, P V, S II, S III, S IV, S V, S VI, S XIV, "+\
+                        "Si II, Si III, Si IV, Si XII]"]
         defaultsave = [10]
 
         R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 6, defaultsphere)
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)[0]
-        ions = read_command_line_args(sys.argv, "-i","--ions", 1, defaultions)[0]
+        ions = read_command_line_args(sys.argv, "-i","--ions", 1, allions)[0]
     elif new == "c":
         filename = read_command_line_args(sys.argv, "-fn","--filename", 1, ["None"])[0]
         simname, redshift = read_command_line_args(sys.argv, "-sz","--simnameredshift", 2, ["None",-1.0])
         if filename == "None" and simname == "None":
-            print "no file to load"
+            tprint("no file to load")
         elif filename == "None":
             filename = get_filename_from_simname(simname, redshift)
         simparams,scanparams,ions,data = read_values(filename)
         dspath = simparams[0]
+        length = scanparams[5]
     else: 
-        print("Run this program with argument 'n' (new) or 'c' (continue).")
+        tprint("Run this program with argument 'n' (new) or 'c' (continue).")
         
     parallelint = read_command_line_args(sys.argv, "-p","--parallel", 0)
     parallel = (parallelint == 1)
     if parallel:
-        from mpi4py import MPI
-        comm = MPI.COMM_WORLD
-        save = comm.Get_size()-1        
-        rank = MPI.COMM_WORLD.Get_rank()
-        if rank == 0:
-            print("Starting quasar_scan.py main script (rank 0)")
-            main_for_rank_0(simname = simname, dspath = dspath, ions = ions, Rvir = Rvir,L = L,\
+        yt.enable_parallelism()
+        yt.only_on_root(main_for_rank_0,simname = simname, dspath = dspath, ions = ions, Rvir = Rvir,L = L,\
                     R = R,n_r = n_r,n_th = n_th,n_phi = n_phi,rmax = rmax,length = length,distances = distances,\
                     simparams = simparams,scanparams = scanparams,data = data,\
                     comm = comm,parallel = parallel,save = save)
-        else:
-            print("rank "+str(rank)+": activating")
-            main_for_other_rank(comm, rank,dspath)
     else:
         main_for_rank_0(simname = simname, dspath = dspath, ions = ions, Rvir = Rvir,L = L,\
                     R = R,n_r = n_r,n_th = n_th,n_phi = n_phi,rmax = rmax,length = length,distances = distances,\

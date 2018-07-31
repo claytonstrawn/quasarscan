@@ -6,6 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 from quasar_scan import *
 from parse_vela_metadata import Rdict, Ldict
+from scipy import stats
 
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
@@ -73,6 +74,8 @@ def sort_ions(ions,flat = True):
     return toreturn
 
 stringcriteria = ["ions","version","simname","simnum"]
+allions = ['Al II', 'Al III', 'Ar I', 'Ar II', 'Ar VII', 'C I', 'C II', 'C III', 'C IV', 'Ca X', 'Fe II', 'H I', 'Mg II', 'Mg X', 'N I', 'N II', 'N III', 'N IV', 'N V', 'Na IX', 'Ne V', 'Ne VI', 'Ne VII', 'Ne VIII', 'O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'P IV', 'P V', 'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII']
+joeions = ['C III', 'H I', 'Mg II', 'Mg X', 'N II', 'N III', 'N IV', 'N V', 'Ne VIII', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'S II', 'S III', 'S IV', 'S V', 'S VI']
 class MultiQuasarSpherePlotter():
     
     #USER MUST EXPLICITLY CALL GET_QUASAR TO INPUT INTO ALL OTHER MULTIQUASARSPHEREPLOTTER METHODS AS NECESSARY
@@ -143,7 +146,7 @@ class MultiQuasarSpherePlotter():
     
     #param bins either serves as an array with each element being as a cutpoint, or a single value
     #follows array indexing exclusivity and inclusivity rules
-    def sort_by(self, criteria, bins, reset = False, exploration_mode = False,atEnd = False):
+    def sort_by(self, criteria, bins, reset = False, exploration_mode = False,atEnd = False,onlyNonempty = False,splitEven = 0):
         if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -160,17 +163,26 @@ class MultiQuasarSpherePlotter():
             bins = np.array([0.0, bins, np.inf])
         elif isinstance(bins, str) and criteria in stringcriteria:
              bins = [bins]
-
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
-        labels, _, quasarBins = sorter.sort(criteria,bins,atEnd = atEnd)
+        if not splitEven:
+            labels, _, quasarBins = sorter.sort(criteria,bins,atEnd = atEnd)
+        else:
+            labels, _, quasarBins = sorter.splitEven(criteria,splitEven,atEnd = atEnd)
         if quasarBins is None:
             return
         if reset == True:
             self.reset_current_Quasar_Array()
         empty = True
-        for item in quasarBins:
+        nonemptyArray = []
+        nonemptyLabelArray = []
+        for i in range(len(quasarBins)):
+            item = quasarBins[i]
             if len(item)>0:
+                nonemptyArray.append(item)
+                nonemptyLabelArray.append(labels[i])
                 empty = False
+        if onlyNonempty:
+            return np.array(nonemptyLabelArray), np.array(nonemptyArray)
         print "Bins are empty." if empty else ""
         return labels, quasarBins
         
@@ -179,7 +191,7 @@ class MultiQuasarSpherePlotter():
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
         if constrainCriteria in self.currentQuasarArrayName:
-            print("Already constrained by %s. Please reset instead of further constraining."%criteria)
+            print("Already constrained by %s. Please reset instead of further constraining."%constrainCriteria)
             return
         if isinstance(bins, list):                
             if len(bins) != 2 and constrainCriteria not in stringcriteria:
@@ -713,6 +725,16 @@ class MultiSphereSorter(object):
             resultBins[index] = toadd
         return np.array(resultBins)
     
+    def splitEven(self,criteria,num,atEnd = False):
+        if criteria in stringcriteria:
+            print("cannot splitEven over string criteria")
+        criteriaArray = self.get_criteria_array(criteria, atEnd = atEnd)
+        bin_edges = stats.mstats.mquantiles(criteriaArray, np.linspace(0,1,num+1))
+        bin_edges[0] *= .999
+        for i in range(1,len(bin_edges)):
+            bin_edges[i]*=1.0001
+        return self.sort(criteria, bin_edges,atEnd = atEnd)
+    
     
     def get_criteria_array(self, criteria,atEnd = False):
         if atEnd == False:
@@ -748,8 +770,8 @@ class MultiSphereSorter(object):
             for index in range(len(bins)-1):
                 low = bins[index]
                 high = bins[index+1]
-                lowstr = "%.1e"%low if low < 0.1 or low > 100.0 else str(low)
-                highstr = "%.1e"%high if high < 0.1 or high > 100.0 else str(high)
+                lowstr = "%.1e"%low if low < 0.1 or low > 100.0 else str(low)[:4]
+                highstr = "%.1e"%high if high < 0.1 or high > 100.0 else str(high)[:4]
                 if low == 0.0:
                     uniqueName = "%s < %s"%(criteria, highstr)
                 elif high == np.inf:
