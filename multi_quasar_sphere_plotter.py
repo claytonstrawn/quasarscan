@@ -208,8 +208,7 @@ class MultiQuasarSpherePlotter():
         
         self.currentQuasarArrayName += constrainCriteria 
         if not constrainCriteria in stringcriteria:
-            tempNumericalConstraints = str(bins[0]) + "-" + str(bins[1])
-            self.currentQuasarArrayName += tempNumericalConstraints
+            self.currentQuasarArrayName += "%1.1f-%1.1f"%(bins[0],bins[1])
         else:
             for acceptedValue in bins:
                 self.currentQuasarArrayName += acceptedValue
@@ -450,11 +449,11 @@ class MultiQuasarSpherePlotter():
             i = 0
             while i < len(x_values_not_averaged)-1:
                 currentList = [x_values_not_averaged[i]]
-                clown=1
-                while i+clown < len(x_values_not_averaged) and x_values_not_averaged[i+clown] - x_values_not_averaged[i] <= tolerance:
-                    currentList.append(x_values_not_averaged[i+clown])
-                    clown+=1
-                i+=clown
+                numtocombine=1
+                while i+numtocombine < len(x_values_not_averaged) and x_values_not_averaged[i+numtocombine] - x_values_not_averaged[i] <= tolerance:
+                    currentList.append(x_values_not_averaged[i+numtocombine])
+                    numtocombine+=1
+                i+=numtocombine
                 x_values.append(np.mean([currentList]))
             if i == len(x_values_not_averaged)-1:
                 x_values.append(x_values_not_averaged[-1])                
