@@ -381,10 +381,6 @@ class QuasarSphere(GeneralizedQuasarSphere):
         ionsstr = ""
         for ion in self.ions:
             ionsstr += "_"+ion.replace(" ","")
-            if ionsstr == "_AlII_AlIII_ArI_ArII_ArVII_CI_CII_CIII_CIV_CaX_FeII_HI_MgII_MgX_NI_NII_NIII_NIV_NV_NaIX_NeV_NeVI_NeVII_NeVIII_OI_OII_OIII_OIV_OV_OVI_PIV_PV_SII_SIII_SIV_SV_SVI_SXIV_SiII_SiIII_SiIV_SiXII":
-                ionsstr = "allions"
-            elif ionsstr == "_OVI_NeVIII_HI_CIII_OIV_NIII_MgII_OV_OIII_NIV_MgX_NV_SIV_OII_SIII_SII_SV_SVI_NII":
-                ionsstr = "goodions"
         if dest:
             filename = dest
         else:
@@ -616,7 +612,7 @@ if __name__ == "__main__":
         if distances == "Rvir":
             defaultsphere = 6,12,12,12,1.5,400
         else:
-            defaultsphere = 1000,12,12,12,250,400
+            defaultsphere = 1000,12,12,12,250,5
         defaultions = ["[O VI, Ne VIII, H I, C III, O IV, N III, Mg II, O V, "+\
                         "O III, N IV, Mg X, N V, S IV, O II, S III, S II, S V, S VI, N II]"]
         allions = ["[Al II, Al III, Ar I, Ar II, Ar VII, C I, C II, C III, C IV, "+\

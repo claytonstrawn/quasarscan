@@ -111,7 +111,7 @@ class MultiQuasarSpherePlotter():
 
     #tests each condition, each condition is a safety check
     def pass_safety_check(self, q):
-        if q.length < 100:
+        if q.length_reached < 100:
             print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
         elif abs(q.Mvir - 0.0) < 1.0e-6:
@@ -186,7 +186,7 @@ class MultiQuasarSpherePlotter():
         print "Bins are empty." if empty else ""
         return labels, quasarBins
         
-    def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False):
+    def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False,atEnd = False):
         if not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -200,7 +200,7 @@ class MultiQuasarSpherePlotter():
         elif isinstance(bins,str) and constrainCriteria in stringcriteria:
             bins = [bins]
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
-        labels, bins, temp = sorter.sort(constrainCriteria,bins)
+        labels, bins, temp = sorter.sort(constrainCriteria,bins,atEnd = atEnd)
         if temp is None:
             return
         
@@ -211,7 +211,7 @@ class MultiQuasarSpherePlotter():
             self.currentQuasarArrayName += "%1.1f-%1.1f"%(bins[0],bins[1])
         else:
             for acceptedValue in bins:
-                self.currentQuasarArrayName += acceptedValue
+                self.currentQuasarArrayName += acceptedValue.replace(" ","")
     #summary: plots an a pyplot errorbar graph with the x-axis being either theta, phi, or the radius; 
     #         the y-axis points are the mean column densities with a spread of +/- the error
     #         quasarArray is the array of quasars to be plotted
@@ -231,7 +231,7 @@ class MultiQuasarSpherePlotter():
         
         
         if quasarArray is None:
-            quasarArray = self.quasarArray
+            quasarArray = self.currentQuasarArray
             if more_info == "loud":
                 print "Parameter quasarArray has been assigned to instance variable self.quasarArray."
         if not isinstance(quasarArray[0],GeneralizedQuasarSphere):

@@ -23,7 +23,7 @@ else
     DIRNAME=$SOURCEDIR1"_v"$1
     mkdir VELA$v$i
     cd VELA$v$i
-    echo "hsi cd $DIRNAME/VELA$i; get *a0.$a*"
+    hsi cd $DIRNAME/VELA$i; get *a0.$a*
 fi
 cd ..
 
