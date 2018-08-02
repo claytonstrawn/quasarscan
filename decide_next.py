@@ -28,13 +28,25 @@ allions = ['Al II', 'Al III', 'Ar I', 'Ar II', 'Ar VII', 'C I', 'C II', \
 minimumlines = 250
 
 def check_in_allfiles(tocheck,alltextfiles,ionlist):
-    print("check_in_allfiles not implemented")
-    #check if tocheck is already represented in allfiles
-    #check if representation in allfiles is adequate
-    #adequate means all ions in ionlist are present 
-    #adequate means length is >= minimumlines
-    #adequate means data is not mostly errors (with some tolerance)
-    #return true if exists and is adequate else false
+    for fil in alltextfiles:
+        afteroutput = fil.split("output/")[1]
+        aftercoldensinfo = afteroutput.split("coldensinfo/")[1]
+        lines = int(aftercoldensinfo.split("_of")[0])
+        if lines >= minimumlines:
+            velaname = afteroutput.split("coldensinfo")[0]
+            if velaname == tocheck[0]:
+                afterz = fil.split("z")[1]
+                file_redshift = float(afterz.split(".t")[0])
+                if abs(file_redshift - tocheck[1]) <= 0.04:
+                    splitunderscore = afteroutput.split("_")
+                    for ion in ionlist:
+                        ion = ion.replace(" ","")
+                        if ion in splitunderscore:
+                            continue
+                        else:
+                            return False
+                    return True
+    return False
     
 def check_validity(tocheck):
     print("check_validity not implemented")
@@ -57,9 +69,6 @@ def write_files(tocheck):
     secondline = "quasarscan/./run_one_new_snapshot_nersc.sh %s %s %s %s"%(v,num,a z)
     f.write(firstline)
     f.write(secondline)
-    f.write(thirdline)
-    f.write(fourthline)
-    f.write(fifthline)
     f.close()
 
     f = open("deletefile.sh","w+")
