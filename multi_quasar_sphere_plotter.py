@@ -164,10 +164,10 @@ class MultiQuasarSpherePlotter():
         elif isinstance(bins, str) and criteria in stringcriteria:
              bins = [bins]
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
-        if not splitEven:
-            labels, _, quasarBins = sorter.sort(criteria,bins,atEnd = atEnd)
-        else:
+        if splitEven:
             labels, _, quasarBins = sorter.splitEven(criteria,splitEven,atEnd = atEnd)
+        else:
+            labels, _, quasarBins = sorter.sort(criteria,bins,atEnd = atEnd)
         if quasarBins is None:
             return
         if reset == True:
@@ -474,7 +474,7 @@ class MultiQuasarSpherePlotter():
             plt.errorbar(x_values,y_values, yerr = y_errors, fmt = ',', capsize = 5, label = names[j])
         plt.xlabel(xVar)
         plt.ylabel("Avg Log Coldens of " + ion)
-        plt.title("Avg Log Coldens of "+ion+" vs "+xVar)
+        plt.title("Avg Log Coldens of "+ion+" vs "+xVar+" from "+str(rlims[0])+"Rvir to "+str(rlims[1])+"Rvir")
         plt.legend()
         
         #CHANGE NAMES OF VARS
