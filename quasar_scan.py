@@ -118,6 +118,7 @@ class GeneralizedQuasarSphere(object):
         self.star_Rvir_arr = []
         self.dm_Rvir_arr = []
         self.sfr_arr = []
+        self.ssfr_arr = []
 
         
         currentpos = 0
@@ -150,6 +151,7 @@ class GeneralizedQuasarSphere(object):
             self.star_Rvir_arr+=q.star_Rvir_arr
             self.dm_Rvir_arr+=q.dm_Rvir_arr
             self.sfr_arr+=q.sfr_arr
+            self.ssfr_arr+=q.ssfr_arr
             
     def get_ion_column_num(self,ion):
         return 11 + self.ions.index(ion)
@@ -266,7 +268,8 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.dm_Rvir_arr = [self.dm_Rvir]
             self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
             self.sfr_arr = [self.sfr]
-            
+            self.ssfr = self.sfr / self.star_Rvir
+            self.ssfr_arr = [self.sfr / self.star_Rvir]
             
             aDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
             aDict.sort()
