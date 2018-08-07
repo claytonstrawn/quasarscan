@@ -182,7 +182,7 @@ class MultiQuasarSpherePlotter():
                 nonemptyLabelArray.append(labels[i])
                 empty = False
         if onlyNonempty:
-            return np.array(nonemptyLabelArray), np.array(nonemptyArray)
+            return np.array(nonemptyLabelArray),bins, np.array(nonemptyArray)
         print "Bins are empty." if empty else ""
         return labels,bins, quasarBins
         
@@ -350,8 +350,9 @@ class MultiQuasarSpherePlotter():
         
         if reset:
             self.reset_current_Quasar_Array()
+        return plt
         
-    def ploterr_zero_galaxy_param(self, ions, gq = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None):
+    def ploterr_zero_galaxy_param(self, ions, gq = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None,dots = False):
         if more_info != 'quiet':
             print("Current constraints (name): "+self.currentQuasarArrayName)
         plt.figure()
@@ -431,7 +432,10 @@ class MultiQuasarSpherePlotter():
                 yerr = yerr[1:]
             
             #change fmt to . or _ for a dot or a horizontal line
-            plt.errorbar(x, y, yerr=yerr, fmt=',', capsize = 5, label = ion)
+            if dots:
+                plt.plot(x,y,"o",label = ion)
+            else:
+                plt.errorbar(x, y, yerr=yerr, fmt=',', capsize = 3, label = ion)
             plt.legend()
 
 
@@ -443,7 +447,7 @@ class MultiQuasarSpherePlotter():
         if reset:
             self.reset_current_Quasar_Array()
 
-    def ploterr_two_galaxy_param (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", tolerance = 0.1,save_fig = None):
+    def ploterr_two_galaxy_param (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", tolerance = 0.1,save_fig = None,log = False):
         for j in range(len(multi_quasar_array)):
             ary = multi_quasar_array[j]
             avgColdens = np.zeros(len(ary))
@@ -498,7 +502,9 @@ class MultiQuasarSpherePlotter():
 
 
             #CHANGED ERROR
-            plt.errorbar(x_values,y_values, yerr = y_errors, fmt = ',', capsize = 5, label = names[j])
+            plt.errorbar(x_values,y_values, yerr = y_errors, fmt = ',', capsize = 3, label = names[j])
+            if log:
+                plt.xscale("log")
         plt.xlabel(xVar)
         plt.ylabel("Avg Log Coldens of " + ion)
         plt.title("Avg Log Coldens of "+ion+" vs "+xVar+" from "+str(rlims[0])+"Rvir to "+str(rlims[1])+"Rvir")
@@ -519,6 +525,7 @@ class MultiQuasarSpherePlotter():
             name = "%s_ErrorBar_Avg_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar,\
                                                  binVariable.replace("_","_a"))
             plt.savefig("plots/"+name + ".png")
+        return plt
         
     
     #summary: calculates the right index corresponding to xvariable, then finds (in 'info') and returns that array
@@ -618,7 +625,7 @@ class MultiSphereSorter(object):
         self.exploration_mode = exploration_mode
     #param bins the lower parameter is inclusive, the upper parameter is exclusive
     def sort(self, criteria, bins,atEnd = False):
-        labels = self.make_labels(criteria, bins)
+        labels = self.make_labels(criteria, bins,atEnd = atEnd)
         if criteria in stringcriteria:
             sortfn = self.sort_by_strparam
         else:

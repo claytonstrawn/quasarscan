@@ -112,6 +112,7 @@ class GeneralizedQuasarSphere(object):
         self.Rvir_arr = []
         self.a0_arr = []
         self.L_arr = []
+        self.L_mag_arr = []
         self.conversion_arr = []
         self.Mvir_arr = []
         self.gas_Rvir_arr = []
@@ -145,6 +146,7 @@ class GeneralizedQuasarSphere(object):
             self.Rvir_arr+=q.Rvir_arr
             self.a0_arr+=q.a0_arr
             self.L_arr+=q.L_arr
+            self.L_mag_arr+=q.L_mag_arr
             self.conversion_arr+=q.conversion_arr
             self.Mvir_arr+=q.Mvir_arr
             self.gas_Rvir_arr+=q.gas_Rvir_arr
@@ -268,9 +270,11 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.dm_Rvir_arr = [self.dm_Rvir]
             self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
             self.sfr_arr = [self.sfr]
-            self.ssfr = self.sfr / self.star_Rvir
-            self.ssfr_arr = [self.sfr / self.star_Rvir]
-            
+            if self.star_Rvir > 0:
+                self.ssfr = self.sfr / self.star_Rvir
+                self.ssfr_arr = [self.sfr / self.star_Rvir]
+            self.L_mag = float(parse_vela_metadata.dict_of_vela_info("L_mag")[self.simname][self.a0])
+            self.L_mag_arr = [self.L_mag]
             aDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
             aDict.sort()
             self.final_a0 = float(aDict[-1])
@@ -281,6 +285,10 @@ class QuasarSphere(GeneralizedQuasarSphere):
     def get_criteria_at_a(self, a, criteria):
         if float(self.final_a0) < float(a):
             tprint("Inputted a value that exceeds the greatest 'a' value in %s" %(self.simname))
+        if criteria == "ssfr":
+            sfr_dict = parse_vela_metadata.dict_of_vela_info("SFR")
+            star_Rvir_dict = parse_vela_metadata.dict_of_vela_info("star_Rvir")
+            return float(sfr_dict[self.simname][a])/float(star_Rvir_dict[self.simname][a])
         if criteria == "sfr":
             criteria = "SFR"
         criteria_dict = parse_vela_metadata.dict_of_vela_info(criteria)

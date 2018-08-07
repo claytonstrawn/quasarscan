@@ -6,7 +6,7 @@ def dict_of_vela_info(quantity,loud = False):
                     "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
                     "gas_10kpc":8,"star_10kpc":9,"dm_10kpc":10,\
                     "gas_Rdisk":11,"star_Rdisk":12,"dm_Rdisk":13}
-    quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7]}
+    quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7],"L_mag":11}
     quantity_dict_Nir_spherical_galaxy_cat = {"SFR":13}
     if quantity in quantity_dict_Mstar.keys():
         index = quantity_dict_Mstar[quantity]
@@ -16,7 +16,9 @@ def dict_of_vela_info(quantity,loud = False):
         numvals = 1
     elif quantity in quantity_dict_Nir_disc_cat.keys():
         index = quantity_dict_Nir_disc_cat[quantity]
-        numvals = 3        
+        numvals = 3
+        if quantity == "L_mag":
+            numvals = 1
     ret_dict = {}
     if os.path.isdir("galaxy_catalogs"):
         basepath = "galaxy_catalogs/"
