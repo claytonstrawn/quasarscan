@@ -48,19 +48,36 @@ def check_in_allfiles(tocheck,alltextfiles,ionlist):
                     return True
     return False
     
+z2a = {"1.0":"0.500","1.5":"0.400","2.0":"0.330","3.0":"0.250","4.0":"0.200"}
+a2z = {"0.500":"1.0","0.400":"1.5","0.330":"2.0","0.250":"3.0","0.200":"4.0"}
+
 def check_validity(tocheck):
-    print("check_validity not implemented")
-    #check metadata in table
-    #check in blacklist
-    #return true if metadata available and not in blacklist else false
+    blacklist = open(blacklist.txt)
+    blacklist_list = blacklist.readlines()
+    for fil in blacklist_list:
+        firstpart = fil.split(" ")[0]
+        if firstpart == tocheck[0]:
+            if float(fil.split(" ")[1]) == tocheck[1]:
+                return False
+            else:
+                continue
+        else:
+            continue
+    try:
+        table_metadata = Rdict[tocheck[0]][z2a[str(tocheck[1])]]
+        return True
+    except:
+        return False
     
 def convert_check_to_strings(tocheck):
     print("convert_check_to_strings not implemented")
     #return str(dirname), str(a)
 
-def add_to_blacklist(dirname,a):
-    print("add_to_blacklist not implemented")
-    #write new line to blacklist
+def add_to_blacklist(dirname,z):
+    f = open("blacklist.txt","w+")
+    line = dirname + " " + z
+    f.write(line)
+    f.close
 
 def write_files(tocheck):
     v,num,a,z = convert_check_to_strings(tocheck)
