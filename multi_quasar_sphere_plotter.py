@@ -340,7 +340,7 @@ class MultiQuasarSpherePlotter():
                 yerr[index] = error
                 if more_info == "loud":
                     print("+/- error value is %5f \n" %error) 
-            if (xVar in ["r>0","rdivR>0"]) and x[0] == 0.0:
+            if (xVar in ["r>0","rdivR>0"]) and len(x) > 0 and x[0] == 0.0:
                 x = x[1:]
                 y = y[1:]
                 yerr = yerr[1:]
