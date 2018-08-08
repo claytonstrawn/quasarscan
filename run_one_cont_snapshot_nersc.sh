@@ -12,7 +12,7 @@ module load python
 source activate myenv
 echo VELA$v$i
 
-srun -n 45 -u python -u quasarscan/quasar_scan.py 
+srun -n 45 -u python -u quasarscan/quasar_scan.py c 
 
 echo "be sure to rm -rf VELA$v$i"
 source deactivate

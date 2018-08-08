@@ -41,7 +41,7 @@ for i in range(0, len(bins)-1):
             start_position=start,
             end_position=end,
             data_filename="ray"+ident+".h5",
-            fields = [('gas',"metallicity")],
+            fields = [('gas',"metallicity"),('gas',"density"),('gas',"temperature")],
             ftype='gas')
         trident.add_ion_fields(ray,ions)
         field_data = ray.all_data()
@@ -55,6 +55,11 @@ for i in range(0, len(bins)-1):
             #vector[12+3*i+2] = incdens
         Z = np.average(field_data[('gas',"metallicity")],weights=field_data['dl'])
         vector[-1] = Z
+        if len(vector) - len(ions) == 14:
+            n = np.average(field_data['density'],weights=field_data['dl'])
+            vector[-2] = n
+            T = np.average(field_data['temperature'],weights=field_data['dl'])
+            vector[-3] = T
         try:
             os.remove("ray"+ident+".h5")
         except:

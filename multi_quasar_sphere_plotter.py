@@ -10,11 +10,12 @@ from parse_vela_metadata import Rdict, Ldict
 
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
-def get_all_textfiles():
+def get_all_textfiles(inquasarscan = True):
     
     #pathname by default starts in output
     path = "output"
-    
+    if not inquasarscan:
+        path = "quasarscan/output"
     textfiles = []
     
     #gets all folders in output
@@ -73,17 +74,20 @@ def sort_ions(ions,flat = True):
         toreturn = [item for sublist in toreturn for item in sublist]
     return toreturn
 
-stringcriteria = ["ions","version","simname","simnum"]
+stringcriteria = ["ions","version","simname","simnum","has_intensives"]
 allions = ['Al II', 'Al III', 'Ar I', 'Ar II', 'Ar VII', 'C I', 'C II', 'C III', 'C IV', 'Ca X', 'Fe II', 'H I', 'Mg II', 'Mg X', 'N I', 'N II', 'N III', 'N IV', 'N V', 'Na IX', 'Ne V', 'Ne VI', 'Ne VII', 'Ne VIII', 'O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'P IV', 'P V', 'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII']
 joeions = ['C III', 'H I', 'Mg II', 'Mg X', 'N II', 'N III', 'N IV', 'N V', 'Ne VIII', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'S II', 'S III', 'S IV', 'S V', 'S VI']
 class MultiQuasarSpherePlotter():
-    
     #USER MUST EXPLICITLY CALL GET_QUASAR TO INPUT INTO ALL OTHER MULTIQUASARSPHEREPLOTTER METHODS AS NECESSARY
     
     
     #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
     #                     all textfiles in output are loaded
-    def __init__(self, textfiles = None, cleanup = False):
+    def __init__(self, textfiles = None, cleanup = False,plots = "mean"):
+        if plots == "mean":
+            self.avgfn = np.mean
+        elif plots == "median":
+            self.avgfn = np.median
         self.quasarLineup = []
         if textfiles is None:
             textfiles = get_all_textfiles()
@@ -186,7 +190,7 @@ class MultiQuasarSpherePlotter():
         print "Bins are empty." if empty else ""
         return labels,bins, quasarBins
         
-    def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False,atEnd = False,splitEven = None):
+    def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False,atEnd = False,splitEven = None,extra_title = ""):
         if not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -252,7 +256,10 @@ class MultiQuasarSpherePlotter():
                    :"azimuthal viewing angle (rad)"}
         
         plt.xlabel(xlabels[xVar])
-        plt.ylabel("log col dens")
+        if ion == "Z":
+            plt.ylabel("metallicity")
+        else:
+            plt.ylabel("log col dens")
  
         plt.title('%s Column Density Averages vs %s %s'%(ion, xVar, extra_title))
         
@@ -291,14 +298,16 @@ class MultiQuasarSpherePlotter():
                 if q.ions[index] == ion:
                     ionIndex = index
             if ionIndex == -1 and q.number > 0:
-                print ("Ion not found. Please enter a different ion.")
-                return
+                if ion != "Z":
+                    print ("Ion not found. Please enter a different ion.")
+                    return
             if more_info == "loud":
                 print ("Ion index found at %d \n" %ionIndex)
 
-
-            allColdens = q.info[:,11 + ionIndex] 
-
+            ionIndex += 11
+            if ion == "Z":
+                ionIndex = -1
+            allColdens = q.info[:,ionIndex] 
 
             #loops to find column density (y) mean and +/- error
             
@@ -310,7 +319,7 @@ class MultiQuasarSpherePlotter():
                     print ("At x value %f, log y is %s" % (x[index], logYTemp))
 
                 #finds mean at given xVar  
-                avg = np.mean(logYTemp)
+                avg = self.avgfn(logYTemp)
                 y[index] = avg
 
                 if more_info == "loud":
@@ -352,7 +361,7 @@ class MultiQuasarSpherePlotter():
             self.reset_current_Quasar_Array()
         return plt
         
-    def ploterr_zero_galaxy_param(self, ions, gq = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None,dots = False):
+    def ploterr_zero_galaxy_param(self, ions, gq = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None,dots = False,extra_title = ""):
         if more_info != 'quiet':
             print("Current constraints (name): "+self.currentQuasarArrayName)
         plt.figure()
@@ -363,7 +372,7 @@ class MultiQuasarSpherePlotter():
         
         plt.xlabel(xlabels[xVar])
         plt.ylabel("log col dens")
-        plt.title('%s Column Density Averages vs %s' % (str(ions).strip("[]").replace("'",""), xVar) )
+        plt.title('%s Column Density Averages vs %s %s' % (str(ions).strip("[]").replace("'",""), xVar, extra_title) )
         
         
         if gq is None:
@@ -415,7 +424,7 @@ class MultiQuasarSpherePlotter():
                     print ("At x value %f, log y is %s" % (x[index], logYTemp))
 
                 #finds mean at given xVar  
-                avg = np.mean(logYTemp)
+                avg = self.avgfn(logYTemp)
                 y[index] = avg
 
                 if more_info == "loud":
@@ -485,7 +494,7 @@ class MultiQuasarSpherePlotter():
                     currentList.append(x_values_not_averaged[i+numtocombine])
                     numtocombine+=1
                 i+=numtocombine
-                x_values.append(np.mean([currentList]))
+                x_values.append(self.avgfn([currentList]))
             if i == len(x_values_not_averaged)-1:
                 x_values.append(x_values_not_averaged[-1])                
                 
@@ -495,7 +504,7 @@ class MultiQuasarSpherePlotter():
             for h in range(len(x_values)):
                 all_y = logallColdens[abs(x_variable - x_values[h])<=tolerance]
                 all_y = np.concatenate(all_y)
-                y_values[h] = np.mean(all_y)
+                y_values[h] = self.avgfn(all_y)
                 all_std = np.std(all_y)
                 y_errors[h] = all_std/np.sqrt(len(all_y))
                 

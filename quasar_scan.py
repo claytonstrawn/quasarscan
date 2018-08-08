@@ -105,7 +105,7 @@ class GeneralizedQuasarSphere(object):
             ions_in_all = []
         self.ions = ions_in_all
         self.length = sum_of_lengths
-        self.info = np.zeros((self.length,11+len(self.ions)+1))
+        self.info = np.zeros((self.length,11+len(self.ions)+3))
         self.simname_arr = []
         self.redshift_arr = []
         self.center_arr = []
@@ -137,6 +137,7 @@ class GeneralizedQuasarSphere(object):
                     convert = q.code_unit_in_kpc/q.Rvir
                 else:
                     tprint("not sure what distance = %s means..."%distance)
+            self.info[currentpos:currentpos+size,-1] = q.info[:size,-1] 
             self.info[currentpos:currentpos+size,3]*=convert
             currentpos += size
                 
@@ -218,6 +219,10 @@ class QuasarSphere(GeneralizedQuasarSphere):
         else:
             self.ions = []
         self.info = data
+        if not data is None:
+            self.has_intensives = str(len(self.info[0])-len(ions) == 14)
+        else:
+            self.has_intensives = "True"
         self.add_extra_simparam_fields()
         
     def get_ion_column_num(self,ion):
@@ -330,7 +335,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.scanparams[6] = 0
         self.add_extra_scanparam_fields()
         
-        self.info = np.zeros((int(length),11+len(self.ions)+1))-1.0
+        self.info = np.zeros((int(length),11+len(self.ions)+3))-1.0
         weightth = weights(th_arr, "sin")
         weightr = weights(r_arr, "lin")
         L = self.L
@@ -413,7 +418,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         secondline = str(self.simparams)+"\n"
         thirdline = "[R, n_th, n_phi, n_r, r_max, num_lines, line_reached]\n"
         fourthline = str(self.scanparams)+"\n"
-        fifthline = "ions\n"
+        fifthline = "ions,T,n,Z\n"
         sixthline = "["+str(self.ions[0])
         for ion in self.ions[1:]:
             sixthline += ", "+ion
@@ -434,7 +439,7 @@ def read_values(filename):
         secondline = str(self.simparams)+"\n"
         thirdline = "[R, n_th, n_phi, n_r, r_max, num_lines, line_reached]\n"
         fourthline = str(self.scanparams)+"\n"
-        fifthline = "ions"
+        fifthline = "ions,T,n,Z\n"
         sixthline = "["+str(self.ions[0])+", "+...+"]"
     """
     f = open(filename)
@@ -448,7 +453,11 @@ def read_values(filename):
     scanparams = eval(fourthline)
     ions = sixthline[1:-1].split(", ")
     length = scanparams[5]
-    data = np.zeros((int(length),11+len(ions)+1))
+    if "T" in fifthline:
+        extens = 3
+    else:
+        extens = 1
+    data = np.zeros((int(length),11+len(ions)+extens))
     for i in range(length):
         myline = f.readline()[1:-1]
         data[i] = np.fromstring(myline,sep = " ")
@@ -625,9 +634,9 @@ if __name__ == "__main__":
             distances = "kpc"
 
         if distances == "Rvir":
-            defaultsphere = 6,12,12,12,1.5,400
+            defaultsphere = 6,12,12,12,1.5,416
         else:
-            defaultsphere = 1000,12,12,12,250,400
+            defaultsphere = 1000,12,12,12,250,416
         defaultions = ["[O VI, Ne VIII, H I, C III, O IV, N III, Mg II, O V, "+\
                         "O III, N IV, Mg X, N V, S IV, O II, S III, S II, S V, S VI, N II]"]
         allions = ["[Al II, Al III, Ar I, Ar II, Ar VII, C I, C II, C III, C IV, "+\
