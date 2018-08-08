@@ -362,7 +362,7 @@ class MultiQuasarSpherePlotter():
                         continue
                     except:
                         break
-                name = "%s_ErrorBar_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, binVariable)
+                name = "%s_ErrorBar_%s_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, binVariable, self.plots)
             else:
                 name = "%s_z%0.2f_ErrorBar_%s_%s" % (quasarArray[0].simparams[0], quasarArray[0].simparams[1], ionNameNoSpaces, xVar)
             plt.savefig("plots/"+name + ".png")
@@ -460,7 +460,7 @@ class MultiQuasarSpherePlotter():
 
         if save_fig == True:
             ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","")
-            name = "%s_ErrorBar_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
+            name = "%s_ErrorBar_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, self.plots)
             plt.savefig("plots/"+name + ".png")
         
         if reset:
