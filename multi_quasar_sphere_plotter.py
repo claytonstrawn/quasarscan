@@ -75,6 +75,9 @@ def sort_ions(ions,flat = True):
     return toreturn
 
 stringcriteria = ["ions","version","simname","simnum","has_intensives"]
+intensives = ["Z","T","n"]
+intensiveslabels = {"Z":"avg metallicity","T":"avg temperature","n":"avg density"}
+intensivespositions = {"Z":-1,"T":-2,"n":-3}
 allions = ['Al II', 'Al III', 'Ar I', 'Ar II', 'Ar VII', 'C I', 'C II', 'C III', 'C IV', 'Ca X', 'Fe II', 'H I', 'Mg II', 'Mg X', 'N I', 'N II', 'N III', 'N IV', 'N V', 'Na IX', 'Ne V', 'Ne VI', 'Ne VII', 'Ne VIII', 'O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'P IV', 'P V', 'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII']
 joeions = ['C III', 'H I', 'Mg II', 'Mg X', 'N II', 'N III', 'N IV', 'N V', 'Ne VIII', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'S II', 'S III', 'S IV', 'S V', 'S VI']
 class MultiQuasarSpherePlotter():
@@ -84,10 +87,9 @@ class MultiQuasarSpherePlotter():
     #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
     #                     all textfiles in output are loaded
     def __init__(self, textfiles = None, cleanup = False,plots = "mean"):
-        if plots == "mean":
-            self.avgfn = np.mean
-        elif plots == "median":
-            self.avgfn = np.median
+        self.plots = "mean"
+        self.avgfn = np.mean
+        self.setPlots(plots)
         self.quasarLineup = []
         if textfiles is None:
             textfiles = get_all_textfiles()
@@ -112,6 +114,14 @@ class MultiQuasarSpherePlotter():
         
         if len(self.currentQuasarArray) == 0:
             print ("There are no quasarspheres stored in currentQuasarArray!")
+            
+    def setPlots(self,plots):
+        if plots == "mean":
+            self.plots = "mean"
+            self.avgfn = np.mean
+        elif plots == "median":
+            self.plots = "median"
+            self.avgfn = np.median
 
     #tests each condition, each condition is a safety check
     def pass_safety_check(self, q):
@@ -234,9 +244,9 @@ class MultiQuasarSpherePlotter():
             if bins[1] == np.inf:
                 highlabel = "andhigher"
             elif bins[1] > 100 or bins[1]<.1:
-                highlabel = "%-1.1e"%bins[1]
+                highlabel = "-%1.1e"%bins[1]
             else:
-                highlabel = "%-1.1f"%bins[1]
+                highlabel = "-%1.1f"%bins[1]
             self.currentQuasarArrayName += "%s%s"%(lowlabel,highlabel)
         else:
             for acceptedValue in bins:
@@ -256,14 +266,14 @@ class MultiQuasarSpherePlotter():
                    :"azimuthal viewing angle (rad)"}
         
         plt.xlabel(xlabels[xVar])
-        if ion == "Z":
-            plt.ylabel("metallicity")
+        if ion in intensives:
+            plt.ylabel(intensiveslabels[ion])
+            cd = ""
         else:
             plt.ylabel("log col dens")
- 
-        plt.title('%s Column Density Averages vs %s %s'%(ion, xVar, extra_title))
-        
-        
+            cd = "Column Density"
+        plt.title('%s %s Averages (%s) %s'%(ion, cd, self.plots, extra_title))
+                
         if quasarArray is None:
             quasarArray = self.currentQuasarArray
             if more_info == "loud":
@@ -298,15 +308,15 @@ class MultiQuasarSpherePlotter():
                 if q.ions[index] == ion:
                     ionIndex = index
             if ionIndex == -1 and q.number > 0:
-                if ion != "Z":
+                if (not ion in intensives) or (q.has_intensives == "False" and ion in ["T","n"]):
                     print ("Ion not found. Please enter a different ion.")
                     return
             if more_info == "loud":
                 print ("Ion index found at %d \n" %ionIndex)
 
             ionIndex += 11
-            if ion == "Z":
-                ionIndex = -1
+            if ion in intensives:
+                ionIndex = intensivespositions[ion]
             allColdens = q.info[:,ionIndex] 
 
             #loops to find column density (y) mean and +/- error
@@ -372,7 +382,7 @@ class MultiQuasarSpherePlotter():
         
         plt.xlabel(xlabels[xVar])
         plt.ylabel("log col dens")
-        plt.title('%s Column Density Averages vs %s %s' % (str(ions).strip("[]").replace("'",""), xVar, extra_title) )
+        plt.title('%s Column Density Averages (%s) %s' % (str(ions).strip("[]").replace("'",""), self.plots, extra_title) )
         
         
         if gq is None:

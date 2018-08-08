@@ -91,6 +91,7 @@ class GeneralizedQuasarSphere(object):
         self.number = len(list_of_quasar_spheres)
         self.distance = distance
         self.simname = name
+        self.has_intensives = "True"
         
         ions_lists = []
         sum_of_lengths = 0
@@ -99,6 +100,8 @@ class GeneralizedQuasarSphere(object):
             q = list_of_quasar_spheres[i]
             ions_lists.append(q.ions) 
             sum_of_lengths += q.length
+            if q.has_intensives == "False":
+                self.has_intensives = "False"
         if self.number > 0:
             ions_in_all = list(reduce(set.intersection, map(set, ions_lists)))
         else:
@@ -137,7 +140,10 @@ class GeneralizedQuasarSphere(object):
                     convert = q.code_unit_in_kpc/q.Rvir
                 else:
                     tprint("not sure what distance = %s means..."%distance)
-            self.info[currentpos:currentpos+size,-1] = q.info[:size,-1] 
+            self.info[currentpos:currentpos+size,-1] = q.info[:size,-1]
+            if self.has_intensives == "True":
+                self.info[currentpos:currentpos+size,-2] = q.info[:size,-2] 
+                self.info[currentpos:currentpos+size,-3] = q.info[:size,-3] 
             self.info[currentpos:currentpos+size,3]*=convert
             currentpos += size
                 
