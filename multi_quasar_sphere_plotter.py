@@ -262,7 +262,8 @@ class MultiQuasarSpherePlotter():
         plt.figure()
         #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
 
-        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir","theta":"viewing angle (rad)","phi" \
+        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
+                   "theta":"viewing angle (rad)","theta_r>0":"viewing angle (rad)","phi" \
                    :"azimuthal viewing angle (rad)"}
         
         plt.xlabel(xlabels[xVar])
@@ -290,8 +291,10 @@ class MultiQuasarSpherePlotter():
             #list of all possibles xVals, with no repeats
             allX = None
             if isinstance(q, GeneralizedQuasarSphere):
-                vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
+                vardict = {"theta":1,"theta_r>0":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
                 allX = q.info[:, vardict[xVar]]
+                allR = q.info[:, 3]
+                Rpositive = allR>0
             else:
                 allX = self.find_xVars_info(q, xVar)
             x = np.unique(allX)
@@ -317,7 +320,13 @@ class MultiQuasarSpherePlotter():
             ionIndex += 11
             if ion in intensives:
                 ionIndex = intensivespositions[ion]
-            allColdens = q.info[:,ionIndex] 
+            allColdens = q.info[:,ionIndex]
+            if ">0" in xVar:
+                allColdens = allColdens[Rpositive]
+                allX = allX[Rpositive]
+                if len(x)>0 and x[0] == 0 and xVar != "theta_r>0":
+                    pass
+                    #x = x[1:]
 
             #loops to find column density (y) mean and +/- error
             
@@ -340,12 +349,11 @@ class MultiQuasarSpherePlotter():
                 yerr[index] = error
                 if more_info == "loud":
                     print("+/- error value is %5f \n" %error) 
-            if (xVar in ["r>0","rdivR>0"]) and len(x) > 0 and x[0] == 0.0:
-                x = x[1:]
-                y = y[1:]
-                yerr = yerr[1:]
             
             #change fmt to . or _ for a dot or a horizontal line
+            print("x.shape:",x.shape)
+            print("y.shape:",y.shape)
+            print("yerr.shape:",yerr.shape)
             plt.errorbar(x, y, yerr=yerr, fmt=',', capsize = 3, label = q.simname)
             plt.legend()
 
@@ -377,8 +385,8 @@ class MultiQuasarSpherePlotter():
         plt.figure()
         #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
 
-        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir","theta":"viewing angle (rad)","phi" \
-                   :"azimuthal viewing angle (rad)"}
+        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir","theta":"viewing angle (rad)",\
+                   "theta_r>0":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
         
         plt.xlabel(xlabels[xVar])
         plt.ylabel("log col dens")
@@ -399,7 +407,7 @@ class MultiQuasarSpherePlotter():
             ion = ions[index]
             
             #list of all possibles xVals, with no repeats
-            vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
+            vardict = {"theta":1,"theta_r>0":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
             allX = gq.info[:, vardict[xVar]]
             x = np.unique(allX)
 

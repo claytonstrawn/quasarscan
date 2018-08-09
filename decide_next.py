@@ -26,9 +26,14 @@ allions = ['Al II', 'Al III', 'Ar I', 'Ar II', 'Ar VII', 'C I', 'C II', \
            'Si III', 'Si IV', 'Si XII']
 
 minimumlines = 250
-final = False
+final = True
+if len(sys.argv)>1:
+    test = True
+else:
+    test = False
 
 def check_in_allfiles(tocheck,alltextfiles,ionlist):
+    startAt = 0
     for fil in alltextfiles:
         afteroutput = fil.split("output/")[1]
         aftercoldensinfo = afteroutput.split("coldensinfo/")[1]
@@ -51,15 +56,17 @@ def check_in_allfiles(tocheck,alltextfiles,ionlist):
                     ion = ion.replace(" ","")
                     if ion in splitunderscore:
                         continue
+                    continue
                 if lines >= minimumlines and lines >= outOf:
                     return True
                 elif lines < minimumlines and lines >= outOf:
-                    return False
-                elif lines < outOf:
-                    return lines
-                else:
-                    return False
-    return False
+                    continue
+                elif lines < outOf and lines > 0:
+                    startAt = max(lines,startAt)
+    if startAt > 0:
+        return startAt
+    else:
+        return False
     
 z2a = {"1.0":"0.500","1.5":"0.400","2.0":"0.330","3.0":"0.250","4.0":"0.200"}
 a2z = {"0.500":"1.0","0.400":"1.5","0.330":"2.0","0.250":"3.0","0.200":"4.0"}
@@ -77,11 +84,8 @@ def check_validity(tocheck):
         else:
             continue
     my_saved_directories = os.listdir("/global/cscratch1/sd/cstrawn")
-    print("do I find %s in %s?"%(tocheck[0],my_saved_directories))
     if not tocheck[0] in my_saved_directories:
-        print("no")
         return False
-    print("yes")
     my_saved_data = os.listdir("/global/cscratch1/sd/cstrawn/%s"%tocheck[0])
     if not "10MpcBox_csf512_a%s.d"%z2a[str(tocheck[1])] in my_saved_data:
         return False
@@ -100,29 +104,34 @@ def convert_check_to_strings(tocheck):
 
 def add_to_blacklist(dirname,z):
     f = open("quasarscan/blacklist.txt","a+")
-    line = dirname + " " + z
+    line = dirname + " " + str(z)+'\n'
     f.write(line)
     f.close
 
 def write_files(tocheck,cont = 0):
     print("I think we should work on %s where we've so far gotten to %d"%(tocheck,cont))
     v,num,a,z = convert_check_to_strings(tocheck)
-    firstline = "#!/bin/bash\n"
-    secondline = "quasarscan/./run_one_new_snapshot_nersc.sh %s %s %s %s %s \n"%(v,num,a[2:], z, cont)
+    firstline = "#!/bin/bash"
+    secondline = "quasarscan/./run_one_new_snapshot_nersc.sh %s %s %s %s %s"%(v,num,a[2:], z, cont)
     f = open("quasarscan/nextfile.sh")
-    currentfirstline = f.read()
-    currentsecondline = f.read()
-    print currentfirstline
+    currentfirstline = f.readline()
+    currentsecondline = f.readline()
     print secondline
-    print secondline in currentfirstline
-    if (secondline in currentfirstline) and final:
+    print currentsecondline.strip()
+    print secondline == currentsecondline.strip()
+    if (secondline == currentsecondline.strip()) and final and cont == 0:
         print("I already tried that, I guess it didn't work :(")
         add_to_blacklist(tocheck[0],tocheck[1])
+        f.close()
         return main_func()
     f.close()
+    if test:
+        print firstline
+        print secondline
+        return
     f = open("quasarscan/nextfile.sh","w+")
-    f.write(firstline)
-    f.write(secondline)
+    f.write(firstline+'\n')
+    f.write(secondline+'\n')
     f.close()
     
 def main_func():
@@ -137,7 +146,7 @@ def main_func():
                 if type(isValid) is int and check_validity(tocheck):
                     write_files(tocheck, cont = isValid)
                     return
-                elif isValid:
+                elif type(isValid) is bool and isValid:
                     print "already done"
                     continue
                 if check_validity(tocheck):
