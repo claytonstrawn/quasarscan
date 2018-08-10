@@ -6,7 +6,6 @@ import sys
 import matplotlib.pyplot as plt
 from quasar_scan import *
 from parse_vela_metadata import Rdict, Ldict
-#from scipy import stats
 
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
@@ -76,10 +75,11 @@ def sort_ions(ions,flat = True):
 
 stringcriteria = ["ions","version","simname","simnum","has_intensives"]
 intensives = ["Z","T","n"]
-intensiveslabels = {"Z":"avg metallicity","T":"avg temperature","n":"avg density"}
+intensiveslabels = {"Z":"avg log metallicity","T":"avg log temperature","n":"avg log density"}
 intensivespositions = {"Z":-1,"T":-2,"n":-3}
-allions = ['Al II', 'Al III', 'Ar I', 'Ar II', 'Ar VII', 'C I', 'C II', 'C III', 'C IV', 'Ca X', 'Fe II', 'H I', 'Mg II', 'Mg X', 'N I', 'N II', 'N III', 'N IV', 'N V', 'Na IX', 'Ne V', 'Ne VI', 'Ne VII', 'Ne VIII', 'O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'P IV', 'P V', 'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII']
-joeions = ['C III', 'H I', 'Mg II', 'Mg X', 'N II', 'N III', 'N IV', 'N V', 'Ne VIII', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'S II', 'S III', 'S IV', 'S V', 'S VI']
+sightline_xVars = ["r","rdivR","theta","phi"]
+param_xVars = ["redshift","a0","Mvir","gas_Rvir","star_Rvir","dm_Rvir","sfr","ssfr","L_mag"]
+
 class MultiQuasarSpherePlotter():
     #USER MUST EXPLICITLY CALL GET_QUASAR TO INPUT INTO ALL OTHER MULTIQUASARSPHEREPLOTTER METHODS AS NECESSARY
     
@@ -114,42 +114,27 @@ class MultiQuasarSpherePlotter():
         
         if len(self.currentQuasarArray) == 0:
             print ("There are no quasarspheres stored in currentQuasarArray!")
-            
-    def setPlots(self,plots):
-        if plots == "mean":
-            self.plots = "mean"
-            self.avgfn = np.mean
-        elif plots == "median":
-            self.plots = "median"
-            self.avgfn = np.median
 
     #tests each condition, each condition is a safety check
     def pass_safety_check(self, q):
-        if q.length_reached < 100:
+        minlength = 100
+        needIntensives = False
+        minions = joeions
+        if q.length_reached < minlength:
             print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
-        elif abs(q.Mvir - 0.0) < 1.0e-6:
-            print "Mass for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
+        elif q.has_intensives == "False" and needIntensives:
+            print "has_intensives for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
-        elif abs(q.Rvir - 0.0) < 1.0e-6:
-            print "Rvir for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
+        elif not all(x in q.ions for x in minions):
+            print "Not all necessary ions present in %s."%(q.simname + "z" + str(q.rounded_redshift))
+            return False
+        try:
+            q.final_a0
+        except: 
+            print "metadata for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
         return True
-    
-    #summary: uses param simname and param redshift (and param ions) to search through instance variable quasarArray and 
-    #         return the matching quasar if found
-    def get_quasar(self, simname, redshift, ions = None):
-        result = None
-        for quasar in self.quasarArray:
-            tempSimName = quasar.simname
-            if ions:
-                tempIons = quasar.ions
-                if tempSimName == simname and quasar.rounded_redshift == redshift and tempIons == ions:
-                    return quasar
-            else:
-                if tempSimName == simname and quasar.rounded_redshift == redshift:
-                    return quasar
-        print ("Quasar with inputted characteristics not found.")
         
     def reset_current_Quasar_Array(self):
         self.currentQuasarArray = []
@@ -256,291 +241,123 @@ class MultiQuasarSpherePlotter():
     #         the y-axis points are the mean column densities with a spread of +/- the error
     #         quasarArray is the array of quasars to be plotted
 
-    def ploterr_one_galaxy_param(self, ion, quasarArray = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None,extra_title = ""):
-        if more_info != 'quiet':
-            print("Current constraints (name): "+self.currentQuasarArrayName)
-        plt.figure()
-        #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
 
-        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
-                   "theta":"viewing angle (rad)","theta_r>0":"viewing angle (rad)","phi" \
-                   :"azimuthal viewing angle (rad)"}
-        
-        plt.xlabel(xlabels[xVar])
-        if ion in intensives:
-            plt.ylabel(intensiveslabels[ion])
-            cd = ""
-        else:
-            plt.ylabel("log col dens")
-            cd = "Column Density"
-        plt.title('%s %s Averages (%s) %s'%(ion, cd, self.plots, extra_title))
-                
-        if quasarArray is None:
-            quasarArray = self.currentQuasarArray
-            if more_info == "loud":
-                print "Parameter quasarArray has been assigned to instance variable self.quasarArray."
-        if not isinstance(quasarArray[0],GeneralizedQuasarSphere):
-            gqary = []
-            for ary in quasarArray:
-                distance = "Rvir" if xVar in ["rdivR","rdivR>0"] else "kpc"
-                gqary.append(GeneralizedQuasarSphere(ary,labels[len(gqary)],distance = distance))
-            quasarArray = np.array(gqary)
-        for index in range(len(quasarArray)):
-                
-            q = quasarArray[index]
-            #list of all possibles xVals, with no repeats
-            allX = None
-            if isinstance(q, GeneralizedQuasarSphere):
-                vardict = {"theta":1,"theta_r>0":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
-                allX = q.info[:, vardict[xVar]]
-                allR = q.info[:, 3]
-                Rpositive = allR>0
-            else:
-                allX = self.find_xVars_info(q, xVar)
-            x = np.unique(allX)
+    def setPlots(self,plots):
+        def getquartiles(data):
+            return np.array([np.median(data) - np.percentile(data,40),np.percentile(data,60)-np.median(data)])
+        def getstderr(data):
+            return np.array([np.std(data)/np.sqrt(len(data)),np.std(data)/np.sqrt(len(data))])
+        if plots == "mean":
+            self.plots = "mean"
+            self.avgfn = np.mean
+            self.errfn = getstderr
+        elif plots == "median":
+            self.plots = "median"
+            self.avgfn = np.median
+            self.errfn = getquartiles
+        elif plots == "med_noquartiles":
+            self.plots = "median_std"
+            self.avgfn = np.median
+            self.errfn = getstderr
 
+    def get_xy_type0(self,xVar,ions,quasarArray,rlims):
+        quasarArray = [self.currentQuasarArray]
+        xs = np.empty(len(ions),dtype = object)
+        ys = np.empty(len(ions),dtype = object)
+        for i in range(len(ions)):
+            ion = ions[i]
+            if xVar in sightline_xVars:
+                x,y = self.get_xy_type1(xVar,ion,quasarArray,rlims)
+            elif xVar in param_xVars:
+                x,y = self.get_xy_type2(xVar,ion,quasarArray,rlims)
+            xs[i] = x[0]
+            ys[i] = y[0]
+        return xs,ys
 
-            #list of column density AVERAGES corresponding to the respective xVal
-            
-            y = np.zeros(len(x))
-            yerr = np.zeros(len(x))
+    def get_xy_type1(self,xVar,ion,quasarArray,rlims):
+        if rlims is None:
+            rlims = [0.1,np.inf]
+        vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
+        distances = "kpc" if xVar == "r" else "Rvir"
+        gqary = []
+        xs = np.empty(len(quasarArray),dtype = object)
+        ys = np.empty(len(quasarArray),dtype = object)
+        for i in range(len(quasarArray)):
+            gq = GeneralizedQuasarSphere(quasarArray[i],distance=distances)
+            if gq.number == 0:
+                xs[i] = np.empty(0)
+                ys[i] = np.empty(0)
+                continue
+            xs[i] = gq.info[:,vardict[xVar]]
+            ys[i] = gq.info[:,gq.get_ion_column_num(ion)]
+            rs = gq.info[:,3]
+            acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
+            xs[i] = xs[i][acceptedLines]
+            ys[i] = ys[i][acceptedLines]
+            xs[i] = xs[i][ys[i]>0]
+            ys[i] = ys[i][ys[i]>0]
+            ys[i] = np.log10(ys[i])
+        return xs,ys
+    
+    def get_xy_type2(self,xVar,ion,quasarArray,rlims):
+        if rlims is None:
+            rlims = np.array([0.1,1.0])
+        xs = np.empty(len(quasarArray),dtype = object)
+        ys = np.empty(len(quasarArray),dtype = object)
+        for i in range(len(quasarArray)):
+            ary = quasarArray[i]
+            xs[i] = np.empty(0)
+            ys[i] = np.empty(0)
+            for q in ary:
+                x = eval("q."+xVar)
+                cdens = q.info[:,q.get_ion_column_num(ion)]
+                rs = q.info[:,3]
+                acceptedLines = np.logical_and(rlims[0]*q.Rvir<=rs*q.code_unit_in_kpc,\
+                                               rs*q.code_unit_in_kpc<=rlims[1]*q.Rvir)
+                cdens = cdens[acceptedLines]
+                cdens = cdens[cdens>0]
+                xs[i] = np.append(xs[i],np.tile(x,len(cdens)))
+                ys[i] = np.append(ys[i],np.log10(cdens))
+        return xs,ys
+    
+    def get_xy_type3(self,xVar,yVar,quasarArray):
+        xs = np.empty(len(quasarArray),dtype = object)
+        ys = np.empty(len(quasarArray),dtype = object)
+        for i in range(len(quasarArray)):
+            ary = quasarArray[i]
+            xs[i] = np.empty(0)
+            ys[i] = np.empty(0)
+            for q in ary:
+                x = eval("q."+xVar)
+                y = eval("q."+yVar)
+                xs[i] = np.append(xs[i],x)
+                ys[i] = np.append(ys[i],y)
+        return xs,ys
 
+    def combine_xs(self,x_variable,tolerance):
+        x_values_not_averaged = np.unique(x_variable)
+        x_values = []
+        i = 0
+        while i < len(x_values_not_averaged)-1:
+            currentList = [x_values_not_averaged[i]]
+            numtocombine=1
+            while i+numtocombine < len(x_values_not_averaged) and \
+                    x_values_not_averaged[i+numtocombine]/x_values_not_averaged[i]-1 <= tolerance:
+                currentList.append(x_values_not_averaged[i+numtocombine])
+                numtocombine+=1
+            i+=numtocombine
+            x_values.append(self.avgfn([currentList]))
+        if i == len(x_values_not_averaged)-1:
+            x_values.append(x_values_not_averaged[-1]) 
+        return np.array(x_values)
 
-            ionIndex = -1
-            for index in range(len(q.ions)):
-                if q.ions[index] == ion:
-                    ionIndex = index
-            if ionIndex == -1 and q.number > 0:
-                if (not ion in intensives) or (q.has_intensives == "False" and ion in ["T","n"]):
-                    print ("Ion not found. Please enter a different ion.")
-                    return
-            if more_info == "loud":
-                print ("Ion index found at %d \n" %ionIndex)
-
-            ionIndex += 11
-            if ion in intensives:
-                ionIndex = intensivespositions[ion]
-            allColdens = q.info[:,ionIndex]
-            if ">0" in xVar:
-                allColdens = allColdens[Rpositive]
-                allX = allX[Rpositive]
-                if len(x)>0 and x[0] == 0 and xVar != "theta_r>0":
-                    pass
-                    #x = x[1:]
-
-            #loops to find column density (y) mean and +/- error
-            
-            for index in range(len(x)):
-                yTemp = allColdens[np.isclose(allX, x[index])]
-                yTemp = yTemp[yTemp > 0]
-                logYTemp = np.log10(yTemp)
-                if more_info == "loud":
-                    print ("At x value %f, log y is %s" % (x[index], logYTemp))
-
-                #finds mean at given xVar  
-                avg = self.avgfn(logYTemp)
-                y[index] = avg
-
-                if more_info == "loud":
-                    print ("Column density mean at %5f %s is %5f" % (x[index], xVar, avg))
-
-                stdev = np.std(logYTemp)
-                error = stdev / np.sqrt(len(logYTemp))
-                yerr[index] = error
-                if more_info == "loud":
-                    print("+/- error value is %5f \n" %error) 
-            
-            #change fmt to . or _ for a dot or a horizontal line
-            print("x.shape:",x.shape)
-            print("y.shape:",y.shape)
-            print("yerr.shape:",yerr.shape)
-            plt.errorbar(x, y, yerr=yerr, fmt=',', capsize = 3, label = q.simname)
-            plt.legend()
-
-
-        if save_fig:
-            ionNameNoSpaces = ion.replace(" ","")
-            if isinstance(quasarArray[0], GeneralizedQuasarSphere):
-                binVariables = quasarArray[0].simname.split(" ")
-                for binVariable in binVariables:
-                    if binVariable in ["<",">"]:
-                        continue
-                    try:
-                        number = float(binVariable)
-                        continue
-                    except:
-                        break
-                name = "%s_ErrorBar_%s_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, binVariable, self.plots)
-            else:
-                name = "%s_z%0.2f_ErrorBar_%s_%s" % (quasarArray[0].simparams[0], quasarArray[0].simparams[1], ionNameNoSpaces, xVar)
-            plt.savefig("plots/"+name + ".png")
-        
-        if reset:
-            self.reset_current_Quasar_Array()
-        return plt
-        
-    def ploterr_zero_galaxy_param(self, ions, gq = None, xVar = "r", more_info = "medium", save_fig = False, reset = False, labels = None,dots = False,extra_title = ""):
-        if more_info != 'quiet':
-            print("Current constraints (name): "+self.currentQuasarArrayName)
-        plt.figure()
-        #axs.errorbar(x[1:], y[1:], yerr=yerr[1:], fmt='_')
-
-        xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir","theta":"viewing angle (rad)",\
-                   "theta_r>0":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
-        
-        plt.xlabel(xlabels[xVar])
-        plt.ylabel("log col dens")
-        plt.title('%s Column Density Averages (%s) %s' % (str(ions).strip("[]").replace("'",""), self.plots, extra_title) )
-        
-        
-        if gq is None:
-            gq = self.currentQuasarArray
-            if more_info == "loud":
-                print "Parameter quasarArray has been assigned to instance variable self.quasarArray."
-        if not isinstance(gq,GeneralizedQuasarSphere):
-            distance = "Rvir" if xVar in ["rdivR","rdivR>0"] else "kpc"
-            gq = GeneralizedQuasarSphere(gq,name = "None",distance = distance)
-        if isinstance(ions,str) :
-            ions = [ions]
-        ions = sort_ions(ions)
-        for index in range(len(ions)):
-            ion = ions[index]
-            
-            #list of all possibles xVals, with no repeats
-            vardict = {"theta":1,"theta_r>0":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
-            allX = gq.info[:, vardict[xVar]]
-            x = np.unique(allX)
-
-
-            #list of column density AVERAGES corresponding to the respective xVal
-            
-            y = np.zeros(len(x))
-            yerr = np.zeros(len(x))
-
-
-            ionIndex = -1
-            for index in range(len(gq.ions)):
-                if gq.ions[index] == ion:
-                    ionIndex = index
-            if ionIndex == -1 and gq.number > 0:
-                print ("Ion not found. Please enter a different ion.")
-                return
-            if more_info == "loud":
-                print ("Ion index found at %d \n" %ionIndex)
-
-
-            allColdens = gq.info[:,11 + ionIndex] 
-
-
-            #loops to find column density (y) mean and +/- error
-            
-            for index in range(len(x)):
-                yTemp = allColdens[np.isclose(allX, x[index])]
-                yTemp = yTemp[yTemp > 0]
-                logYTemp = np.log10(yTemp)
-                if more_info == "loud":
-                    print ("At x value %f, log y is %s" % (x[index], logYTemp))
-
-                #finds mean at given xVar  
-                avg = self.avgfn(logYTemp)
-                y[index] = avg
-
-                if more_info == "loud":
-                    print ("Column density mean at %5f %s is %5f" % (x[index], xVar, avg))
-
-                stdev = np.std(logYTemp)
-                error = stdev / np.sqrt(len(logYTemp))
-                yerr[index] = error
-                if more_info == "loud":
-                    print("+/- error value is %5f \n" %error) 
-            if (xVar in ["r>0","rdivR>0"]) and x[0] == 0.0:
-                x = x[1:]
-                y = y[1:]
-                yerr = yerr[1:]
-            
-            #change fmt to . or _ for a dot or a horizontal line
-            if dots:
-                plt.plot(x,y,"o",label = ion)
-            else:
-                plt.errorbar(x, y, yerr=yerr, fmt=',', capsize = 3, label = ion)
-            plt.legend()
-
-
-        if save_fig == True:
-            ionNameNoSpaces = str(ions).strip("[]").replace("'","").replace(" ","")
+    def get_savefig_name(self,ion,labels,xVar,plot_type):
+        if plot_type in [0]:
+            ionNameNoSpaces = str(labels).strip("[]").replace("'","").replace(" ","")
             name = "%s_ErrorBar_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, self.plots)
-            plt.savefig("plots/"+name + ".png")
-        
-        if reset:
-            self.reset_current_Quasar_Array()
-
-    def ploterr_two_galaxy_param (self, ion, multi_quasar_array, names, rlims, xVar = "redshift", tolerance = 0.1,save_fig = None,log = False):
-        for j in range(len(multi_quasar_array)):
-            ary = multi_quasar_array[j]
-            avgColdens = np.zeros(len(ary))
-            x_variable = np.zeros(len(ary))
-            logallColdens = np.empty(len(ary),dtype="object")
-            error = np.zeros(len(ary))
-            for i in range(len(ary)):
-                q = ary[i]
-                x_variable[i] = eval("q."+xVar)
-                ionIndex = -1
-                for index in range(len(q.ions)):
-                    if q.ions[index] == ion:
-                        ionIndex = index
-                if ionIndex == -1:
-                    print ("Ion not found. Please enter a different ion.")
-                    return
-                r = q.info[:,3]
-                kpcsize = q.simparams[10]
-                rconverted = r * kpcsize
-                Rvir = q.Rvir
-                allColdens = q.info[:,11 + ionIndex]
-                filteredColdens = allColdens[np.logical_and(rconverted > rlims[0]*Rvir, rconverted < rlims[1]*Rvir)]
-                filteredColdens = filteredColdens[filteredColdens > 0]
-                logfilteredColdens = np.log10(filteredColdens)
-                logallColdens[i] = logfilteredColdens
-
-
-            x_values_not_averaged = np.unique(x_variable)
-            x_values = []
-            i = 0
-            while i < len(x_values_not_averaged)-1:
-                currentList = [x_values_not_averaged[i]]
-                numtocombine=1
-                while i+numtocombine < len(x_values_not_averaged) and x_values_not_averaged[i+numtocombine] - x_values_not_averaged[i] <= tolerance:
-                    currentList.append(x_values_not_averaged[i+numtocombine])
-                    numtocombine+=1
-                i+=numtocombine
-                x_values.append(self.avgfn([currentList]))
-            if i == len(x_values_not_averaged)-1:
-                x_values.append(x_values_not_averaged[-1])                
-                
-                           
-            y_values = np.zeros(len(x_values))
-            y_errors = np.zeros(len(x_values))
-            for h in range(len(x_values)):
-                all_y = logallColdens[abs(x_variable - x_values[h])<=tolerance]
-                all_y = np.concatenate(all_y)
-                y_values[h] = self.avgfn(all_y)
-                all_std = np.std(all_y)
-                y_errors[h] = all_std/np.sqrt(len(all_y))
-                
-
-
-            #CHANGED ERROR
-            plt.errorbar(x_values,y_values, yerr = y_errors, fmt = ',', capsize = 3, label = names[j])
-            if log:
-                plt.xscale("log")
-        plt.xlabel(xVar)
-        plt.ylabel("Avg Log Coldens of " + ion)
-        plt.title("Avg Log Coldens of "+ion+" vs "+xVar+" from "+str(rlims[0])+"Rvir to "+str(rlims[1])+"Rvir")
-        plt.legend()
-        
-        #CHANGE NAMES OF VARS
-        if save_fig:
+        elif plot_type in [1,2,3]:
             ionNameNoSpaces = ion.replace(" ","")
-            binVariables = names[0].split(" ")
+            binVariables = labels[0].split(" ")
             for binVariable in binVariables:
                 if binVariable in ["<",">"]:
                     continue
@@ -549,34 +366,122 @@ class MultiQuasarSpherePlotter():
                     continue
                 except:
                     break
-            name = "%s_ErrorBar_Avg_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar,\
-                                                 binVariable.replace("_","_a"))
-            plt.savefig("plots/"+name + ".png")
-        return plt
-        
-    
-    #summary: calculates the right index corresponding to xvariable, then finds (in 'info') and returns that array
-    #precondition: xVar must be "theta","phi","r","r>0","rdivR"
-    def find_xVars_info(self, q, xvariable):
-        if xvariable in ["r","r>0"]:
-            conversion = q.simparams[10]
-        elif xvariable in ["rdivR","rdivR>0"]:
-            if q.simparams[5] > 0:
-                conversion = q.simparams[10]/q.simparams[5]
-            else:
-                print("No virial radius found")
-                return
-        else:
-            if q.simparams[5] < 0:
-                print("No metadata, angle plots will be arbitrary axis.")
-            conversion = 1
+            name = "%s_ErrorBar_%s_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, binVariable, self.plots)
+        if name[0] == "_":
+            name = name[1:]
+        return name
 
-        vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
-        if not (xvariable in vardict):
-            print ("Inputted xvariable not found. Please enter a valid xvariable.")
+    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
+                 reset = False, labels = None,extra_title = "",rlims = None,\
+                 tolerance = 1e-5,dots = False,logx = False,average = None):
+        print("Current constraints (name): "+self.currentQuasarArrayName)
+        plt.figure()
+        if isinstance(ion,list):
+            ions = ion
+            plot_type = 0
+            for ion in ions:
+                assert not ion in intensives
+            assert quasarArray is None
+            assert labels is None
+            labels = ions
+            xarys,yarys = self.get_xy_type0(xVar,ions,quasarArray,rlims)
+        elif not quasarArray is None and xVar in sightline_xVars:
+            plot_type = 1
+            assert isinstance(ion,str)
+            assert len(labels) == len(quasarArray)
+            xarys,yarys = self.get_xy_type1(xVar,ion,quasarArray,rlims)
+        elif (not quasarArray is None) and xVar in param_xVars and (not ion in param_xVars):
+            plot_type = 2
+            assert isinstance(ion,str)
+            assert len(labels) == len(quasarArray)
+            xarys,yarys = self.get_xy_type2(xVar,ion,quasarArray,rlims)
+        elif ion in param_xVars and xVar in param_xVars:
+            yVar = ion
+            plot_type = 3
+            assert not quasarArray is None
+            assert len(labels) == len(quasarArray)
+            if not dots is None: 
+                dots = True
+            xarys,yarys = self.get_xy_type3(xVar,yVar,quasarArray)
+        else:
+            print("Requirements not met (type could not be detected). Cannot plot.")
             return
 
-        return q.info[:, vardict[xvariable]]*conversion
+        if not average is None:
+            self.setPlots(average)
+        xs = np.empty(len(yarys),dtype = object)
+        ys = np.empty(len(yarys),dtype = object)
+        yerrs = np.empty(len(yarys),dtype = object)
+        for i in range(len(yarys)):
+            unique_xs = self.combine_xs(xarys[i],tolerance)
+            xs[i] = unique_xs
+            ys[i] = np.zeros(len(unique_xs))
+            yerrs[i] = np.zeros((len(unique_xs),2))
+            mask = np.ones(len(unique_xs),dtype = bool)
+            for j in range(len(unique_xs)):
+                x_value = unique_xs[j]
+                yvals = yarys[i][abs(xarys[i]/x_value - 1)<=tolerance]
+                if len(yvals) == 0:
+                    mask[j] = False
+                    continue
+                ys[i][j] = self.avgfn(yvals)
+                yerrs[i][j] = self.errfn(yvals)
+            xs[i] = xs[i][mask]
+            ys[i] = ys[i][mask]
+            yerrs[i] = yerrs[i][mask]
+            
+        sightline_unit_labels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
+                   "theta":"viewing angle (rad)","theta_r>0":"viewing angle (rad)","phi" \
+                   :"azimuthal viewing angle (rad)"}
+        param_unit_labels = {"redshift":"z","a0":"a","Mvir":"Virial Mass (Msun)",\
+                            "gas_Rvir":"Gas Mass within Rvir (Msun)","star_Rvir":"Stellar Mass within Rvir (Msun)",\
+                            "dm_Rvir":"Dark Matter Mass within Rvir (Msun)","sfr":"Star Formation Rate (Msun yr-1)",\
+                            "ssfr":"Specific Star Formation Rate (Msun yr-1 Mstar-1)","L_mag":"Magnitude of Angular Momentum"}
+
+        if xVar in sightline_xVars:
+            plt.xlabel(sightline_unit_labels[xVar])
+        elif xVar in param_xVars:
+            plt.xlabel(param_unit_labels[xVar])
+        if ion in intensives:
+            plt.ylabel(intensiveslabels[ion])
+            cd = ""
+        elif ion in param_xVars:
+            plt.ylabel(param_unit_labels[yVar])
+            cd = ""
+        else:
+            plt.ylabel("log col dens")
+            cd = "Column Density "
+        if plot_type in [0]:
+            ionstr = str(ions).strip("[]").replace("'","")
+        elif plot_type in [1,2,3]:
+            ionstr = ion
+        plt.title('%s %sAverages (%s) %s'%(ionstr, cd, self.plots, extra_title))
+
+        for i in range(len(xs)):
+            x = xs[i]
+            y = ys[i]
+            yerr = np.transpose(yerrs[i])
+            label = labels[i] 
+            #change fmt to . or _ for a dot or a horizontal line
+            fmtdict = {"mean":',',"median_std":',',"median":"."}
+            if dots:
+                plt.plot(x,y,"o",label = label)
+            else:
+                plt.errorbar(x,y, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label)
+        plt.legend()
+        
+        if logx:
+            plt.xscale('log')
+
+        if reset:
+            self.reset_current_Quasar_Array()
+            
+        if save_fig:
+            name = self.get_savefig_name(ion,labels,xVar,plot_type)
+            plt.savefig("plots/"+name + ".png")
+            return plt,"plots/"+name + ".png"
+        return plt
+
     
     #summary: plots histogram(s) of ion column density vs incrementing xvariable, 
     #         uses a color bar to show the percentage of sightlines for a certain column density at a specific x value

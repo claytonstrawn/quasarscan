@@ -45,19 +45,23 @@ def check_in_allfiles(tocheck,alltextfiles,ionlist):
             file_redshift = float(afterz.split(".t")[0])
             if abs(file_redshift - tocheck[1]) <= 0.04:
                 splitunderscore = afteroutput.split("_")
+                ion_ok = True
                 for ion in ionlist:
+                    if velaname == "VELA_v2_24":
+                        print ion
+                        print splitunderscore
                     if not ion in allions:
-                        print("that ion %s cannot be made in TRIDENT"%ion)
-                        return
-                    if "allions" in splitunderscore:
+                        print("that ion %s cannot be made in TRIDENT (yet)"%ion)
+                        Error
+                    if "allions" in splitunderscore[-2]:
                         continue
-                    if "joeions" in splitunderscore and ion in joeions:
+                    if "joeions" in splitunderscore[-2] and ion in joeions:
                         continue
                     ion = ion.replace(" ","")
                     if ion in splitunderscore:
                         continue
-                    continue
-                if lines >= minimumlines and lines >= outOf:
+                    ion_ok = False
+                if ion_ok and lines >= minimumlines and lines >= outOf:
                     return True
                 elif lines < minimumlines and lines >= outOf:
                     continue
@@ -119,7 +123,7 @@ def write_files(tocheck,cont = 0):
     print secondline
     print currentsecondline.strip()
     print secondline == currentsecondline.strip()
-    if (secondline == currentsecondline.strip()) and final and cont == 0:
+    if (secondline == currentsecondline.strip()) and final and cont == 0 and not test:
         print("I already tried that, I guess it didn't work :(")
         add_to_blacklist(tocheck[0],tocheck[1])
         f.close()
@@ -137,7 +141,9 @@ def write_files(tocheck,cont = 0):
 def main_func():
     #figure out what is next necessary file to scan
     #write a bash script to go get it, and to delete it after
-    for ionlist in [joeions,allions]:
+    ionlists = [joeions,allions]
+    for i in range(len(ionlists)):
+        ionlist = ionlists[i]
         for file in nerscsimnames:
             for redshift in knownredshifts:
                 tocheck = (file,redshift)
@@ -153,7 +159,8 @@ def main_func():
                     write_files(tocheck)
                     return
                 print "can't do it"
-        print("Moving on to larger ion list")
+        if i<len(ionlists)-1:
+            print("Moving on to larger ion list")
     print("Finished, all available files satisfy strictest criteria!")
 
 main_func()
