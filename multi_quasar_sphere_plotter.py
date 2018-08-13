@@ -186,7 +186,7 @@ class MultiQuasarSpherePlotter():
         return labels,bins, quasarBins
         
     def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False,atEnd = False,splitEven = None,extra_title = ""):
-        if not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
+        if len(self.currentQuasarArray)>0 and not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
         if constrainCriteria in self.currentQuasarArrayName:

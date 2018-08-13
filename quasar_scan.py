@@ -12,8 +12,10 @@ import datetime
 
 try:
     from quasarscan import parse_vela_metadata
+    from quasarscan.ion_lists import *
 except:
     import parse_vela_metadata
+    from ion_lists import *
 
 yt.funcs.mylog.setLevel(50)
 
@@ -84,8 +86,6 @@ def ion_to_field_name(ion):
     ionization = trident.roman.from_roman(ion.split(" ")[1])-1
     return "%s_p%s_number_density"%(atom,ionization)
 
-allions = ['Al II', 'Al III', 'Ar I', 'Ar II', 'Ar VII', 'C I', 'C II', 'C III', 'C IV', 'Ca X', 'Fe II', 'H I', 'Mg II', 'Mg X', 'N I', 'N II', 'N III', 'N IV', 'N V', 'Na IX', 'Ne V', 'Ne VI', 'Ne VII', 'Ne VIII', 'O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'P IV', 'P V', 'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII']
-joeions = ['C III', 'H I', 'Mg II', 'Mg X', 'N II', 'N III', 'N IV', 'N V', 'Ne VIII', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'S II', 'S III', 'S IV', 'S V', 'S VI']
 
 class GeneralizedQuasarSphere(object):
     def __init__(self, list_of_quasar_spheres, distance = "kpc"):
@@ -574,6 +574,7 @@ def main_for_rank_0(simname = None, dspath = None, ions = None, Rvir = None,L = 
     if not simparams:
         q.create_QSO_endpoints(R, n_th, n_phi, n_r, rmax, length, distances=distances)
     #q.get_coldens(parallel=parallel,comm=comm,save=save)
+
 
 
 if __name__ == "__main__":
