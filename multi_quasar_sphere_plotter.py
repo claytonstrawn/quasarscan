@@ -493,7 +493,26 @@ class MultiQuasarSpherePlotter():
             ions = q.ions
         else:
             ions = do_ions
-        xVarsArray = self.find_xVars_info(q, xvariable)
+   
+        if xvariable in ["r","r>0"]:
+            conversion = q.simparams[10]
+        elif xvariable in ["rdivR","rdivR>0"]:
+            if q.simparams[5] > 0:
+                conversion = q.simparams[10]/q.simparams[5]
+            else:
+                print("No virial radius found")
+                return
+        else:
+            if q.simparams[5] < 0:
+                print("No metadata, angle plots will be arbitrary axis.")
+            conversion = 1
+
+        vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
+        if not (xvariable in vardict):
+            print ("Inputted xvariable not found. Please enter a valid xvariable.")
+            return
+
+        xVarsArray = q.info[:, vardict[xvariable]]*conversion
         #ion,xvars,cdens,simname
         for i in range(len(q.ions)):
             end = q.scanparams[6]
