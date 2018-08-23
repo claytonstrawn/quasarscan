@@ -53,12 +53,13 @@ for i in range(0, len(bins)-1):
             vector[11+j] = cdens
             #vector[12+3*i+1] = outcdens
             #vector[12+3*i+2] = incdens
-        Z = np.average(field_data[('gas',"metallicity")],weights=field_data['dl'])
+        Z = np.sum(field_data[('gas',"metal_density")]*field_data['dl'])/ \
+            np.sum(field_data[('gas',"H_nuclei_mass_density")]*field_data['dl'])
         vector[-1] = Z
         if len(vector) - len(ions) == 14:
-            n = np.average(field_data['density'],weights=field_data['dl'])
+            n = np.average(field_data['density'],weights=field_data['density']*field_data['dl'])
             vector[-2] = n
-            T = np.average(field_data['temperature'],weights=field_data['dl'])
+            T = np.average(field_data['temperature'],weights=weights=field_data['density']*field_data['dl'])
             vector[-3] = T
         try:
             os.remove("ray"+ident+".h5")

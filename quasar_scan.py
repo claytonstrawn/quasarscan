@@ -385,7 +385,10 @@ class QuasarSphere(GeneralizedQuasarSphere):
         ionsstr = ""
         for ion in self.ions:
             ionsstr += "_"+ion.replace(" ","")
-            if ionsstr == "_AlII_AlIII_ArI_ArII_ArVII_CI_CII_CIII_CIV_CaX_FeII_HI_MgII_MgX_NI_NII_NIII_NIV_NV_NaIX_NeV_NeVI_NeVII_NeVIII_OI_OII_OIII_OIV_OV_OVI_PIV_PV_SII_SIII_SIV_SV_SVI_SXIV_SiII_SiIII_SiIV_SiXII":
+            if ionsstr == "_AlII_AlIII_ArI_ArII_ArVII_CI_CII_CIII_CIV_CaX_FeII_"+\
+                            "HI_MgII_MgX_NI_NII_NIII_NIV_NV_NaIX_NeV_NeVI_NeVII_NeVIII"+\
+                            "_OI_OII_OIII_OIV_OV_OVI_PIV_PV_SII_SIII_SIV_SV_SVI_"+\
+                            "SXIV_SiII_SiIII_SiIV_SiXII":
                 ionsstr = "allions"
             elif ionsstr == "_OVI_NeVIII_HI_CIII_OIV_NIII_MgII_OV_OIII_NIV_MgX_NV_SIV_OII_SIII_SII_SV_SVI_NII":
                 ionsstr = "goodions"
@@ -491,7 +494,9 @@ def convert_a0_to_redshift(a0):
     return 1.0/float(a0)-1
 
 def read_Choi_metadata():
-    files = [948,908,858,763,721,664,616,549,501,408,380,329,305,290,259,227,224,220,215,209,204,190,189,175,163,162,125,53]
+    files = [948,908,858,763,721,664,616,549,501,\
+            408,380,329,305,290,259,227,224,220,215,\
+            209,204,190,189,175,163,162,125,53]
     all_data_dict = {}
     for num in files:
         filename = "/Users/claytonstrawn/Downloads/Choi17_z1set/m0{0:03d}_info_044.txt".format(num)
