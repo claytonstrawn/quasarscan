@@ -67,7 +67,7 @@ class GasBinsHolder(Object):
         self.bin_types += ["temperature"]
         self.bins_dict["temperature:cold"] = YTArray([0.0,10.0**3.8],"K")
         self.bins_dict["temperature:cool"] = YTArray([10.0**3.8,10.0**4.5],"K")
-        self.bins_dict["temperature:warm-hot"] = YTArray([10.0**4.5,10.0**6.5],"K")
+        self.bins_dict["temperature:warm_hot"] = YTArray([10.0**4.5,10.0**6.5],"K")
 
     def add_radial_velocity(self):
         if "radial_velocity" in self.bin_types:
