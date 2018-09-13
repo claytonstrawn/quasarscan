@@ -1,65 +1,143 @@
 import numpy as np
 from yt import YTArray
 
-class GasBinsHolder(Object):
-    self.bins_dict = {}
-    self.bin_types = []
-    self.possible_bin_types = ["density","temperature","radial_velocity","resolution"]
+class GasBin(object):
 
-    def __init__(self,bins):
+    def __init__(self,name,binnames,binvalstr,field = None):
+        self.name = name
+        if not field:
+            self.field = ('gas',name)
+        elif field == "NotImplemented":
+            print("cannot instantiate field %s!"%name)
+            return
+        else:
+            self.field = field
+        assert len(binnames) == len(binvalstr)-1
+        self.binvalstr = binvalstr
+        self.binvals = [None]*len(binvalstr)
+        for i,item in enumerate(self.binvalstr):
+            self.binvals[i] = eval(item)
+        self.binnames = binnames
+
+    def __eq__(self,other):
+        if self.name == other.name:
+            if self.field == other.field and self.binvalstr == other.binvalstr and self.binnames == other.binnames:
+                return True
+            print "using two different definitions of %s!"%name
+            return False
+        return False
+
+    def __ne__(self,other):
+        return not self.__eq__(other)
+
+    def get_length(self):
+        return len(self.binnames)
+
+    def get_keys(self):
+        newlist = []
+        for val in self.binnames:
+            newlist.append(self.name+":"+val)
+        return newlist
+
+density_bin = GasBin("density",["low","medium","high"],["0.0","1e-4","1e-2","1e1"])
+temperature_bin = GasBin("temperature",["cold","cool","warm-hot"],["0.0","10**3.8","10**4.5","10**6.5"])
+radial_velocity_bin = GasBin("radial_velocity",["inflow","tangential","outflow"],['-np.inf','-10','10','np.inf'])
+resolution_bin = GasBin("resolution",["low","medium","high"],['0.0','1e-4','1e-2','1e1'],field = "NotImplemented")
+
+
+class GasBinsHolder(object):
+
+    def __init__(self,bins,string = None):
+        self.bin_types = []
+        if string:
+            allnames = string.strip("[]").split(", ")
+            currentBin = allinfo[0]
+            i = 0 
+            while i < len(allnames):
+                i+=1
+                allinfo = allnames[i].split(":")
+                currentBinNames = [allinfo[1]]
+                currentBinVals = [allinfo[2].split("_")[0],allinfo[2].split("_")[1]]
+                j = 0
+                field = None
+                while allnames[i+j].startswith(currentBin):
+                    j+=1
+                    allinfo = allnames[i+j].split(":")
+                    currentBinNames += [allinfo[1]]
+                    currentBinVals += [allinfo[2].split("_")[1]]
+                    if len(allinfo) == 4:
+                        field = allinfo[3]
+                    else:
+                        field = None
+                i+=j
+                newBin = GasBin(currentBin,currentBinNames,currentBinVals,field = field)
+                self.bin_types.append(newBin)
+            return
+
+        self.possible_bin_types = ["density","temperature","radial_velocity"]#,"resolution"]
         if bins == "all":
             bins = self.possible_bin_types
         elif bins is None:
             bins = []
         if "density" in bins:
-            self.add_density()
+            self.bin_types.append(density_bin)
         if "temperature" in bins:
-            self.add_temperature()
+            self.bin_types.append(temperature_bin)
         if "radial_velocity" in bins:
-            self.add_radial_velocity()
+            self.bin_types.append(radial_velocity_bin)
         if "resolution" in bins:
-            self.add_resolution()
+            self.bin_types.append(resolution_bin)
 
-    def combine_holders(self,others):
-        bins = self.bin_types
-        for other in others:
-            bins = list(set(bins).union(set(other.bin_types)))
-        if "density" in bins:
-            self.add_density()
-        if "temperature" in bins:
-            self.add_temperature()
-        if "radial_velocity" in bins:
-            self.add_radial_velocity()
-        if "resolution" in bins:
-            self.add_resolution()
-
-    def get_bins_for_key(self,key):
-        try: 
-            if not self.bins_dict[key] is None:
-                return self.bins_dict[key]
-        except:
-            print("key '%s' is not recognized. Add it to gasbinning.py?"%key)
-        raise KeyError
+    def combine_holders(self,other):
+        bins = []
+        for obj in self.bin_types:
+            if obj in other.bin_types:
+                bins.append(obj)
+        self.bin_types = bins
 
     def get_all_keys(self):
-        mykeys = self.bins_dict.keys()
-        mykeys.sort()
-        return mykeys
+        mylist = []
+        for binvar in self.bin_types:
+            mylist += binvar.get_keys()
+        return mylist
+
+    def get_field_binedges_for_key(self,key):
+        var_name,bin_name = key.split(":")
+        for gb in self.bin_types:
+            if gb.name == var_name:
+                i = gb.binnames.index(bin_name)
+                return gb.field,(gb.binvals[i],gb.binvals[i+1])
+        print "that field does not exist!"
+        assert 0 == 1
+
+    def get_field_binedges_for_num(self,num):
+        mykeys = self.get_all_keys()
+        return self.get_field_binedges_for_key(mykeys[num])
 
     def get_all_bintypes(self):
-        mytypes = self.bin_types
-        return mytypes
+        return self.bin_types
 
     def get_length(self):
-        mykeys = self.get_all_keys()
-        return len(mykeys)
+        mysum = 0
+        for binvar in self.bin_types:
+            mysum += binvar.get_length()
+        return mysum
 
-    def add_density(self):
-        if "density" in self.bin_types:
-            return
-        self.bin_types += ["density"]
-        self.bins_dict["density:low"] = YTArray([1e-4,1e-2],"g/cm**3")
-        self.bins_dict["density:high"] = YTArray([1e-2,1e+0],"g/cm**3")
+    def get_bin_str(self,numbers = True,append = ""):
+        to_return = "filler"
+        current_to_add = append
+        for gb in self.bin_types:
+            current_to_add+=gb.name
+            for i,val in enumerate(gb.binnames):
+                if numbers:
+                    specific_val=":%s:%s_%s"%(val,gb.binvalstr[i],gb.binvalstr[i+1])
+                else:
+                    specific_val=":%s"%val
+                if gb.field != ('gas',gb.name):
+                    specific_val += gb.field
+                to_return+=", %s%s"%(current_to_add,specific_val)
+            current_to_add = append
+        return to_return.replace("filler, ","")
 
     def add_temperature(self):
         if "temperature" in self.bin_types:
@@ -67,15 +145,6 @@ class GasBinsHolder(Object):
         self.bin_types += ["temperature"]
         self.bins_dict["temperature:cold"] = YTArray([0.0,10.0**3.8],"K")
         self.bins_dict["temperature:cool"] = YTArray([10.0**3.8,10.0**4.5],"K")
-        self.bins_dict["temperature:warm_hot"] = YTArray([10.0**4.5,10.0**6.5],"K")
-
-    def add_radial_velocity(self):
-        if "radial_velocity" in self.bin_types:
-            return
-        self.bin_types += ["radial_velocity"]      
-        self.bins_dict["radial_velocity:inflow"] = YTArray([-np.inf,-10],"km/s")
-        self.bins_dict["radial_velocity:tangential"] = YTArray([-10,10],"km/s")
-        self.bins_dict["radial_velocity:outflow"] = YTArray([10,np.inf],"km/s")
 
     def add_resolution(self):
         if "resolution" in self.bin_types:

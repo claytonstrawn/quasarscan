@@ -6,6 +6,7 @@ import sys
 import os
 from quasar_scan import tprint
 import gasbinning
+from yt.utilities.physical_constants import mh
 
 yt.funcs.mylog.setLevel(50)
 
@@ -17,23 +18,22 @@ def get_filename_and_save():
     elif filename == "None":
         filename = quasar_scan.get_filename_from_simname(simname, redshift)
     save = quasar_scan.read_command_line_args(sys.argv, "-s","--save", 1, [12])[0]
+    print filename
     return filename,save
 
 atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
         'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
         'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn']
-fields_to_keep = [('gas',"H_nuclei_mass_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature")]
+fields_to_keep = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity")]
 for atom in atoms:
     fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
 
 yt.enable_parallelism()
 filename,save = get_filename_and_save()
-simparams,scanparams,ions,data = quasar_scan.read_values(filename)
+simparams,scanparams,ions,data,gasbins = quasar_scan.read_values(filename)
 test = False
-binningvars = gasbinning.GasBinsHolder("all")
-num_bin_vars = binningvars.get_length()
-q = quasar_scan.QuasarSphere(simparams=simparams,scanparams=scanparams,ions=ions,data=data)
-
+q = quasar_scan.QuasarSphere(simparams=simparams,scanparams=scanparams,ions=ions,data=data,gasbins = gasbins)
+num_bin_vars = gasbins.get_length()
 starting_point = q.length_reached 
 bins = np.append(np.arange(starting_point,q.length,save)[:-1],q.length)
 for i in range(0, len(bins)-1):
@@ -62,16 +62,15 @@ for i in range(0, len(bins)-1):
             cdens = np.sum(field_data[("gas",quasar_scan.ion_to_field_name(ion))] * field_data['dl'])
             vector[11+j*(num_bin_vars+2)] = cdens
             atom = ion.split(" ")[0]
-            total_nucleus = np.sum(field_data[("gas","%s_nuclei_mass_density"%atom)]/trident.ion_balance.atomic_mass[atom] * field_data['dl'])
-            vector[11+j*(num_bin_vars+2)+1]
+            total_nucleus = np.sum(field_data[("gas","%s_nuclei_mass_density"%atom)]/(mh*trident.ion_balance.atomic_mass[atom]) * field_data['dl'])
+            vector[11+j*(num_bin_vars+2)+1] = cdens / total_nucleus
             for k in range(num_bin_vars):
-                binvar = binningvars.get_all_keys()[k]
-                edges = binningvars.get_bins_for_key(binvar)
-                variable_name = ("gas",binvar.split(":")[0])
+                variable_name,edges = gasbins.get_field_binedges_for_num(k)
                 abovelowerbound = field_data[variable_name]>edges[0]
                 belowupperbound = field_data[variable_name]<edges[1]
                 withinbounds = np.logical_and(abovelowerbound,belowupperbound)
-                coldens_in_bin = np.sum(field_data[("gas",quasar_scan.ion_to_field_name(ion))][withinbounds] * field_data['dl'])
+                coldens_in_line = (field_data[("gas",quasar_scan.ion_to_field_name(ion))][withinbounds])*(field_data['dl'][withinbounds])
+                coldens_in_bin = np.sum(coldens_in_line)
                 vector[11+j*(num_bin_vars+2)+k+2] = coldens_in_bin/cdens
         Z = np.sum(field_data[('gas',"metal_density")]*field_data['dl'])/ \
             np.sum(field_data[('gas',"H_nuclei_mass_density")]*field_data['dl'])
@@ -94,5 +93,5 @@ for i in range(0, len(bins)-1):
         q.scanparams[6]+=(bins[i+1]-bins[i])
         q.length_reached = q.scanparams[6]
         if not test:
-            output = q.save_values()
+            output = q.save_values(at_level = 0)
             tprint("file saved to "+output+".")

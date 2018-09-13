@@ -12,9 +12,9 @@ from parse_vela_metadata import Rdict, Ldict
 def get_all_textfiles(inquasarscan = True):
     
     #pathname by default starts in output
-    path = "output"
+    path = "output2.0"
     if not inquasarscan:
-        path = "quasarscan/output"
+        path = "quasarscan/output2.0"
     textfiles = []
     
     #gets all folders in output
@@ -32,7 +32,7 @@ def get_all_textfiles(inquasarscan = True):
 def get_VELA_folder_textfiles(folderName):
     
     #pathname by default starts in output
-    path = "output/" + folderName + "coldensinfo"
+    path = "output2.0/" + folderName + "coldensinfo"
     
     textfiles = []
     
