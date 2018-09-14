@@ -95,16 +95,16 @@ class MultiQuasarSpherePlotter():
             textfiles = get_all_textfiles()
         for textfile in textfiles:
             try:
-                simparams,scanparams,ions,data = read_values(textfile)
-                q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions = ions,data = data, readonly = True)
+                simparams,scanparams,ions,data,gasbins = read_values(textfile)
+                q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions = ions,data = data, gasbins = gasbins, readonly = True)
                 if self.pass_safety_check(q):
                     self.quasarLineup.append(q)
                 elif cleanup:
                     todo = raw_input("file %s did not pass safety check. Remove it? (y/n)"%textfile).lower()
                     os.remove(textfile) if todo == 'y' else None
             except Exception as e:
+                print(textfile + " could not load because:")
                 print(e)
-                print(textfile + " could not load.")
         self.quasarArray = np.array(self.quasarLineup)
         self.currentQuasarArray = []
         for q in self.quasarArray:
@@ -117,14 +117,10 @@ class MultiQuasarSpherePlotter():
 
     #tests each condition, each condition is a safety check
     def pass_safety_check(self, q):
-        minlength = 100
-        needIntensives = False
-        minions = joeions
+        minlength = 1
+        minions = []
         if q.length_reached < minlength:
             print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
-            return False
-        elif q.has_intensives == "False" and needIntensives:
-            print "has_intensives for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
             return False
         elif not all(x in q.ions for x in minions):
             print "Not all necessary ions present in %s."%(q.simname + "z" + str(q.rounded_redshift))

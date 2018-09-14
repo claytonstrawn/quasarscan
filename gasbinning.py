@@ -3,8 +3,9 @@ from yt import YTArray
 
 class GasBin(object):
 
-    def __init__(self,name,binnames,binvalstr,field = None):
+    def __init__(self,name,binnames,binvalstr,field = None,units = None):
         self.name = name
+        self.units = units
         if not field:
             self.field = ('gas',name)
         elif field == "NotImplemented":
@@ -21,7 +22,8 @@ class GasBin(object):
 
     def __eq__(self,other):
         if self.name == other.name:
-            if self.field == other.field and self.binvalstr == other.binvalstr and self.binnames == other.binnames:
+            if self.field == other.field and self.binvalstr == other.binvalstr\
+             and self.binnames == other.binnames and self.units == other.units:
                 return True
             print "using two different definitions of %s!"%name
             return False
@@ -39,42 +41,48 @@ class GasBin(object):
             newlist.append(self.name+":"+val)
         return newlist
 
-density_bin = GasBin("density",["low","medium","high"],["0.0","1e-4","1e-2","1e1"])
-temperature_bin = GasBin("temperature",["cold","cool","warm-hot"],["0.0","10**3.8","10**4.5","10**6.5"])
-radial_velocity_bin = GasBin("radial_velocity",["inflow","tangential","outflow"],['-np.inf','-10','10','np.inf'])
-resolution_bin = GasBin("resolution",["low","medium","high"],['0.0','1e-4','1e-2','1e1'],field = "NotImplemented")
+density_bin = GasBin("density",["low","medium","selfshielding","starforming"],["0.0","1e-2","1e-1","1e1","np.inf"])
+temperature_bin = GasBin("temperature",["cold","cool","warm-hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"])
+radial_velocity_bin = GasBin("radial_velocity",["inflow","tangential","outflow"],['-np.inf','-10','10','np.inf'],units = "km/s")
+resolution_bin = GasBin("resolution",["high","medium","low"],['0','200','1000','np.inf'],field = ('gas','dx'),units = "pc")
 
 
 class GasBinsHolder(object):
 
-    def __init__(self,bins,string = None):
+    def __init__(self,bins = None,string = None):
+        assert not (bins is None and string is None)
         self.bin_types = []
         if string:
             allnames = string.strip("[]").split(", ")
-            currentBin = allinfo[0]
             i = 0 
             while i < len(allnames):
-                i+=1
+                currentBin = allnames[i].split(":")[0]
                 allinfo = allnames[i].split(":")
                 currentBinNames = [allinfo[1]]
                 currentBinVals = [allinfo[2].split("_")[0],allinfo[2].split("_")[1]]
-                j = 0
+                j = 1
                 field = None
-                while allnames[i+j].startswith(currentBin):
-                    j+=1
+                while i+j < len(allnames) and allnames[i+j].startswith(currentBin):
                     allinfo = allnames[i+j].split(":")
                     currentBinNames += [allinfo[1]]
                     currentBinVals += [allinfo[2].split("_")[1]]
-                    if len(allinfo) == 4:
-                        field = allinfo[3]
+                    if len(allinfo) >= 4:
+                        if "field" in allinfo[3]:
+                            fieldlist = allinfo[3].split("-")[1].strip("()").split(",")
+                            field = (fieldlist[0],fieldlist[1])
+                        if len(allinfo) > 4 and "units" in allinfo[4]:
+                            units = allinfo[4].split("-")[1]
+                        elif "units" in allinfo[3]:
+                            units = allinfo[3].split("-")[1]
                     else:
                         field = None
+                    j+=1
                 i+=j
                 newBin = GasBin(currentBin,currentBinNames,currentBinVals,field = field)
                 self.bin_types.append(newBin)
             return
 
-        self.possible_bin_types = ["density","temperature","radial_velocity"]#,"resolution"]
+        self.possible_bin_types = ["density","temperature","radial_velocity","resolution"]
         if bins == "all":
             bins = self.possible_bin_types
         elif bins is None:
@@ -106,7 +114,7 @@ class GasBinsHolder(object):
         for gb in self.bin_types:
             if gb.name == var_name:
                 i = gb.binnames.index(bin_name)
-                return gb.field,(gb.binvals[i],gb.binvals[i+1])
+                return gb.field,(gb.binvals[i],gb.binvals[i+1]),gb.units
         print "that field does not exist!"
         assert 0 == 1
 
@@ -134,7 +142,9 @@ class GasBinsHolder(object):
                 else:
                     specific_val=":%s"%val
                 if gb.field != ('gas',gb.name):
-                    specific_val += gb.field
+                    specific_val += ":field-%s"%str(gb.field).replace(" ","").replace("'","")
+                if gb.units:
+                    specific_val += ":units-%s"%gb.units
                 to_return+=", %s%s"%(current_to_add,specific_val)
             current_to_add = append
         return to_return.replace("filler, ","")

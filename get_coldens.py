@@ -24,7 +24,7 @@ def get_filename_and_save():
 atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
         'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
         'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn']
-fields_to_keep = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity")]
+fields_to_keep = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'dx')]
 for atom in atoms:
     fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
 
@@ -36,6 +36,10 @@ q = quasar_scan.QuasarSphere(simparams=simparams,scanparams=scanparams,ions=ions
 num_bin_vars = gasbins.get_length()
 starting_point = q.length_reached 
 bins = np.append(np.arange(starting_point,q.length,save)[:-1],q.length)
+try:
+    os.remove("ray0.0.h5")
+except:
+    pass 
 for i in range(0, len(bins)-1):
     current_info = q.info[bins[i]:bins[i+1]]
     if yt.is_root():
@@ -48,7 +52,6 @@ for i in range(0, len(bins)-1):
         ident = str(index)
         start = vector[5:8]
         end = vector[8:11]
-        
         ray = trident.make_simple_ray(q.ds,
             start_position=start,
             end_position=end,
@@ -65,9 +68,13 @@ for i in range(0, len(bins)-1):
             total_nucleus = np.sum(field_data[("gas","%s_nuclei_mass_density"%atom)]/(mh*trident.ion_balance.atomic_mass[atom]) * field_data['dl'])
             vector[11+j*(num_bin_vars+2)+1] = cdens / total_nucleus
             for k in range(num_bin_vars):
-                variable_name,edges = gasbins.get_field_binedges_for_num(k)
-                abovelowerbound = field_data[variable_name]>edges[0]
-                belowupperbound = field_data[variable_name]<edges[1]
+                variable_name,edges,units = gasbins.get_field_binedges_for_num(k)
+                if units:
+                    data = field_data[variable_name].in_units(units)
+                else:
+                    data = field_data[variable_name]
+                abovelowerbound = data>edges[0]
+                belowupperbound = data<edges[1]
                 withinbounds = np.logical_and(abovelowerbound,belowupperbound)
                 coldens_in_line = (field_data[("gas",quasar_scan.ion_to_field_name(ion))][withinbounds])*(field_data['dl'][withinbounds])
                 coldens_in_bin = np.sum(coldens_in_line)
