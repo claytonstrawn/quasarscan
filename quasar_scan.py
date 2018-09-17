@@ -582,7 +582,7 @@ if __name__ == "__main__":
 
         R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 6, defaultsphere)
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)[0]
-        ions = read_command_line_args(sys.argv, "-i","--ions", 1, allions)[0]
+        ions = read_command_line_args(sys.argv, "-i","--ions", 1, alloxygens)[0]
     elif new == "c":
         filename = read_command_line_args(sys.argv, "-fn","--filename", 1, ["None"])[0]
         simname, redshift = read_command_line_args(sys.argv, "-sz","--simnameredshift", 2, ["None",-1.0])

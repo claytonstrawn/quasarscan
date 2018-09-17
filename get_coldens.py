@@ -24,11 +24,13 @@ def get_filename_and_save():
 atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
         'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
         'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn']
-fields_to_keep = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'dx')]
+fields_to_keep = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
 for atom in atoms:
     fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
 
-yt.enable_parallelism()
+parallel = quasar_scan.read_command_line_args(sys.argv, "-p","--parallel", 0)
+if parallel:
+    yt.enable_parallelism()
 filename,save = get_filename_and_save()
 simparams,scanparams,ions,data,gasbins = quasar_scan.read_values(filename)
 test = False

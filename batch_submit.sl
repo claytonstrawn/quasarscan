@@ -9,6 +9,9 @@
 
 v=$1
 num=$2
+a=$3
+z=$4
+n=$5
 
 export HDF5_USE_FILE_LOCKING=FALSE
-quasarscan/./run_one_new_snapshot_nersc.sh $v $num
+quasarscan/./run_one_new_snapshot_nersc.sh $v $num $a $z $n
