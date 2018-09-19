@@ -511,7 +511,7 @@ def main_for_rank_0(simname = None, dspath = None, ions = None, Rvir = None,L = 
                     R = None,n_r = None,n_th = None,n_phi = None,rmax = None,length = None,distances = None,\
                     simparams = None,scanparams = None,data = None,\
                     comm = None,parallel = None,save = None):
-    
+    print "ions",ions
     gasbins = gasbinning.GasBinsHolder("all")
     q = QuasarSphere(simname = simname, dspath = dspath, ions = ions, Rvir = Rvir,L = L,\
                      simparams = simparams, scanparams = scanparams,data = data,gasbins = gasbins)
@@ -582,7 +582,7 @@ if __name__ == "__main__":
 
         R,n_r,n_th,n_phi,rmax,length = read_command_line_args(sys.argv, "-qp","--sphereparams", 6, defaultsphere)
         save = read_command_line_args(sys.argv, "-s","--save", 1, defaultsave)[0]
-        ions = read_command_line_args(sys.argv, "-i","--ions", 1, alloxygens)[0]
+        ions = read_command_line_args(sys.argv, "-i","--ions", 1, [stringform(alloxygens)])[0]
     elif new == "c":
         filename = read_command_line_args(sys.argv, "-fn","--filename", 1, ["None"])[0]
         simname, redshift = read_command_line_args(sys.argv, "-sz","--simnameredshift", 2, ["None",-1.0])

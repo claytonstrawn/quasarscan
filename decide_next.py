@@ -3,6 +3,7 @@ import quasar_scan
 from multi_quasar_sphere_plotter import get_all_textfiles
 from parse_vela_metadata import Rdict
 import sys
+from ion_lists import *
 
 alltextfiles = get_all_textfiles(False)
 
@@ -35,7 +36,7 @@ else:
 def check_in_allfiles(tocheck,alltextfiles,ionlist):
     startAt = 0
     for fil in alltextfiles:
-        afteroutput = fil.split("output/")[1]
+        afteroutput = fil.split("output2.0/")[1]
         aftercoldensinfo = afteroutput.split("coldensinfo/")[1]
         lines = int(aftercoldensinfo.split("_of_")[0])
         outOf = int(aftercoldensinfo.split("_of_")[1].split("-")[0])
@@ -141,7 +142,7 @@ def write_files(tocheck,cont = 0):
 def main_func():
     #figure out what is next necessary file to scan
     #write a bash script to go get it, and to delete it after
-    ionlists = [joeions,allions]
+    ionlists = [alloxygens]
     for i in range(len(ionlists)):
         ionlist = ionlists[i]
         for file in nerscsimnames:

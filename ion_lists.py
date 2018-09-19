@@ -58,3 +58,10 @@ joeions = ['C III', 'H I', 'Mg II', 'Mg X', 'N II', 'N III', 'N IV', 'N V', 'Ne 
 alloxygens = ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX', 'H I',\
 'H II']
 
+def stringform(lst):
+    toret = "["
+    for item in lst:
+        toret += item
+        toret += ", "
+    toret = toret[:-2]
+    return toret + "]"
