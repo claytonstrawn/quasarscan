@@ -342,7 +342,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.info[i][5:8] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[0]) + self.center
             self.info[i][8:11] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]) + self.center 
         tprint(str(length)+" LOSs to scan.")
-        output = self.save_values()
+        output = self.save_values(at_level = 0)
         tprint("file saved to "+output+".")
         return length
     
@@ -406,6 +406,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         return filename
     
 def read_values(filename):
+    print "trying to read file: %s"%filename
     f = open(filename)
     firstfew = [None]*7
     firstfew[0] = f.readline()

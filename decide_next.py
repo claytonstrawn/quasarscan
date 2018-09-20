@@ -16,16 +16,6 @@ for num in numsnersc:
 
 knownredshifts = [1.0,1.5,2.0,3.0,4.0]
 
-joeions = ['C III', 'H I', 'Mg II', 'Mg X', 'N II', 'N III', \
-           'N IV', 'N V', 'Ne VIII', 'O II', 'O III', 'O IV', \
-           'O V', 'O VI', 'S II', 'S III', 'S IV', 'S V', 'S VI']
-allions = ['Al II', 'Al III', 'Ar I', 'Ar II', 'Ar VII', 'C I', 'C II', \
-           'C III', 'C IV', 'Ca X', 'Fe II', 'H I', 'Mg II', 'Mg X', 'N I', \
-           'N II', 'N III', 'N IV', 'N V', 'Na IX', 'Ne V', 'Ne VI', 'Ne VII', \
-           'Ne VIII', 'O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'P IV', \
-           'P V', 'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', \
-           'Si III', 'Si IV', 'Si XII']
-
 minimumlines = 250
 final = True
 if len(sys.argv)>1:
@@ -51,7 +41,7 @@ def check_in_allfiles(tocheck,alltextfiles,ionlist):
                     if velaname == "VELA_v2_24":
                         print ion
                         print splitunderscore
-                    if not ion in allions:
+                    if not ion in truly_allions:
                         print("that ion %s cannot be made in TRIDENT (yet)"%ion)
                         Error
                     if "allions" in splitunderscore[-2]:
