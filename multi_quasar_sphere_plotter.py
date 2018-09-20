@@ -238,16 +238,28 @@ class MultiQuasarSpherePlotter():
     #         quasarArray is the array of quasars to be plotted
 
 
-    def setPlots(self,plots):
+    def setPlots(self,plots,quartiles = None):
+        if isinstance(plots,tuple):
+            if len(plots) == 3:
+                quartiles = (plots[1],plots[2])
+            elif len(plots) == 2:
+                if isinstance(plots[1],tuple):
+                    quartiles = plots[1]
+                else:
+                    quartiles = (50-plots[1],50+plots[1])
+            plots = plots[0]
+        if not quartiles:
+            quartiles = (40,60)
         def getquartiles(data):
-            return np.array([np.median(data) - np.percentile(data,40),np.percentile(data,60)-np.median(data)])
+            return np.array([np.median(data) - np.percentile(data,quartiles[0]),\
+                             np.percentile(data,quartiles[1])-np.median(data)])
         def getstderr(data):
             return np.array([np.std(data)/np.sqrt(len(data)),np.std(data)/np.sqrt(len(data))])
         if plots == "mean":
             self.plots = "mean"
             self.avgfn = np.mean
             self.errfn = getstderr
-        elif plots == "median":
+        elif plots == "median" or plots == "med":
             self.plots = "median"
             self.avgfn = np.median
             self.errfn = getquartiles
@@ -290,9 +302,6 @@ class MultiQuasarSpherePlotter():
             acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
             xs[i] = xs[i][acceptedLines]
             ys[i] = ys[i][acceptedLines]
-            xs[i] = xs[i][ys[i]>0]
-            ys[i] = ys[i][ys[i]>0]
-            ys[i] = np.log10(ys[i])
         return xs,ys
     
     def get_xy_type2(self,xVar,ion,quasarArray,rlims):
@@ -311,9 +320,8 @@ class MultiQuasarSpherePlotter():
                 acceptedLines = np.logical_and(rlims[0]*q.Rvir<=rs*q.code_unit_in_kpc,\
                                                rs*q.code_unit_in_kpc<=rlims[1]*q.Rvir)
                 cdens = cdens[acceptedLines]
-                cdens = cdens[cdens>0]
                 xs[i] = np.append(xs[i],np.tile(x,len(cdens)))
-                ys[i] = np.append(ys[i],np.log10(cdens))
+                ys[i] = np.append(ys[i],cdens)
         return xs,ys
     
     def get_xy_type3(self,xVar,yVar,quasarArray):
@@ -366,10 +374,35 @@ class MultiQuasarSpherePlotter():
         if name[0] == "_":
             name = name[1:]
         return name
+    
+    def get_redundancy_from_labels(self,labels):
+        def allstartwith(ls,st):
+            for s in ls:
+                if not s.startswith(st):
+                    return False
+            return True
+        
+        numsplits = len(labels[0].split(":"))
+        beginning = ""
+        for i in range(numsplits):
+            if not allstartwith(labels,beginning+labels[0].split(":")[i]):
+                break
+            else:
+                beginning += labels[0].split(":")[i]
+                beginning += ":"
+            print "beginning is now %s"%beginning
+        retlabels = [None]*len(labels)
+        for i in range(len(retlabels)):
+            retlabels[i] = labels[i].replace(beginning,"")
+        if beginning.endswith(":"):
+            beginning = beginning[:-1]
+        return retlabels,beginning
+
+                    
 
     def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
                  reset = False, labels = None,extra_title = "",rlims = None,\
-                 tolerance = 1e-5,dots = False,logx = False,average = None):
+                 tolerance = 1e-5,dots = False,logx = False,average = None,logy = True):
         print("Current constraints (name): "+self.currentQuasarArrayName)
         plt.figure()
         if isinstance(ion,list):
@@ -402,7 +435,15 @@ class MultiQuasarSpherePlotter():
         else:
             print("Requirements not met (type could not be detected). Cannot plot.")
             return
+        
+        labels, redundancy = self.get_redundancy_from_labels(labels)
 
+        if logy:
+            for i in range(len(yarys)):
+                xarys[i] = xarys[i][yarys[i]>0]
+                yarys[i] = yarys[i][yarys[i]>0]
+                yarys[i] = np.log10(yarys[i])
+            
         if not average is None:
             self.setPlots(average)
         xs = np.empty(len(yarys),dtype = object)
@@ -434,6 +475,10 @@ class MultiQuasarSpherePlotter():
                             "dm_Rvir":"Dark Matter Mass within Rvir (Msun)","sfr":"Star Formation Rate (Msun yr-1)",\
                             "ssfr":"Specific Star Formation Rate (Msun yr-1 Mstar-1)","L_mag":"Magnitude of Angular Momentum"}
 
+        if logy:
+            islogy = "log "
+        else:
+            islogy = ""
         if xVar in sightline_xVars:
             plt.xlabel(sightline_unit_labels[xVar])
         elif xVar in param_xVars:
@@ -444,11 +489,14 @@ class MultiQuasarSpherePlotter():
         elif ion in param_xVars:
             plt.ylabel(param_unit_labels[yVar])
             cd = ""
+        elif ":" in ion and ion.split(":")[1] != "cdens":
+            plt.ylabel("%sfraction of %s in state"%(islogy,ion.split(":")[0]))
+            cd = "fraction "
         else:
-            plt.ylabel("log col dens")
+            plt.ylabel("%scol dens"%islogy)
             cd = "Column Density "
         if plot_type in [0]:
-            ionstr = str(ions).strip("[]").replace("'","")
+            ionstr = redundancy
         elif plot_type in [1,2,3]:
             ionstr = ion
         plt.title('%s %sAverages (%s) %s'%(ionstr, cd, self.plots, extra_title))

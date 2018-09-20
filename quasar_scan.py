@@ -155,7 +155,7 @@ class GeneralizedQuasarSphere(object):
         elif bintype == "fraction":
             plus = 1
         else:
-            plus = self.gasbins.get_all_keys().index(bintype)+1
+            plus = self.gasbins.get_all_keys().index(bintype)+2
         if ion in ['Z','n','T']:
             return len(self.info[0])+intensivesdict[ion]
         try:
