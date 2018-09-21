@@ -390,7 +390,6 @@ class MultiQuasarSpherePlotter():
             else:
                 beginning += labels[0].split(":")[i]
                 beginning += ":"
-            print "beginning is now %s"%beginning
         retlabels = [None]*len(labels)
         for i in range(len(retlabels)):
             retlabels[i] = labels[i].replace(beginning,"")
