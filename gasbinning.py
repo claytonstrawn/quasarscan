@@ -45,6 +45,7 @@ density_bin = GasBin("density",["low","medium","selfshielding","starforming"],["
 temperature_bin = GasBin("temperature",["cold","cool","warm-hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"])
 radial_velocity_bin = GasBin("radial_velocity",["inflow","tangential","outflow"],['-np.inf','-10','10','np.inf'],units = "km/s")
 resolution_bin = GasBin("resolution",["high","medium","low"],['0.00e+00', '1.70e+05', '3.40e+05', 'np.inf'],field = ('gas','dx'),units = "cpc")
+possible_bin_types = ["density","temperature","radial_velocity","resolution"]
 
 
 class GasBinsHolder(object):
@@ -62,6 +63,7 @@ class GasBinsHolder(object):
                 currentBinVals = [allinfo[2].split("_")[0],allinfo[2].split("_")[1]]
                 j = 1
                 field = None
+                units = None
                 while i+j < len(allnames) and allnames[i+j].startswith(currentBin):
                     allinfo = allnames[i+j].split(":")
                     currentBinNames += [allinfo[1]]
@@ -74,17 +76,13 @@ class GasBinsHolder(object):
                             units = allinfo[4].split("-")[1]
                         elif "units" in allinfo[3]:
                             units = allinfo[3].split("-")[1]
-                    else:
-                        field = None
                     j+=1
                 i+=j
-                newBin = GasBin(currentBin,currentBinNames,currentBinVals,field = field)
+                newBin = GasBin(currentBin,currentBinNames,currentBinVals,field = field,units = units)
                 self.bin_types.append(newBin)
             return
-
-        self.possible_bin_types = ["density","temperature","radial_velocity","resolution"]
         if bins == "all":
-            bins = self.possible_bin_types
+            bins = possible_bin_types
         elif bins is None:
             bins = []
         if "density" in bins:

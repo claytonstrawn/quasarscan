@@ -175,7 +175,13 @@ class GeneralizedQuasarSphere(object):
 class QuasarSphere(GeneralizedQuasarSphere):
     def __init__(self,ions=None,simname=None,dspath=None,data = None,\
                  simparams = None,scanparams = None,Rvir = None,L=np.array([0,0,1]),\
-                 ytlevel = "quiet",readonly = False,gasbins = None):
+                 ytlevel = "quiet",readonly = False,gasbins = None,readvalsoutput = None):
+        if readvalsoutput:
+            simparams  = readvalsoutput[0]
+            scanparams = readvalsoutput[1]
+            ions       = readvalsoutput[2]
+            data       = readvalsoutput[3]
+            gasbins    = readvalsoutput[4]
         self.scan_version = "2.0"
         self.number = 1
         if ytlevel == "loud":

@@ -5,6 +5,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 from quasar_scan import *
+import gasbinning
 from parse_vela_metadata import Rdict, Ldict
 
 #precondition: assumes there are only two levels of depth within the output folder
@@ -180,8 +181,18 @@ class MultiQuasarSpherePlotter():
             return np.array(nonemptyLabelArray),bins, np.array(nonemptyArray)
         print "Bins are empty." if empty else ""
         return labels,bins, quasarBins
-        
-    def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False,atEnd = False,splitEven = None,extra_title = ""):
+    
+    def constrain_via_gasbins(self,gasbintype=None):
+        if gasbintype == None:
+            gasbintype = raw_input("Available bins are: %s"%gasbinning.possible_bin_types)
+        g = gasbinning.GasBinsHolder(bins=[gasbintype])
+        toReturn = []
+        for q in self.currentQuasarArray:
+            if g.get_bin_str() in q.gasbins.get_bin_str():
+                toReturn.append(q)
+        self.currentQuasarArray = toReturn
+    
+    def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False,atEnd = False,splitEven = None):
         if len(self.currentQuasarArray)>0 and not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
