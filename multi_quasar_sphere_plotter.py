@@ -262,38 +262,68 @@ class MultiQuasarSpherePlotter():
         if not quartiles:
             quartiles = (40,60)
         def getquartiles(data):
-            return np.array([np.median(data) - np.percentile(data,quartiles[0]),\
-                             np.percentile(data,quartiles[1])-np.median(data)])
+            return np.array([np.nanmedian(data) - np.nanpercentile(data,quartiles[0]),\
+                             np.nanpercentile(data,quartiles[1])-np.nanmedian(data)])
         def getstderr(data):
-            return np.array([np.std(data)/np.sqrt(len(data)),np.std(data)/np.sqrt(len(data))])
+            l = len(data[~np.isnan(data)])
+            return np.array([np.nanstd(data)/np.sqrt(l),np.nanstd(data)/np.sqrt(l)])
         if plots == "mean":
             self.plots = "mean"
-            self.avgfn = np.mean
+            self.avgfn = np.nanmean
             self.errfn = getstderr
         elif plots == "median" or plots == "med":
             self.plots = "median"
-            self.avgfn = np.median
+            self.avgfn = np.nanmedian
             self.errfn = getquartiles
         elif plots == "med_noquartiles":
             self.plots = "median_std"
-            self.avgfn = np.median
+            self.avgfn = np.nanmedian
             self.errfn = getstderr
+    
+    def get_yVar_from_str(self,gq,stringVar):
+        def split_by_ops(s):
+            s = s.replace("(","_splitchar_")
+            s = s.replace(")","_splitchar_")
+            s = s.replace("/","_splitchar_")
+            s = s.replace("*","_splitchar_")
+            s = s.replace("+","_splitchar_")
+            #s = s.replace("-","_splitchar_")
+            return filter(None,s.split("_splitchar_"))
+        def bylength(word1,word2):
+            return len(word2)-len(word1)
+        def sortlist(a):
+            a.sort(cmp=bylength)
+            return a
+        strings_to_find = split_by_ops(stringVar)
+        new_str_to_eval = stringVar
+        strings_to_replace_with = {}
+        for i,s in enumerate(strings_to_find):
+            try:
+                eval(s)
+                string_to_replace_with = s
+            except:
+                string_to_replace_with = "gq.info[:,%d]"%gq.get_ion_column_num(s)
+            strings_to_replace_with[s] = string_to_replace_with
+        for s in sortlist(strings_to_replace_with.keys()):
+            new_str_to_eval = new_str_to_eval.replace(s,strings_to_replace_with[s])
+        to_return = eval(new_str_to_eval)
+        return to_return
 
-    def get_xy_type0(self,xVar,ions,quasarArray,rlims):
+    def get_xy_type0(self,xVar,yVars,quasarArray,rlims):
         quasarArray = [self.currentQuasarArray]
-        xs = np.empty(len(ions),dtype = object)
-        ys = np.empty(len(ions),dtype = object)
-        for i in range(len(ions)):
-            ion = ions[i]
+        xs = np.empty(len(yVars),dtype = object)
+        ys = np.empty(len(yVars),dtype = object)
+        for i in range(len(yVars)):
+            yVar = yVars[i]
             if xVar in sightline_xVars:
-                x,y = self.get_xy_type1(xVar,ion,quasarArray,rlims)
+                x,y = self.get_xy_type1(xVar,yVar,quasarArray,rlims)
             elif xVar in param_xVars:
-                x,y = self.get_xy_type2(xVar,ion,quasarArray,rlims)
+                x,y = self.get_xy_type2(xVar,yVar,quasarArray,rlims)
             xs[i] = x[0]
             ys[i] = y[0]
         return xs,ys
 
-    def get_xy_type1(self,xVar,ion,quasarArray,rlims):
+    def get_xy_type1(self,xVar,yVar,quasarArray,rlims):
         if rlims is None:
             rlims = [0.1,np.inf]
         vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
@@ -308,14 +338,14 @@ class MultiQuasarSpherePlotter():
                 ys[i] = np.empty(0)
                 continue
             xs[i] = gq.info[:,vardict[xVar]]
-            ys[i] = gq.info[:,gq.get_ion_column_num(ion)]
+            ys[i] = self.get_yVar_from_str(gq,yVar)
             rs = gq.info[:,3]
             acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
             xs[i] = xs[i][acceptedLines]
             ys[i] = ys[i][acceptedLines]
         return xs,ys
     
-    def get_xy_type2(self,xVar,ion,quasarArray,rlims):
+    def get_xy_type2(self,xVar,yVar,quasarArray,rlims):
         if rlims is None:
             rlims = np.array([0.1,1.0])
         xs = np.empty(len(quasarArray),dtype = object)
@@ -326,13 +356,13 @@ class MultiQuasarSpherePlotter():
             ys[i] = np.empty(0)
             for q in ary:
                 x = eval("q."+xVar)
-                cdens = q.info[:,q.get_ion_column_num(ion)]
+                y = self.get_yVar_from_str(q,yVar)
                 rs = q.info[:,3]
                 acceptedLines = np.logical_and(rlims[0]*q.Rvir<=rs*q.code_unit_in_kpc,\
                                                rs*q.code_unit_in_kpc<=rlims[1]*q.Rvir)
-                cdens = cdens[acceptedLines]
-                xs[i] = np.append(xs[i],np.tile(x,len(cdens)))
-                ys[i] = np.append(ys[i],cdens)
+                y = y[acceptedLines]
+                xs[i] = np.append(xs[i],np.tile(x,len(y)))
+                ys[i] = np.append(ys[i],y)
         return xs,ys
     
     def get_xy_type3(self,xVar,yVar,quasarArray):
@@ -453,7 +483,10 @@ class MultiQuasarSpherePlotter():
                 xarys[i] = xarys[i][yarys[i]>0]
                 yarys[i] = yarys[i][yarys[i]>0]
                 yarys[i] = np.log10(yarys[i])
-            
+        else:
+            for i in range(len(yarys)):
+                xarys[i] = xarys[i][yarys[i]>0]
+                yarys[i] = yarys[i][yarys[i]>0]
         if not average is None:
             self.setPlots(average)
         xs = np.empty(len(yarys),dtype = object)
