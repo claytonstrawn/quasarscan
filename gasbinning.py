@@ -42,7 +42,7 @@ class GasBin(object):
         return newlist
 
 density_bin = GasBin("density",["low","medium","selfshielding","starforming"],["0.0","1e-2","1e-1","1e1","np.inf"])
-temperature_bin = GasBin("temperature",["cold","cool","warm-hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"])
+temperature_bin = GasBin("temperature",["cold","cool","warm_hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"])
 radial_velocity_bin = GasBin("radial_velocity",["inflow","tangential","outflow"],['-np.inf','-10','10','np.inf'],units = "km/s")
 resolution_bin = GasBin("resolution",["high","medium","low"],['0.00e+00', '1.70e+05', '3.40e+05', 'np.inf'],field = ('gas','dx'),units = "cpc")
 possible_bin_types = ["density","temperature","radial_velocity","resolution"]
