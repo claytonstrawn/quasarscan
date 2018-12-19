@@ -51,7 +51,6 @@ possible_bin_types = ["density","temperature","radial_velocity","resolution"]
 class GasBinsHolder(object):
 
     def __init__(self,bins = None,string = None):
-        assert not (bins is None and string is None)
         self.bin_types = []
         if string:
             allnames = string.strip("[]").split(", ")
@@ -95,11 +94,16 @@ class GasBinsHolder(object):
             self.bin_types.append(resolution_bin)
 
     def combine_holders(self,other):
-        bins = []
-        for obj in self.bin_types:
-            if obj in other.bin_types:
-                bins.append(obj)
-        self.bin_types = bins
+        if len(self.bin_types) == 0:
+            self.bin_types = other.bin_types
+        elif len(other.bin_types) == 0:
+            pass
+        else:
+            bins = []
+            for obj in self.bin_types:
+                if obj in other.bin_types:
+                    bins.append(obj)
+            self.bin_types = bins
 
     def get_all_keys(self):
         mylist = []

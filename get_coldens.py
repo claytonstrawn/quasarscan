@@ -32,7 +32,10 @@ parallel = quasar_scan.read_command_line_args(sys.argv, "-p","--parallel", 0)
 if parallel:
     yt.enable_parallelism()
 filename,save = get_filename_and_save()
-simparams,scanparams,ions,data,gasbins = quasar_scan.read_values(filename)
+try:
+    simparams,scanparams,ions,data,gasbins = quasar_scan.read_values(filename)
+except:
+    simparams,scanparams,ions,data,gasbins = quasar_scan.read_values(filename.split('quasarscan/')[1])
 test = False
 q = quasar_scan.QuasarSphere(simparams=simparams,scanparams=scanparams,ions=ions,data=data,gasbins = gasbins)
 num_bin_vars = gasbins.get_length()

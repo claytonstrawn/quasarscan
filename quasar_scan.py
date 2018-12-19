@@ -102,7 +102,10 @@ class GeneralizedQuasarSphere(object):
         self.scan_version = "2.0"
         self.number = len(list_of_quasar_spheres)
         self.distance = distance
-        self.gasbins = list_of_quasar_spheres[0].gasbins
+        if self.number > 0:
+            self.gasbins = list_of_quasar_spheres[0].gasbins
+        else:
+            self.gasbins = gasbinning.GasBinsHolder(bins = None)
         
         ions_lists = []
         sum_of_lengths = 0
