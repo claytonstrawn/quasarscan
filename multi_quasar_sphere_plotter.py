@@ -80,6 +80,13 @@ intensiveslabels = {"Z":"avg log metallicity","T":"avg log temperature","n":"avg
 intensivespositions = {"Z":-1,"T":-2,"n":-3}
 sightline_xVars = ["r","rdivR","theta","phi"]
 param_xVars = ["redshift","a0","Mvir","gas_Rvir","star_Rvir","dm_Rvir","sfr","ssfr","L_mag"]
+sightline_unit_labels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
+           "theta":"viewing angle (rad)","theta_r>0":"viewing angle (rad)","phi" \
+           :"azimuthal viewing angle (rad)"}
+param_unit_labels = {"redshift":"z","a0":"a","Mvir":"Virial Mass (Msun)",\
+                    "gas_Rvir":"Gas Mass within Rvir (Msun)","star_Rvir":"Stellar Mass within Rvir (Msun)",\
+                    "dm_Rvir":"Dark Matter Mass within Rvir (Msun)","sfr":"Star Formation Rate (Msun yr-1)",\
+                    "ssfr":"Specific Star Formation Rate (Msun yr-1 Mstar-1)","L_mag":"Magnitude of Angular Momentum"}
 
 class MultiQuasarSpherePlotter():
     #USER MUST EXPLICITLY CALL GET_QUASAR TO INPUT INTO ALL OTHER MULTIQUASARSPHEREPLOTTER METHODS AS NECESSARY
@@ -379,6 +386,12 @@ class MultiQuasarSpherePlotter():
                 ys[i] = np.append(ys[i],y)
         return xs,ys
 
+    def values_within_tolerance(self,x_in_list,x_comp,tolerance):
+        if x_comp == 0:
+            return np.abs(x_in_list)<=tolerance
+        else:
+            return x_in_list/x_comp-1<=tolerance
+
     def combine_xs(self,x_variable,tolerance):
         x_values_not_averaged = np.unique(x_variable)
         x_values = []
@@ -387,7 +400,7 @@ class MultiQuasarSpherePlotter():
             currentList = [x_values_not_averaged[i]]
             numtocombine=1
             while i+numtocombine < len(x_values_not_averaged) and \
-                    x_values_not_averaged[i+numtocombine]/x_values_not_averaged[i]-1 <= tolerance:
+                    self.values_within_tolerance(x_values_not_averaged[i+numtocombine],x_values_not_averaged[i],tolerance):
                 currentList.append(x_values_not_averaged[i+numtocombine])
                 numtocombine+=1
             i+=numtocombine
@@ -396,7 +409,7 @@ class MultiQuasarSpherePlotter():
             x_values.append(x_values_not_averaged[-1]) 
         return np.array(x_values)
 
-    def get_savefig_name(self,ion,labels,xVar,plot_type):
+    def get_savefig_name(self,ion,labels,xVar,plot_type,custom_name = None):
         if plot_type in [0]:
             ionNameNoSpaces = str(labels).strip("[]").replace("'","").replace(" ","")
             name = "%s_ErrorBar_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, self.plots)
@@ -412,8 +425,13 @@ class MultiQuasarSpherePlotter():
                 except:
                     break
             name = "%s_ErrorBar_%s_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, binVariable, self.plots)
+        elif plot_type in [4]:
+            ionNameNoSpaces = ion.replace(" ","")
+            name = "%s_HeatMap_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
         if name[0] == "_":
             name = name[1:]
+        if custom_name:
+            name = custom_name
         return name
     
     def get_redundancy_from_labels(self,labels):
@@ -438,11 +456,24 @@ class MultiQuasarSpherePlotter():
             beginning = beginning[:-1]
         return retlabels,beginning
 
-                    
+    def get_ylabel_cd(self,ion,islogy):
+        if ion in intensives:
+            ylabel = intensiveslabels[ion]
+            cd = ""
+        elif ion in param_xVars:
+            ylabel = param_unit_labels[yVar]
+            cd = ""
+        elif ":" in ion and ion.split(":")[1] != "cdens":
+            ylabel = "%sfraction of %s in state"%(islogy,ion.split(":")[0])
+            cd = "fraction "
+        else:
+            ylabel = "%scol dens"%islogy
+            cd = "Column Density "
+        return ylabel,cd  
 
-    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
-                 reset = False, labels = None,extra_title = "",rlims = None,\
-                 tolerance = 1e-5,dots = False,logx = False,average = None,logy = True):
+    def plot_err(self, ion, quasarArray = None, xVar = "rdivR", save_fig = False, \
+                 labels = None,extra_title = "",rlims = None,tolerance = 1e-5, \
+                 dots = False,logx = False,average = None,logy = True, custom_name = None):
         print("Current constraints (name): "+self.currentQuasarArrayName)
         plt.figure()
         if isinstance(ion,list):
@@ -488,6 +519,7 @@ class MultiQuasarSpherePlotter():
                 xarys[i] = xarys[i][yarys[i]>0]
                 yarys[i] = yarys[i][yarys[i]>0]
         if not average is None:
+            oldplots = self.plots
             self.setPlots(average)
         xs = np.empty(len(yarys),dtype = object)
         ys = np.empty(len(yarys),dtype = object)
@@ -500,7 +532,7 @@ class MultiQuasarSpherePlotter():
             mask = np.ones(len(unique_xs),dtype = bool)
             for j in range(len(unique_xs)):
                 x_value = unique_xs[j]
-                yvals = yarys[i][abs(xarys[i]/x_value - 1)<=tolerance]
+                yvals = yarys[i][self.values_within_tolerance(xarys[i],x_value,tolerance)]
                 if len(yvals) == 0:
                     mask[j] = False
                     continue
@@ -509,39 +541,14 @@ class MultiQuasarSpherePlotter():
             xs[i] = xs[i][mask]
             ys[i] = ys[i][mask]
             yerrs[i] = yerrs[i][mask]
-            
-        sightline_unit_labels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
-                   "theta":"viewing angle (rad)","theta_r>0":"viewing angle (rad)","phi" \
-                   :"azimuthal viewing angle (rad)"}
-        param_unit_labels = {"redshift":"z","a0":"a","Mvir":"Virial Mass (Msun)",\
-                            "gas_Rvir":"Gas Mass within Rvir (Msun)","star_Rvir":"Stellar Mass within Rvir (Msun)",\
-                            "dm_Rvir":"Dark Matter Mass within Rvir (Msun)","sfr":"Star Formation Rate (Msun yr-1)",\
-                            "ssfr":"Specific Star Formation Rate (Msun yr-1 Mstar-1)","L_mag":"Magnitude of Angular Momentum"}
-
-        if logy:
-            islogy = "log "
-        else:
-            islogy = ""
+        islogy = "log " if logy else ""
+        ylabel, cd = self.get_ylabel_cd(ion,islogy)
+        plt.ylabel(ylabel)
         if xVar in sightline_xVars:
             plt.xlabel(sightline_unit_labels[xVar])
         elif xVar in param_xVars:
             plt.xlabel(param_unit_labels[xVar])
-        if ion in intensives:
-            plt.ylabel(intensiveslabels[ion])
-            cd = ""
-        elif ion in param_xVars:
-            plt.ylabel(param_unit_labels[yVar])
-            cd = ""
-        elif ":" in ion and ion.split(":")[1] != "cdens":
-            plt.ylabel("%sfraction of %s in state"%(islogy,ion.split(":")[0]))
-            cd = "fraction "
-        else:
-            plt.ylabel("%scol dens"%islogy)
-            cd = "Column Density "
-        if plot_type in [0]:
-            ionstr = redundancy
-        elif plot_type in [1,2,3]:
-            ionstr = ion
+        ionstr = ion if plot_type in [1,2,3] else redundancy
         plt.title('%s %sAverages (%s) %s'%(ionstr, cd, self.plots, extra_title))
 
         for i in range(len(xs)):
@@ -559,54 +566,104 @@ class MultiQuasarSpherePlotter():
         
         if logx:
             plt.xscale('log')
-
-        if reset:
-            self.reset_current_Quasar_Array()
             
         if save_fig:
-            name = self.get_savefig_name(ion,labels,xVar,plot_type)
+            name = self.get_savefig_name(ion,labels,xVar,plot_type,custom_name = custom_name)
             plt.savefig("plots/"+name + ".png")
             return plt,"plots/"+name + ".png"
+        
+        if not average is None:
+            self.setPlots(oldPlots)
+        
         return plt
 
-    
+    def definecolorbar(self):
+        from matplotlib.colors import LinearSegmentedColormap
+        f= 256.0
+        cdict = {'red':   ((0.0,  255/f, 255/f),
+                           (1e-9, 255/f, 255/f),
+                           (0.1,  255/f, 255/f),
+                           (0.3,  255/f, 255/f),
+                           (0.5,  139/f, 139/f),
+                           (1.0,  0/f, 0/f)),
+
+                 'green': ((0.0,  255/f, 255/f),
+                           (1e-9, 255/f, 255/f),
+                           (0.1,  165/f, 165/f),
+                           (0.3,  0/f, 0/f),
+                           (0.5,  0/f, 0/f),
+                           (1.0,  0/f, 0/f)),
+
+                 'blue':  ((0.0,  255/f, 255/f),
+                           (1e-9, 255/f, 0/f),
+                           (0.1,  0/f, 0/f),
+                           (0.3,  0/f, 0/f),
+                           (0.5,  0/f, 0/f),
+                           (1.0,  0/f, 0/f))}
+
+        hotcustom = LinearSegmentedColormap('HotCustom', cdict)
+        return hotcustom
+
     #summary: plots histogram(s) of ion column density vs incrementing xvariable, 
     #         uses a color bar to show the percentage of sightlines for a certain column density at a specific x value
-    def plot_hist(self, q, simname = None,xvariable = "r",zeros = "ignore",\
-                  weights = True,save_fig = None,ns = (42,15),do_ions = "all"):
-        if not simname:
-            simname = q.simparams[0]
-        if do_ions == "all":
-            ions = q.ions
+    #
+    #    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
+    #             reset = False, labels = None,extra_title = "",rlims = None,\
+    #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
+    def plot_hist(self, ion, xVar = "rdivR",extra_title = "",rlims = None,weights = True,\
+                  save_fig = False, tolerance = 1e-5,ns = (42,15),logx = False, logy = True):
+        hotcustom = self.definecolorbar()
+        plt.register_cmap(cmap=hotcustom)
+        if rlims is None:
+            rlims = [0.1,np.inf]
+        vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
+        distances = "kpc" if xVar == "r" else "Rvir"
+        gq = GeneralizedQuasarSphere(self.currentQuasarArray,distance = distances)
+        xs = gq.info[:, vardict[xVar]]
+        ys = self.get_yVar_from_str(gq,ion)
+        rs = gq.info[:,3]
+        acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
+        xs = xs[acceptedLines]
+        ys = ys[acceptedLines]
+        islogy = ""
+        if logy:
+            xs = xs[ys>0]
+            ys = ys[ys>0]
+            ys = np.log10(ys)
+            islogy = "log "
+        if weights:
+            weight = xs*0.0
+            for i in range(len(xs)):
+                if xs[i]!=0:
+                    weight[i] = 1.0/len(xs[abs(xs[i]/xs - 1)<tolerance])
+                else:
+                    weight[i] = 1.0/len(xs[xs<tolerance])
+            cbarlabel = "Fraction of lines for fixed %s"%(xVar)
         else:
-            ions = do_ions
-   
-        if xvariable in ["r","r>0"]:
-            conversion = q.simparams[10]
-        elif xvariable in ["rdivR","rdivR>0"]:
-            if q.simparams[5] > 0:
-                conversion = q.simparams[10]/q.simparams[5]
-            else:
-                print("No virial radius found")
-                return
+            weight = xs*0.0+1.0
+            cbarlabel = "Total number of lines"
+        H, xedges, yedges = np.histogram2d(xs, ys, bins=ns,weights = weight)
+        H = H.T
+        X, Y = np.meshgrid(xedges, yedges)
+        plt.pcolormesh(X,Y, H, cmap=hotcustom)
+        plt.colorbar(label = cbarlabel)
+        ylabel,cd = self.get_ylabel_cd(ion,islogy)
+        plt.ylabel(ylabel)
+        plt.xlabel(sightline_unit_labels[xVar])
+        plt.title('%s %sDistribution %s'%(ion, cd, extra_title))
+        def get_new_axislim(current,divideBy = 20):
+            x1 = current[0]
+            x2 = current[1]
+            return x1-(x2-x1)/divideBy,x2+(x2-x1)/divideBy
+        plt.ylim(get_new_axislim(plt.ylim()))
+        if logx:
+            plt.xscale('log')
+            plt.xlabel('log ' + sightline_unit_labels[xVar])
         else:
-            if q.simparams[5] < 0:
-                print("No metadata, angle plots will be arbitrary axis.")
-            conversion = 1
+            plt.xlim(get_new_axislim(plt.xlim()))
 
-        vardict = {"theta":1,"phi":2,"r":3,"r>0":3,"rdivR":3,"rdivR>0":3}
-        if not (xvariable in vardict):
-            print ("Inputted xvariable not found. Please enter a valid xvariable.")
-            return
+        return plt
 
-        xVarsArray = q.info[:, vardict[xvariable]]*conversion
-        #ion,xvars,cdens,simname
-        for i in range(len(q.ions)):
-            end = q.scanparams[6]
-            if q.ions[i] in ions:
-                plot2dhist(q.ions[i],xVarsArray,\
-                       q.info[:end,11+i],simname,xvariable = xvariable, ns = ns,zeros = zeros,\
-                       weights = weights,save_fig = save_fig,z = q.simparams[1])
 
 #summary: helper method for plot_hist                
 def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None, z = None):
