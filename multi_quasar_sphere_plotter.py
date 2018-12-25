@@ -282,9 +282,13 @@ class MultiQuasarSpherePlotter():
             self.plots = "median"
             self.avgfn = np.nanmedian
             self.errfn = getquartiles
-        elif plots == "med_noquartiles":
+        elif plots == "med_noquartiles" or plots == "median_std":
             self.plots = "median_std"
             self.avgfn = np.nanmedian
+            self.errfn = getstderr
+        elif plots == "scatter":
+            self.plots = "scatter"
+            self.avgfn = np.nanmean
             self.errfn = getstderr
     
     def get_yVar_from_str(self,gq,stringVar):
@@ -385,6 +389,29 @@ class MultiQuasarSpherePlotter():
                 xs[i] = np.append(xs[i],x)
                 ys[i] = np.append(ys[i],y)
         return xs,ys
+    
+    def get_xy_type4(self,xVar,yVar,quasarArray,rlims):
+        if rlims is None:
+            rlims = [0.1,np.inf]
+        distances = "kpc" if xVar == "r" else "Rvir"
+        gqary = []
+        xs = np.empty(len(quasarArray),dtype = object)
+        ys = np.empty(len(quasarArray),dtype = object)
+        for i in range(len(quasarArray)):
+            gq = GeneralizedQuasarSphere(quasarArray[i],distance=distances)
+            if gq.number == 0:
+                xs[i] = np.empty(0)
+                ys[i] = np.empty(0)
+                continue
+            xs[i] = self.get_yVar_from_str(gq,xVar)
+            ys[i] = self.get_yVar_from_str(gq,yVar)
+            rs = gq.info[:,3]
+            acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
+            xs[i] = xs[i][acceptedLines]
+            ys[i] = ys[i][acceptedLines]
+        return xs,ys
+    def get_xy_type5(self, xVar, yVay, quasarArray, rlims):
+        pass
 
     def values_within_tolerance(self,x_in_list,x_comp,tolerance):
         if x_comp == 0:
@@ -426,6 +453,9 @@ class MultiQuasarSpherePlotter():
                     break
             name = "%s_ErrorBar_%s_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, binVariable, self.plots)
         elif plot_type in [4]:
+            # not implemented yet, just pretend it's type 1
+            return self.get_savefig_name(ion,labels,xVar,1,custom_name)
+        elif plot_type in [5]:
             ionNameNoSpaces = ion.replace(" ","")
             name = "%s_HeatMap_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
         if name[0] == "_":
@@ -484,16 +514,19 @@ class MultiQuasarSpherePlotter():
             assert quasarArray is None
             assert labels is None
             labels = ions
+            xerr = None
             xarys,yarys = self.get_xy_type0(xVar,ions,quasarArray,rlims)
         elif not quasarArray is None and xVar in sightline_xVars:
             plot_type = 1
             assert isinstance(ion,str)
             assert len(labels) == len(quasarArray)
+            xerr = None
             xarys,yarys = self.get_xy_type1(xVar,ion,quasarArray,rlims)
         elif (not quasarArray is None) and xVar in param_xVars and (not ion in param_xVars):
             plot_type = 2
             assert isinstance(ion,str)
             assert len(labels) == len(quasarArray)
+            xerr = None
             xarys,yarys = self.get_xy_type2(xVar,ion,quasarArray,rlims)
         elif ion in param_xVars and xVar in param_xVars:
             yVar = ion
@@ -502,7 +535,12 @@ class MultiQuasarSpherePlotter():
             assert len(labels) == len(quasarArray)
             if not dots is None: 
                 dots = True
+            xerr = None
             xarys,yarys = self.get_xy_type3(xVar,yVar,quasarArray)
+        elif xVar not in sightline_xVars + param_xVars:
+            yVar = ion
+            plot_type = 4
+            xarys,yarys = self.get_xy_type4(xVar,yVar,quasarArray,rlims)
         else:
             print("Requirements not met (type could not be detected). Cannot plot.")
             return
@@ -543,6 +581,8 @@ class MultiQuasarSpherePlotter():
             yerrs[i] = yerrs[i][mask]
         islogy = "log " if logy else ""
         ylabel, cd = self.get_ylabel_cd(ion,islogy)
+        if plot_type in [1,2,3,4]:
+            ylabel = ion +" "+ ylabel
         plt.ylabel(ylabel)
         if xVar in sightline_xVars:
             plt.xlabel(sightline_unit_labels[xVar])
@@ -554,17 +594,27 @@ class MultiQuasarSpherePlotter():
         for i in range(len(xs)):
             x = xs[i]
             y = ys[i]
+            if self.plots == "scatter":
+                islogx = "log " if logx else ""
+                xlabel, _ = self.get_ylabel_cd(xVar,islogx)
+                plt.xlabel(xVar +" "+ xlabel)
+                x = xarys[i]
+                y = yarys[i]
+                if logx:
+                    x = np.log10(x)
             yerr = np.transpose(yerrs[i])
-            label = labels[i] 
+            label = labels[i]
             #change fmt to . or _ for a dot or a horizontal line
             fmtdict = {"mean":',',"median_std":',',"median":"."}
             if dots:
                 plt.plot(x,y,"o",label = label)
+            elif self.plots == "scatter":
+                plt.plot(x,y,'o',label = label, markersize = 2)
             else:
                 plt.errorbar(x,y, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label)
         plt.legend()
         
-        if logx:
+        if logx and not self.plots == "scatter":
             plt.xscale('log')
             
         if save_fig:
@@ -573,7 +623,7 @@ class MultiQuasarSpherePlotter():
             return plt,"plots/"+name + ".png"
         
         if not average is None:
-            self.setPlots(oldPlots)
+            self.setPlots(oldplots)
         
         return plt
 
