@@ -149,7 +149,8 @@ class MultiQuasarSpherePlotter():
     
     #param bins either serves as an array with each element being as a cutpoint, or a single value
     #follows array indexing exclusivity and inclusivity rules
-    def sort_by(self, criteria, bins = [0,np.inf], reset = False, exploration_mode = False,atEnd = False,onlyNonempty = False,splitEven = 0):
+    def sort_by(self, criteria, bins = [0,np.inf], reset = False, exploration_mode = False,\
+        atEnd = False,onlyNonempty = False,splitEven = 0,reverse = False):
         if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -187,6 +188,14 @@ class MultiQuasarSpherePlotter():
         if onlyNonempty:
             return np.array(nonemptyLabelArray),bins, np.array(nonemptyArray)
         print "Bins are empty." if empty else ""
+        if reverse:
+            def reversearray(ary):
+                ary = list(ary)
+                ary.reverse()
+                return np.array(ary)
+            labels = reversearray(labels)
+            bins = reversearray(bins)
+            quasarBins = reversearray(quasarBins)
         return labels,bins, quasarBins
     
     def constrain_via_gasbins(self,gasbintype=None):
@@ -274,7 +283,7 @@ class MultiQuasarSpherePlotter():
         def getstderr(data):
             l = len(data[~np.isnan(data)])
             return np.array([np.nanstd(data)/np.sqrt(l),np.nanstd(data)/np.sqrt(l)])
-        if plots == "mean":
+        if plots == "mean" or plots == "std":
             self.plots = "mean"
             self.avgfn = np.nanmean
             self.errfn = getstderr
@@ -390,28 +399,26 @@ class MultiQuasarSpherePlotter():
                 ys[i] = np.append(ys[i],y)
         return xs,ys
     
-    def get_xy_type4(self,xVar,yVar,quasarArray,rlims):
+    def get_xy_type4(self, xVar, yVar, quasarArray, rlims):
         if rlims is None:
-            rlims = [0.1,np.inf]
-        distances = "kpc" if xVar == "r" else "Rvir"
-        gqary = []
+            rlims = [0.1,1.0]
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
         for i in range(len(quasarArray)):
-            gq = GeneralizedQuasarSphere(quasarArray[i],distance=distances)
-            if gq.number == 0:
-                xs[i] = np.empty(0)
-                ys[i] = np.empty(0)
-                continue
-            xs[i] = self.get_yVar_from_str(gq,xVar)
-            ys[i] = self.get_yVar_from_str(gq,yVar)
-            rs = gq.info[:,3]
-            acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
-            xs[i] = xs[i][acceptedLines]
-            ys[i] = ys[i][acceptedLines]
+            xs[i] = np.empty(len(quasarArray[i]),dtype = object)
+            ys[i] = np.empty(len(quasarArray[i]),dtype = object)
+            for j in range(len(quasarArray[i])):
+                q = quasarArray[i][j]
+                x = self.get_yVar_from_str(q,xVar)
+                y = self.get_yVar_from_str(q,yVar)
+                rs = q.info[:,3]
+                acceptedLines = np.logical_and(rlims[0]*q.Rvir<=rs*q.code_unit_in_kpc,\
+                                               rs*q.code_unit_in_kpc<=rlims[1]*q.Rvir)
+                x = x[acceptedLines]
+                y = y[acceptedLines]
+                xs[i][j] = x
+                ys[i][j] = y
         return xs,ys
-    def get_xy_type5(self, xVar, yVay, quasarArray, rlims):
-        pass
 
     def values_within_tolerance(self,x_in_list,x_comp,tolerance):
         if x_comp == 0:
@@ -435,6 +442,47 @@ class MultiQuasarSpherePlotter():
         if i == len(x_values_not_averaged)-1:
             x_values.append(x_values_not_averaged[-1]) 
         return np.array(x_values)
+
+    def process_errbars_onlyvertical(self,xarys,yarys,tolerance):
+        xs = np.empty(len(yarys),dtype = object)
+        ys = np.empty(len(yarys),dtype = object)
+        yerrs = np.empty(len(yarys),dtype = object)
+        for i in range(len(yarys)):
+            unique_xs = self.combine_xs(xarys[i],tolerance)
+            xs[i] = unique_xs
+            ys[i] = np.zeros(len(unique_xs))
+            yerrs[i] = np.zeros((len(unique_xs),2))
+            mask = np.ones(len(unique_xs),dtype = bool)
+            for j in range(len(unique_xs)):
+                x_value = unique_xs[j]
+                yvals = yarys[i][self.values_within_tolerance(xarys[i],x_value,tolerance)]
+                if len(yvals) == 0:
+                    mask[j] = False
+                    continue
+                ys[i][j] = self.avgfn(yvals)
+                yerrs[i][j] = self.errfn(yvals)
+            xs[i] = xs[i][mask]
+            ys[i] = ys[i][mask]
+            yerrs[i] = yerrs[i][mask]
+        return xs,ys,yerrs
+
+    def process_errbars_vertandhoriz(self,xarys,yarys):
+        xs = np.empty(len(yarys),dtype = object)
+        ys = np.empty(len(yarys),dtype = object)
+        xerrs = np.empty(len(yarys),dtype = object)
+        yerrs = np.empty(len(yarys),dtype = object)
+        for i in range(len(xs)):
+            xs[i] = np.zeros(len(xarys[i]))
+            ys[i] = np.zeros(len(xarys[i]))
+            xerrs[i] = np.zeros((len(xarys[i]),2))
+            yerrs[i] = np.zeros((len(xarys[i]),2))
+            for j,xlist in enumerate(xarys[i]):
+                xs[i][j] = self.avgfn(xlist)
+                xerrs[i][j] = self.errfn(xlist)
+            for j,ylist in enumerate(yarys[i]):
+                ys[i][j] = self.avgfn(ylist)
+                yerrs[i][j] = self.errfn(ylist)
+        return xs,ys,xerrs,yerrs
 
     def get_savefig_name(self,ion,labels,xVar,plot_type,custom_name = None):
         if plot_type in [0]:
@@ -503,8 +551,12 @@ class MultiQuasarSpherePlotter():
 
     def plot_err(self, ion, quasarArray = None, xVar = "rdivR", save_fig = False, \
                  labels = None,extra_title = "",rlims = None,tolerance = 1e-5, \
-                 dots = False,logx = False,average = None,logy = True, custom_name = None):
+                 dots = False,logx = False,logy = True, average = None,custom_name = None, \
+                 coloration = None, visibility_threshold = None):
         print("Current constraints (name): "+self.currentQuasarArrayName)
+        if not average is None:
+            oldplots = self.plots
+            self.setPlots(average)
         plt.figure()
         if isinstance(ion,list):
             ions = ion
@@ -547,38 +599,57 @@ class MultiQuasarSpherePlotter():
         
         labels, redundancy = self.get_redundancy_from_labels(labels)
 
-        if logy:
+        if plot_type in [0,1,2,3]:
             for i in range(len(yarys)):
                 xarys[i] = xarys[i][yarys[i]>0]
                 yarys[i] = yarys[i][yarys[i]>0]
-                yarys[i] = np.log10(yarys[i])
-        else:
+                if logy:
+                    yarys[i] = np.log10(yarys[i])
+        elif plot_type in [4]:
             for i in range(len(yarys)):
-                xarys[i] = xarys[i][yarys[i]>0]
-                yarys[i] = yarys[i][yarys[i]>0]
+                for j in range(len(yarys[i])):
+                    xarys[i][j] = xarys[i][j][yarys[i][j]>0]
+                    yarys[i][j] = yarys[i][j][yarys[i][j]>0]
+                    yarys[i][j] = yarys[i][j][xarys[i][j]>0]
+                    xarys[i][j] = xarys[i][j][xarys[i][j]>0]
+                    if logy:
+                        yarys[i][j] = np.log10(yarys[i][j])
+                    if logx:
+                        xarys[i][j] = np.log10(xarys[i][j])
+        if visibility_threshold:
+            if plot_type in [0,1,2,3]:
+                xarys_visible = np.empty(len(xarys),dtype = object)
+                yarys_visible = np.empty(len(xarys),dtype = object)
+                for i in range(len(yarys)):
+                    oldyarys = np.power(10,yarys[i]) if logy else yarys[i]
+                    xarys_visible[i] = xarys[i][oldyarys>visibility_threshold]
+                    yarys_visible[i] = yarys[i][oldyarys>visibility_threshold]
+            elif plot_type in [4]:
+                xarys_visible = np.empty(len(xarys),dtype = object)
+                yarys_visible = np.empty(len(xarys),dtype = object)
+                for i in range(len(yarys)):
+                    xarys_visible[i] = np.empty(len(yarys[i]), dtype = object)
+                    yarys_visible[i] = np.empty(len(yarys[i]), dtype = object)
+                    for j in range(len(yarys[i])):
+                        oldyarys = np.power(10,yarys[i][j]) if logy else yarys[i][j]
+                        oldxarys = np.power(10,xarys[i][j]) if logx else xarys[i][j]
+                        xarys_visible[i][j] = xarys[i][j][oldyarys>visibility_threshold[0]]
+                        yarys_visible[i][j] = yarys[i][j][oldyarys>visibility_threshold[0]]
+                        yarys_visible[i][j] = yarys[i][j][oldxarys>visibility_threshold[1]]
+                        xarys_visible[i][j] = xarys[i][j][oldxarys>visibility_threshold[1]]
         if not average is None:
             oldplots = self.plots
             self.setPlots(average)
-        xs = np.empty(len(yarys),dtype = object)
-        ys = np.empty(len(yarys),dtype = object)
-        yerrs = np.empty(len(yarys),dtype = object)
-        for i in range(len(yarys)):
-            unique_xs = self.combine_xs(xarys[i],tolerance)
-            xs[i] = unique_xs
-            ys[i] = np.zeros(len(unique_xs))
-            yerrs[i] = np.zeros((len(unique_xs),2))
-            mask = np.ones(len(unique_xs),dtype = bool)
-            for j in range(len(unique_xs)):
-                x_value = unique_xs[j]
-                yvals = yarys[i][self.values_within_tolerance(xarys[i],x_value,tolerance)]
-                if len(yvals) == 0:
-                    mask[j] = False
-                    continue
-                ys[i][j] = self.avgfn(yvals)
-                yerrs[i][j] = self.errfn(yvals)
-            xs[i] = xs[i][mask]
-            ys[i] = ys[i][mask]
-            yerrs[i] = yerrs[i][mask]
+        if plot_type in [0,1,2,3]:
+            xs,ys,yerrs = self.process_errbars_onlyvertical(xarys,yarys,tolerance)
+            xerrs = None
+            if visibility_threshold:
+                xs_visible,ys_visible,yerrs_visible = self.process_errbars_onlyvertical(xarys_visible,yarys_visible,tolerance)
+                xerrs_visible = None
+        elif plot_type in [4]:
+            xs,ys,xerrs,yerrs = self.process_errbars_vertandhoriz(xarys,yarys)
+            if visibility_threshold:
+                xs_visible,ys_visible,xerrs_visible,yerrs_visible = self.process_errbars_vertandhoriz(xarys_visible,yarys_visible)
         islogy = "log " if logy else ""
         ylabel, cd = self.get_ylabel_cd(ion,islogy)
         if plot_type in [1,2,3,4]:
@@ -588,33 +659,73 @@ class MultiQuasarSpherePlotter():
             plt.xlabel(sightline_unit_labels[xVar])
         elif xVar in param_xVars:
             plt.xlabel(param_unit_labels[xVar])
+        if plot_type in [0]:
+            ionstr = redundancy
+        elif plot_type in [1,2,3]:
+            ionstr = ion
+        elif plot_type in [4]:
+            ionstr = ""
         ionstr = ion if plot_type in [1,2,3] else redundancy
         plt.title('%s %sAverages (%s) %s'%(ionstr, cd, self.plots, extra_title))
+
 
         for i in range(len(xs)):
             x = xs[i]
             y = ys[i]
-            if self.plots == "scatter":
+            if plot_type == 4:
                 islogx = "log " if logx else ""
-                xlabel, _ = self.get_ylabel_cd(xVar,islogx)
-                plt.xlabel(xVar +" "+ xlabel)
-                x = xarys[i]
-                y = yarys[i]
-                if logx:
-                    x = np.log10(x)
+                if xVar in sightline_xVars:
+                    plt.xlabel(sightline_unit_labels[xVar])
+                else:
+                    xlabel, _ = self.get_ylabel_cd(xVar,islogx)
+                    plt.xlabel(xVar +" "+ xlabel)
             yerr = np.transpose(yerrs[i])
-            label = labels[i]
+            xerr = np.transpose(xerrs[i]) if not (xerrs is None) else None
+            label = labels[i] if not visibility_threshold else None
+            color = None
+            if not (coloration is None):
+                color = coloration[i]
             #change fmt to . or _ for a dot or a horizontal line
             fmtdict = {"mean":',',"median_std":',',"median":"."}
-            if dots:
-                plt.plot(x,y,"o",label = label)
+            alpha_value = .3 if visibility_threshold else 1.
+            if self.plots == "scatter" and dots:
+                print "average = scatter AND dots = True detected"
+                print "'scatter' gives all sightlines without averaging."
+                print "'dots' gives all averages without error bars."
+                print "please change one and try again"
+                return
+            elif dots:
+                plt.plot(x,y,"o",label = label,color = color,alpha = alpha_value)
+                if visibility_threshold:
+                    x_visible = xs_visible[i]
+                    y_visible = ys_visible[i]
+                    plt.plot(x_visible,y_visible,"o",color = color,label = labels[i])
             elif self.plots == "scatter":
-                plt.plot(x,y,'o',label = label, markersize = 2)
+                def flatten_if_needed(ary):
+                    try:
+                        for item in ary:
+                            len(item)
+                        return np.concatenate(ary)
+                    except:
+                        return ary
+                x = flatten_if_needed(xarys[i])
+                y = flatten_if_needed(yarys[i])
+                plt.plot(x,y,'o',label = label, markersize = 2,color = color,alpha = alpha_value)
+                if visibility_threshold:
+                    x_visible = flatten_if_needed(xarys_visible[i])
+                    y_visible = flatten_if_needed(yarys_visible[i])
+                    plt.plot(x_visible,y_visible,"o",label = labels[i],markersize = 2,color = color)
             else:
-                plt.errorbar(x,y, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label)
+                plt.errorbar(x,y, xerr = xerr, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label,color = color,alpha = alpha_value)
+                if visibility_threshold:
+                    x_visible = xs_visible[i]
+                    y_visible = ys_visible[i]
+                    yerr_visible = np.transpose(yerrs_visible[i])
+                    xerr_visible = np.transpose(xerrs_visible[i]) if not (xerrs_visible is None) else None
+                    plt.errorbar(x_visible,y_visible, xerr = xerr_visible, yerr=yerr_visible, fmt=fmtdict[self.plots], capsize = 3, label = labels[i],color = color)
         plt.legend()
         
-        if logx and not self.plots == "scatter":
+        if logx and not plot_type == 4:
             plt.xscale('log')
             
         if save_fig:
@@ -872,3 +983,15 @@ class MultiSphereSorter(object):
                     uniqueName = "%s < %s < %s"%(lowstr,criteria,highstr)
                 labels.append(uniqueName)
         return labels
+
+def print_general_shape(ary,name = "ary",indent=0,showitems = False):
+    if indent == 0:
+        print name+": len()="+str(len(ary))
+        indent += 1
+    for i,a in enumerate(ary):
+        try:
+            print '---_'*indent+str(len(a))
+            print_general_shape(a,indent = indent+1)
+        except:
+            if showitems:
+                print '---_'*indent+"*item*"+str(a)
