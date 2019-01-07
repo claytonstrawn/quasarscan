@@ -132,7 +132,7 @@ def write_files(tocheck,cont = 0):
 def main_func():
     #figure out what is next necessary file to scan
     #write a bash script to go get it, and to delete it after
-    ionlists = [alloxygens]
+    ionlists = [alloxygens,joeions]
     for i in range(len(ionlists)):
         ionlist = ionlists[i]
         for file in nerscsimnames:

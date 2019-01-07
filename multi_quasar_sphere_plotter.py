@@ -664,56 +664,6 @@ class MultiQuasarSpherePlotter():
 
         return plt
 
-
-#summary: helper method for plot_hist                
-def plot2dhist(ion,xvars,cdens,simname,xvariable = "r",ns = (42,15),zeros = "ignore",weights = True, save_fig = None, z = None):
-    if zeros == "ignore":
-        xvars = xvars[cdens>0]
-        cdens = cdens[cdens>0]
-        logdens = np.log10(cdens)
-    else:
-        logdens = np.log10(np.maximum(cdens,1e-15))
-    if xvariable == "r>0" or xvariable == "rdivR>0":
-        logdens = logdens[xvars>0.0]
-        xvars = xvars[xvars>0.0]
-    nx = ns[0]
-    ny = ns[1]
-    plotvars = {"r":"r","r>0":"r","rdivR":"r","rdivR>0":"r","theta":"theta","phi":"phi"}
-    plotvar = plotvars[xvariable]
-    if weights:
-        weight = xvars*0.0
-        for i in range(len(xvars)):
-            weight[i] = 1.0/len(xvars[xvars==xvars[i]])
-        H, xedges, yedges = np.histogram2d(xvars, logdens, bins=[nx,ny],weights = weight)
-        cbarlabel = "Fraction of lines for fixed %s"%(plotvar)
-    else:
-        H, xedges, yedges = np.histogram2d(xvars, logdens, bins=[nx,ny])
-        cbarlabel = "Total number of lines"
-    H = H.T
-    X, Y = np.meshgrid(xedges, yedges)
-    plt.pcolormesh(X,Y, H, cmap=hotcustom)
-    plt.title("distribution of "+ion+" in "+simname+" at z="+str(z)[:4])
-    # set the limits of the plot to the limits of the data
-    #plt.axis([x.min(), x.max(), y.min(), y.max()])
-    plt.colorbar(label = cbarlabel)
-    x1,x2,y1,y2 = plt.axis()
-    dx = x2-x1
-    dy = y2-y1
-    plt.axis((x1-dx*0.1,x2+dx*0.1,y1-dy*0.1,y2+dy*0.1))
-    xlabels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir","theta":"viewing angle (rad)","phi":"azimuthal viewing angle (rad)"}
-    plt.xlabel(xlabels[xvariable])
-    plt.ylabel("log col dens")
-    if save_fig:
-        if save_fig == "default" :
-            save_fig = simname + "_" + plotvar + "_z" +str(z)[:4]
-        name = save_fig+"_"+ion.replace(" ","")
-        if weights:
-            name +="_w"
-        if zeros == "ignore":
-            name +="_nozeros"
-        plt.savefig(name+".png")
-    plt.show()
-
 class MultiSphereSorter(object):
     def __init__(self,myArray,exploration_mode = False):
         self.array = myArray

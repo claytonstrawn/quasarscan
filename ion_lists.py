@@ -53,8 +53,8 @@ allions = ['Al II', 'Al III', 'Ar I', 'Ar II', 'Ar VII', 'C I', 'C II', 'C III',
 'Fe II', 'H I', 'Mg II', 'Mg X', 'N I', 'N II', 'N III', 'N IV', 'N V', 'Na IX', 'Ne V',\
 'Ne VI', 'Ne VII', 'Ne VIII', 'O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'P IV',\
 'P V', 'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII']
-joeions = ['C III', 'H I', 'Mg II', 'Mg X', 'N II', 'N III', 'N IV', 'N V', 'Ne VIII', 'O II', \
-'O III', 'O IV', 'O V', 'O VI', 'S II', 'S III', 'S IV', 'S V', 'S VI']
+joeions = ['C III', 'C IV', 'H I','H II', 'Mg II', 'Mg X', 'N II', 'N III', 'N IV', 'N V', 'Ne VIII', 'O II', \
+'O III', 'O IV', 'O V', 'O VI','O VII','O VIII', 'O IX', 'S II', 'S III', 'S IV', 'S V', 'S VI']
 alloxygens = ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX', 'H I',\
 'H II']
 
