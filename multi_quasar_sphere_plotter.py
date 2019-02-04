@@ -272,7 +272,7 @@ class MultiQuasarSpherePlotter():
             elif len(plots) == 2:
                 if isinstance(plots[1],tuple):
                     quartiles = plots[1]
-                else:
+                elif plots[0] == 'median' or plots[0] == 'med':
                     quartiles = (50-plots[1],50+plots[1])
             plots = plots[0]
         if not quartiles:
@@ -307,7 +307,7 @@ class MultiQuasarSpherePlotter():
             s = s.replace("/","_splitchar_")
             s = s.replace("*","_splitchar_")
             s = s.replace("+","_splitchar_")
-            #s = s.replace("-","_splitchar_")
+            s = s.replace("-","_splitchar_")
             return filter(None,s.split("_splitchar_"))
         def bylength(word1,word2):
             return len(word2)-len(word1)

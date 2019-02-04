@@ -279,7 +279,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.dm_Rvir = float(parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simname][self.a0])
             self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
             self.ssfr = self.sfr / self.star_Rvir
-            self.L_mag = float(parse_vela_metadata.dict_of_vela_info("L_mag")[self.simname][self.a0])
+            self.L_mag = np.sqrt(np.sum(self.L**2))
             aDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
             aDict.sort()
             self.final_a0 = float(aDict[-1])
