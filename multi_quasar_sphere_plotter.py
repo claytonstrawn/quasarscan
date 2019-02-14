@@ -302,12 +302,14 @@ class MultiQuasarSpherePlotter():
     
     def get_yVar_from_str(self,gq,stringVar):
         def split_by_ops(s):
+            s = s.replace("e-","_temp_minus_char_")
             s = s.replace("(","_splitchar_")
             s = s.replace(")","_splitchar_")
             s = s.replace("/","_splitchar_")
             s = s.replace("*","_splitchar_")
             s = s.replace("+","_splitchar_")
             s = s.replace("-","_splitchar_")
+            s = s.replace("_temp_minus_char_","e-")
             return filter(None,s.split("_splitchar_"))
         def bylength(word1,word2):
             return len(word2)-len(word1)
@@ -318,12 +320,13 @@ class MultiQuasarSpherePlotter():
         new_str_to_eval = stringVar
         strings_to_replace_with = {}
         for i,s in enumerate(strings_to_find):
-            try:
-                eval(s)
-                string_to_replace_with = s
-            except:
-                string_to_replace_with = "gq.info[:,%d]"%gq.get_ion_column_num(s)
-            strings_to_replace_with[s] = string_to_replace_with
+            if len(s)>0:
+                try:
+                    eval(s)
+                    string_to_replace_with = s
+                except:
+                    string_to_replace_with = "gq.info[:,%d]"%gq.get_ion_column_num(s)
+                strings_to_replace_with[s] = string_to_replace_with
         for s in sortlist(strings_to_replace_with.keys()):
             new_str_to_eval = new_str_to_eval.replace(s,strings_to_replace_with[s])
         to_return = eval(new_str_to_eval)
