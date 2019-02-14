@@ -54,7 +54,7 @@ def dict_of_vela_info(quantity,loud = False):
                     ret_dict[folder][a] = line.split()[index]
                 else:
                     ret_dict[folder][a] = [line.split()[index[0]],line.split()[index[1]],line.split()[index[2]]]
-                line = f.readline()[1:]
+                line = f.readline()[:]
                 try:
                     a = line.split()[0]
                 except:

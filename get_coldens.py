@@ -38,6 +38,10 @@ except:
     simparams,scanparams,ions,data,gasbins = quasar_scan.read_values(filename.split('quasarscan/')[1])
 test = False
 q = quasar_scan.QuasarSphere(simparams=simparams,scanparams=scanparams,ions=ions,data=data,gasbins = gasbins)
+if (ftype, "redshift") not in q.ds.derived_field_list:
+    def gas_mass(field, data):
+        return data['deposit','Gas_mass']
+    q.ds.add_field(('gas','mass'),units = 'g', function = gas_mass, sampling_type = 'cell')
 num_bin_vars = gasbins.get_length()
 starting_point = q.length_reached 
 bins = np.append(np.arange(starting_point,q.length,save)[:-1],q.length)
