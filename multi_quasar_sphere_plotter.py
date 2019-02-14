@@ -1,6 +1,4 @@
 import numpy as np
-import trident
-import yt
 import os
 import sys
 import matplotlib.pyplot as plt
