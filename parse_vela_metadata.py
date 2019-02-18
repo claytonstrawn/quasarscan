@@ -1,6 +1,7 @@
 import numpy as np
 import os
 def dict_of_vela_info(quantity,loud = False):
+    #This is a guide for what info can be found in what column, starting from column 0.
     quantity_dict_Mstar = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
                     "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
                     "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
@@ -8,6 +9,8 @@ def dict_of_vela_info(quantity,loud = False):
                     "gas_Rdisk":11,"star_Rdisk":12,"dm_Rdisk":13}
     quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7],"L_mag":11}
     quantity_dict_Nir_spherical_galaxy_cat = {"SFR":13}
+    
+    #This calculates the column index as well as the number of data points for one piece of info
     if quantity in quantity_dict_Mstar.keys():
         index = quantity_dict_Mstar[quantity]
         numvals = 1
@@ -19,6 +22,8 @@ def dict_of_vela_info(quantity,loud = False):
         numvals = 3
         if quantity == "L_mag":
             numvals = 1
+  
+    #Setting up the dictionary of the desired property, where the dictionary key is the name of the galaxy folder : the redshift, and the dictionary value is the respective desired property quantity
     ret_dict = {}
     if os.path.isdir("galaxy_catalogs"):
         basepath = "galaxy_catalogs/"
@@ -46,8 +51,10 @@ def dict_of_vela_info(quantity,loud = False):
                 if loud:
                     print("Error reading %s"%pathname)
                 continue
-            f.readline()
-            line = f.readline()
+            f.readline() #one-time skips the identification number on the first line
+            
+            # the following lines including the while loop retrieve the desired property value by iterating through the textfile line by line 
+            line = f.readline() 
             a = line.split()[0]
             while 1:
                 if numvals == 1:
