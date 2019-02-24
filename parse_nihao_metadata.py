@@ -38,10 +38,10 @@ def dict_of_vela_info(quantity,loud = False):      #aexp,Rvir,Mvir_gas,Mvir_star
         ret_dict[folder] = {}
         if quantity in quantity_dict_Mvir_fbar.keys():
             pathname = basepath + folder + "/Mvir_fbar_R200.out"
-        elif quantity in quantity_dict_Nir_disc_cat.keys():
-            pathname = basepath + folder + "/galaxy_catalogue/Nir_disc_cat.txt"
-        elif quantity in quantity_dict_Nir_spherical_galaxy_cat.keys():
-            pathname = basepath + folder + "/galaxy_catalogue/Nir_spherical_galaxy_cat.txt"
+        #elif quantity in quantity_dict_Nir_disc_cat.keys():
+            #pathname = basepath + folder + "/galaxy_catalogue/Nir_disc_cat.txt"
+        #elif quantity in quantity_dict_Nir_spherical_galaxy_cat.keys():
+            #pathname = basepath + folder + "/galaxy_catalogue/Nir_spherical_galaxy_cat.txt"
         else: 
             print("where is %s stored? We don't know :("%quantity)
         try:
