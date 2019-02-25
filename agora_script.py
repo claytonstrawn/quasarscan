@@ -77,8 +77,16 @@ def main(filetype):
 
 if __name__ == "__main__":
 	for filetype in filenames.keys():
+		successes = []
+		failures = []
 		try:
 			main(filetype)
+			successes.append(filetype)
 		except Exception as e:
-			print e
->>>>>>> using different method of accessing scratch
+			print "Error!: %s"%e
+			failures.append(filetype)
+
+	print "successes"
+	print successes
+	print "failures" 
+	print failures 
