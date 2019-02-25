@@ -24,12 +24,12 @@
 /project/projectdirs/agora/paper_CGM/Cal_step2/GIZMO/cos-mech/output/
 """
 
-filenames = {"art-I":"$SCRATCH/AGORAfiles/art-I/10MpcBox_csf512_a0.050.d",\
-"ramses":"$SCRATCH/AGORAfiles/ramses/output_00002/info_00002.txt",\
-"enzo":"$SCRATCH/AGORAfiles/enzo/DD0008/DD0008",\
-"gadget3":"$SCRATCH/AGORAfiles/gadget3/snapshot_021.0.hdf5",\
-"gear":"$SCRATCH/AGORAfiles/gear/snapshot_0047.hdf5",\
-"gizmo":"$SCRATCH/AGORAfiles/gizmo/snapshot_010.hdf5"}
+filenames = {"art-I":"/global/cscratch1/sd/cstrawn/AGORAfiles/art-I/10MpcBox_csf512_a0.050.d",\
+"ramses":"/global/cscratch1/sd/cstrawn/AGORAfiles/ramses/output_00002/info_00002.txt",\
+"enzo":"/global/cscratch1/sd/cstrawn/AGORAfiles/enzo/DD0008/DD0008",\
+"gadget3":"/global/cscratch1/sd/cstrawn/AGORAfiles/gadget3/snapshot_021.0.hdf5",\
+"gear":"/global/cscratch1/sd/cstrawn/AGORAfiles/gear/snapshot_0047.hdf5",\
+"gizmo":"/global/cscratch1/sd/cstrawn/AGORAfiles/gizmo/snapshot_010.hdf5"}
 
 #agora_script.py
 def main(filetype):
@@ -81,3 +81,4 @@ if __name__ == "__main__":
 			main(filetype)
 		except Exception as e:
 			print e
+>>>>>>> using different method of accessing scratch
