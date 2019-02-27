@@ -71,3 +71,4 @@ def dict_of_vela_info(quantity,loud = False):
     
 Rdict = dict_of_vela_info("Rvir")
 Ldict = dict_of_vela_info("L")
+adict = dict_of_vela_info("a")

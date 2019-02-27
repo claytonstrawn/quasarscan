@@ -1,28 +1,15 @@
 import numpy as np
 import os
-def dict_of_vela_info(quantity,loud = False):      #aexp,Rvir,Mvir_gas,Mvir_star,Mvir_dm,Mvir,fb/fbcosmo,fs/fbcosmo,Mgcold,Mgcool,Mgwarm,Mgwhot,Mghot,Mgcold(r>0.1Rvir),cool,warm,whot,hot 
+def dict_of_nihao_info(quantity,loud = False):      #aexp,Rvir,Mvir_gas,Mvir_star,Mvir_dm,Mvir,fb/fbcosmo,fs/fbcosmo,Mgcold,Mgcool,Mgwarm,Mgwhot,Mghot,Mgcold(r>0.1Rvir),cool,warm,whot,hot 
     
     #This is a guide for what info can be found in what column, starting from column 0.
     quantity_dict_Mvir_fbar = {"a":0,"Rvir":1,"gas_Rvir":2,"star_Rvir":3,"dm_Rvir":4,"Mvir":5}
-    quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7],"L_mag":11}
-    quantity_dict_Nir_spherical_galaxy_cat = {"SFR":13}
+    # NEED SFR
     
     #This calculates the column index as well as the number of data points for one piece of info
     if quantity in quantity_dict_Mvir_fbar.keys():
         index = quantity_dict_Mvir_fbar[quantity]
         numvals = 1
-    elif quantity in quantity_dict_Nir_spherical_galaxy_cat.keys():
-        print "not implemented for NIHAO"
-        return
-        index = quantity_dict_Nir_spherical_galaxy_cat[quantity]
-        numvals = 1
-    elif quantity in quantity_dict_Nir_disc_cat.keys():
-        print "not implemented for NIHAO"
-        return
-        index = quantity_dict_Nir_disc_cat[quantity]
-        numvals = 3
-        if quantity == "L_mag":
-            numvals = 1
     
     #Setting up the dictionary of the desired property, where the dictionary key is the name of the galaxy folder : the redshift, and the dictionary value is the respective desired property quantity
     ret_dict = {}
@@ -38,10 +25,6 @@ def dict_of_vela_info(quantity,loud = False):      #aexp,Rvir,Mvir_gas,Mvir_star
         ret_dict[folder] = {}
         if quantity in quantity_dict_Mvir_fbar.keys():
             pathname = basepath + folder + "/Mvir_fbar_R200.out"
-        #elif quantity in quantity_dict_Nir_disc_cat.keys():
-            #pathname = basepath + folder + "/galaxy_catalogue/Nir_disc_cat.txt"
-        #elif quantity in quantity_dict_Nir_spherical_galaxy_cat.keys():
-            #pathname = basepath + folder + "/galaxy_catalogue/Nir_spherical_galaxy_cat.txt"
         else: 
             print("where is %s stored? We don't know :("%quantity)
         try:
@@ -71,5 +54,6 @@ def dict_of_vela_info(quantity,loud = False):      #aexp,Rvir,Mvir_gas,Mvir_star
                 f.close()
     return ret_dict
 
-Rdict = dict_of_vela_info("Rvir")
+Rdict = dict_of_nihao_info("Rvir")
 #Ldict = dict_of_vela_info("L")
+adict = dict_of_nihao_info("a")

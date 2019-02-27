@@ -12,11 +12,9 @@ import datetime
 try:
     from quasarscan import parse_metadata
     from quasarscan import quasar_sphere
-    level = 0
 except:
     import parse_metadata
     import quasar_sphere
-    level = 1
 
 def convert_to_xyz(r, theta, phi):
     return np.array([r*np.sin(theta)*np.cos(phi),r*np.sin(theta)*np.sin(phi),r*np.cos(theta)])
@@ -68,21 +66,20 @@ def weights(array,function):
     probs /= np.sum(probs)
     return probs
 
-def create_QSO_endpoints(R, n_th, n_phi, n_r, rmax, length, convert_code_unit_to_kpc,\
-                         distances = "kpc", Rvir = None, L = None, center=None, endonsph = False):
-
+def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,\
+                         L = None, center=None, endonsph = False):
+    R=sphere[0]
+    n_th=sphere[1]
+    n_phi=sphere[2]
+    n_r=sphere[3]
+    rmax=sphere[4]
+    length=sphere[5]
     r_arr = np.linspace(0,rmax,n_r)
     th_arr = np.linspace(0,np.pi,n_th,endpoint = False)
     phi_arr = np.linspace(0,2*np.pi,n_phi,endpoint = False)
-    if distances == "kpc":
-        convert = convert_code_unit_to_kpc
-    elif distances == "Rvir":
-        convert = convert_code_unit_to_kpc
-        convert /= Rvir
-    elif distances == "test":
-        convert = 1
-    R /= convert
-    r_arr /= convert
+
+    R /= convert_code_unit_to_kpc
+    r_arr /= convert_code_unit_to_kpc
     scanparams = [None]*7
     scanparams[0] = R
     scanparams[1] = len(th_arr)
@@ -108,45 +105,20 @@ def create_QSO_endpoints(R, n_th, n_phi, n_r, rmax, length, convert_code_unit_to
         info[i][8:11] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]) + center 
     return scanparams,info
 
-
-def read_command_line_args(args, shortform,longform, tograb, defaults = None):
-    if shortform in args or longform in args:
-        if tograb == 0:
-            return 1
-        if shortform in args:
-            i = args.index(shortform)
-        else:
-            i = args.index(longform)
-        paramsstr = args[i+1:i+1+tograb]
-        params = [None]*len(paramsstr)
-        for i in range(len(defaults)):
-            if type(defaults[i]) is str:
-                params[i] = paramsstr[i]
-            else:
-                toinsert = eval(paramsstr[i])
-                if type(defaults[i]) is type(toinsert):
-                    params[i] = toinsert
-                else:
-                    tprint("Called with incorrect arguments: \
-                        The %dth argument after '%s' or '%s' should be type: %s"%
-                        (i, shortform, longform, type(defaults[i])))
-                    return None
-        return params
-    else: 
-        return defaults
-
 if __name__ == "__main__":
     name = sys.argv[1]
     path = sys.argv[2]
     ds = yt.load(path)
     z = ds.redshift
     Rvir = parse_metadata.get_value("Rvir",name,z)
-    use_Rvir = True
     if Rvir is None:
-        use_Rvir = False
-        R = 100#kpc
+        Rvir = 100#kpc
     center = ds.find_max('gas','density')[1]
     L = parse_metadata.get_value("L",name,z)
     if L is None:
         sp = ds.sphere(center,(R,"kpc"))
         L = sp.quantities.angular_momentum_vector()
+    convert = ds.length_unit.in_units('kpc').value
+    defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
+    scanparams, info = create_QSO_endpoints(defaultsphere,convert,L,center)
+
