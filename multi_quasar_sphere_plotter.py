@@ -72,7 +72,7 @@ def sort_ions(ions,flat = True):
         toreturn = [item for sublist in toreturn for item in sublist]
     return toreturn
 
-stringcriteria = ["ions","version","simname","simnum","has_intensives"]
+stringcriteria = ["ions","simname","version","code","simnum"]
 intensives = ["Z","T","n"]
 intensiveslabels = {"Z":"avg log metallicity","T":"avg log temperature","n":"avg log density"}
 intensivespositions = {"Z":-1,"T":-2,"n":-3}
