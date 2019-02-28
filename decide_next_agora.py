@@ -25,28 +25,18 @@ else:
 def check_in_allfiles(tocheck,alltextfiles,ionlist):
     startAt = 0
     for fil in alltextfiles:
-        afteroutput = fil.split("output2.0/")[1]
+        afteroutput = fil.split("output/")[1]
         aftercoldensinfo = afteroutput.split("coldensinfo/")[1]
         lines = int(aftercoldensinfo.split("_of_")[0])
         outOf = int(aftercoldensinfo.split("_of_")[1].split("-")[0])
-        velaname = afteroutput.split("coldensinfo")[0]
-        if velaname == tocheck[0]:
+        simname = afteroutput.split("coldensinfo")[0]
+        if simname == tocheck[0]:
             afterz = fil.split("z")[1]
             file_redshift = float(afterz.split(".t")[0])
             if abs(file_redshift - tocheck[1]) <= 0.04:
                 splitunderscore = afteroutput.split("_")
                 ion_ok = True
                 for ion in ionlist:
-                    if velaname == "VELA_v2_24":
-                        print ion
-                        print splitunderscore
-                    if not ion in truly_allions:
-                        print("that ion %s cannot be made in TRIDENT (yet)"%ion)
-                        Error
-                    if "allions" in splitunderscore[-2]:
-                        continue
-                    if "joeions" in splitunderscore[-2] and ion in joeions:
-                        continue
                     ion = ion.replace(" ","")
                     if ion in splitunderscore:
                         continue

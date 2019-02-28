@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 
 import numpy as np
-import trident
 import yt
-import os
 import sys
-import itertools
-import logging
-import datetime
 
 try:
     from quasarscan import parse_metadata
     from quasarscan import quasar_sphere
+    from quasarscan import ion_lists
+    from quasarscan import gasbinning
+
 except:
     import parse_metadata
     import quasar_sphere
+    import ion_lists
+    import gasbinning
 
 def convert_to_xyz(r, theta, phi):
     return np.array([r*np.sin(theta)*np.cos(phi),r*np.sin(theta)*np.sin(phi),r*np.cos(theta)])
@@ -66,7 +66,7 @@ def weights(array,function):
     probs /= np.sum(probs)
     return probs
 
-def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,\
+def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,ions,gasbins=None,\
                          L = None, center=None, endonsph = False):
     R=sphere[0]
     n_th=sphere[1]
@@ -87,14 +87,16 @@ def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,\
     scanparams[3] = len(r_arr)
     scanparams[4] = rmax
     scanparams[5] = length
+    scanparams[6] = 0
     weightth = weights(th_arr, "sin")
-    weightr = weights(r_arr, "lin")
+    weightr = weights(r_arr, "lin")        
+    num_extra_columns = gasbins.get_length()
+    info = np.zeros((int(length),11+len(ions)*(num_extra_columns+2)+3))-1.0
     if L is None:
         L = np.array([0,0,1.])
     if center is None:
         center = np.array([0,0,0.])
     rot_matrix = get_rotation_matrix(L)
-    info = np.zeros(length,11)
     for i in range(int(length)):
         theta = np.random.choice(th_arr,p = weightth)
         r = np.random.choice(r_arr,p = weightr)
@@ -105,20 +107,26 @@ def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,\
         info[i][8:11] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]) + center 
     return scanparams,info
 
-if __name__ == "__main__":
+if __name__ == "__main__"
     name = sys.argv[1]
     path = sys.argv[2]
     ds = yt.load(path)
-    z = ds.redshift
+    z = ds.current_redshift
     Rvir = parse_metadata.get_value("Rvir",name,z)
     if Rvir is None:
         Rvir = 100#kpc
-    center = ds.find_max('gas','density')[1]
+    center = [0.50570774, 0.5021925,  0.50058842]#ds.find_max(('gas','density'))[1] (removed for speed)
     L = parse_metadata.get_value("L",name,z)
     if L is None:
-        sp = ds.sphere(center,(R,"kpc"))
-        L = sp.quantities.angular_momentum_vector()
-    convert = ds.length_unit.in_units('kpc').value
+        #sp = ds.sphere(center,(Rvir,"kpc"))
+        L = np.array([0,0,1.])
+    convert = float(ds.length_unit.in_units('kpc').value)
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
-    scanparams, info = create_QSO_endpoints(defaultsphere,convert,L,center)
+    testsphere = 6*Rvir,12,12,12,2*Rvir,10
+    defaultions = ion_lists.agoraions
+    gasbins = gasbinning.GasBinsHolder("all")
+    scanparams, info = create_QSO_endpoints(testsphere,convert,defaultions,L=L,center=center,gasbins = gasbins)
+    simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert]
+    q = quasar_sphere.QuasarSphere(simparams,scanparams,defaultions,info,gasbins)
+    q.save_values()
 
