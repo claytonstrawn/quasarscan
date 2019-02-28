@@ -27,7 +27,7 @@
 filenames = {"art-I":"/global/cscratch1/sd/cstrawn/AGORAfiles/art-I/10MpcBox_csf512_a0.050.d",\
 "ramses":"/global/cscratch1/sd/cstrawn/AGORAfiles/ramses/output_00002/info_00002.txt",\
 "enzo":"/global/cscratch1/sd/cstrawn/AGORAfiles/enzo/DD0008/DD0008",\
-"gadget3":"/global/cscratch1/sd/cstrawn/AGORAfiles/gadget3/snapshot_021.0.hdf5",\
+"gadget3":"/global/cscratch1/sd/cstrawn/AGORAfiles/gadget3/z10/snapshot_021.0.hdf5",\
 "gear":"/global/cscratch1/sd/cstrawn/AGORAfiles/gear/snapshot_0047.hdf5",\
 "gizmo":"/global/cscratch1/sd/cstrawn/AGORAfiles/gizmo/snapshot_010.hdf5"}
 
@@ -76,9 +76,9 @@ def main(filetype):
 	print output
 
 if __name__ == "__main__":
+	successes = []
+	failures = []
 	for filetype in filenames.keys():
-		successes = []
-		failures = []
 		try:
 			main(filetype)
 			successes.append(filetype)
