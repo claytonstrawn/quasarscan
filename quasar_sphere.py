@@ -3,16 +3,15 @@
 import numpy as np
 import os
 import datetime
-
 try:
     from quasarscan import parse_vela_metadata
-    from quasarscan.ion_lists import *
+    from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
     level = 0
 except:
     import parse_vela_metadata
-    from ion_lists import *
+    import ion_lists
     import gasbinning
     import roman
     level = 1
@@ -136,6 +135,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
     #finds and saves stellar mass, total mass (virial mass), and the star formation rate
     def add_extra_simparam_fields(self):
         self.name     = self.simparams[0]
+        print self.name
         name_fields   = self.name.split("_")
         self.simname  = name_fields[0]
         self.version  = name_fields[1]
@@ -148,6 +148,11 @@ class QuasarSphere(GeneralizedQuasarSphere):
         if abs(self.redshift - 2) <= .05: self.rounded_redshift = 2.00
         if abs(self.redshift - 3) <= .05: self.rounded_redshift = 3.00
         if abs(self.redshift - 4) <= .05: self.rounded_redshift = 4.00
+        if abs(self.redshift - 5) <= .5: self.rounded_redshift = 5.00
+        if abs(self.redshift - 6) <= .5: self.rounded_redshift = 6.00
+        if abs(self.redshift - 8) <= 1: self.rounded_redshift = 8.00
+        if abs(self.redshift - 10) <= 1: self.rounded_redshift = 10.00
+        if abs(self.redshift - 20) <= 1: self.rounded_redshift = 20.00
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
         self.Rvir = self.simparams[5]
         self.dspath = self.simparams[6]
@@ -249,6 +254,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
             f.write(str(vector).replace("\n",""))
             f.write("\n")
         f.close()
+        print "saved file %s"%filename
         return filename
     
 def read_values(filename):

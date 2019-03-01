@@ -4,7 +4,6 @@ import trident
 import quasar_sphere
 import sys
 import os
-import gasbinning
 import datetime
 from yt.utilities.physical_constants import mh
 
@@ -14,7 +13,7 @@ def tprint(*args,**kwargs):
         print(datetime.datetime.now())
     print(args)
 
-#yt.funcs.mylog.setLevel(50)
+yt.funcs.mylog.setLevel(50)
 
 def get_cmd_args():
     filename = sys.argv[1]
@@ -22,14 +21,10 @@ def get_cmd_args():
     parallel = sys.argv[3]=='p'
     return filename,save,parallel
 
-def _H_mass_density(field, data):
-    return data['gas','H_nuclei_density']*mh
-yt.add_field(("gas", "H_nuclei_mass_density"), function=_H_mass_density, units="g / cm**3")
-
 atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
         'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
         'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn']
-fields_to_keep = [('gas',"H_nuclei_density"),('gas',"H_nuclei_mass_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
+fields_to_keep = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
 
 def atoms_from_ions(ions):
     toret = []
@@ -37,8 +32,8 @@ def atoms_from_ions(ions):
         toret.append(ion.split(" ")[0])
     return list(set(toret))
 
-#filename,save,parallel = get_cmd_args()
-filename,save,parallel = 'output/VELA_v2_art_99coldensinfo/0_of_448-agoraions_z0.75.txt',2,False
+filename,save,parallel = get_cmd_args()
+
 if parallel:
     yt.enable_parallelism()
 try:
@@ -47,7 +42,7 @@ except:
     readvalsoutput = quasar_sphere.read_values(filename.split('quasarscan/')[1])
 test = False
 q = quasar_sphere.QuasarSphere(readvalsoutput=readvalsoutput)
-
+g = q.gasbins
 for atom in atoms:
     if atom in atoms_from_ions(q.ions):
         fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
@@ -82,10 +77,14 @@ for i in range(0, len(bins)-1):
         field_data = ray.all_data()
         for j in range(len(q.ions)):
             ion = q.ions[j]
-            cdens = np.sum(field_data[("gas",quasar_sphere.ion_to_field_name(ion))] * field_data['dl'])
+            dl = field_data['dl']
+            cdens = np.sum(field_data[("gas",quasar_sphere.ion_to_field_name(ion))] * dl)
             vector[11+j*(num_bin_vars+2)] = cdens
             atom = ion.split(" ")[0]
-            total_nucleus = np.sum(field_data[("gas","%s_nuclei_mass_density"%atom)]/(mh*trident.ion_balance.atomic_mass[atom]) * field_data['dl'])
+            if atom == "H":
+                total_nucleus = np.sum(field_data[('gas','H_nuclei_density')]*dl)
+            else:
+                total_nucleus = np.sum(field_data[("gas","%s_nuclei_mass_density"%atom)]/(mh*trident.ion_balance.atomic_mass[atom]) * dl)
             vector[11+j*(num_bin_vars+2)+1] = cdens / total_nucleus
             for k in range(num_bin_vars):
                 variable_name,edges,units = q.gasbins.get_field_binedges_for_num(k)
@@ -96,15 +95,15 @@ for i in range(0, len(bins)-1):
                 abovelowerbound = data>edges[0]
                 belowupperbound = data<edges[1]
                 withinbounds = np.logical_and(abovelowerbound,belowupperbound)
-                coldens_in_line = (field_data[("gas",quasar_sphere.ion_to_field_name(ion))][withinbounds])*(field_data['dl'][withinbounds])
+                coldens_in_line = (field_data[("gas",quasar_sphere.ion_to_field_name(ion))][withinbounds])*(dl[withinbounds])
                 coldens_in_bin = np.sum(coldens_in_line)
                 vector[11+j*(num_bin_vars+2)+k+2] = coldens_in_bin/cdens
-        Z = np.sum(field_data[('gas',"metal_density")]*field_data['dl'])/ \
-            np.sum(field_data[('gas',"H_nuclei_mass_density")]*field_data['dl'])
+        Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
+            np.sum(field_data[('gas',"H_nuclei_mass_density")]*dl)
         vector[-1] = Z
-        n = np.average(field_data['density'],weights=field_data['density']*field_data['dl'])
+        n = np.average(field_data['density'],weights=field_data['density']*dl)
         vector[-2] = n
-        T = np.average(field_data['temperature'],weights=field_data['density']*field_data['dl'])
+        T = np.average(field_data['temperature'],weights=field_data['density']*dl)
         vector[-3] = T
         try:
             os.remove("ray"+ident+".h5")

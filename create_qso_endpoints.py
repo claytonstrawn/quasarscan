@@ -107,7 +107,7 @@ def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,ions,gasbins=None,\
         info[i][8:11] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]) + center 
     return scanparams,info
 
-if __name__ == "__main__"
+if __name__ == "__main__":
     name = sys.argv[1]
     path = sys.argv[2]
     ds = yt.load(path)
@@ -122,11 +122,11 @@ if __name__ == "__main__"
         L = np.array([0,0,1.])
     convert = float(ds.length_unit.in_units('kpc').value)
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
-    testsphere = 6*Rvir,12,12,12,2*Rvir,10
+    #testsphere = 6*Rvir,12,12,12,2*Rvir,10
     defaultions = ion_lists.agoraions
     gasbins = gasbinning.GasBinsHolder("all")
     scanparams, info = create_QSO_endpoints(testsphere,convert,defaultions,L=L,center=center,gasbins = gasbins)
     simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert]
-    q = quasar_sphere.QuasarSphere(simparams,scanparams,defaultions,info,gasbins)
-    q.save_values()
+    q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= defaultions,data=info,gasbins= gasbins)
+    q.save_values(at_level = 0)
 
