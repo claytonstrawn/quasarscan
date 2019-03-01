@@ -1,5 +1,4 @@
 import numpy as np
-from yt import YTArray
 
 class GasBin(object):
 

@@ -2,18 +2,29 @@ import numpy as np
 import os
 import sys
 import matplotlib.pyplot as plt
-from quasar_scan import *
-import gasbinning
-from parse_vela_metadata import Rdict, Ldict
+try:
+    from quasarscan import quasar_sphere
+    from quasarscan import parse_metadata
+    from quasarscan import ion_lists
+    from quasarscan import gasbinning
+    from quasarscan import roman
+    level = 0
+except:
+    import quasar_sphere
+    import parse_metadata
+    import ion_lists
+    import gasbinning
+    import roman
+    level = 1
 
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
 def get_all_textfiles(inquasarscan = True):
     
     #pathname by default starts in output
-    path = "output2.0"
+    path = "output"
     if not inquasarscan:
-        path = "quasarscan/output2.0"
+        path = "quasarscan/output"
     textfiles = []
     
     #gets all folders in output
@@ -98,11 +109,11 @@ class MultiQuasarSpherePlotter():
         self.setPlots(plots)
         self.quasarLineup = []
         if textfiles is None:
-            textfiles = get_all_textfiles()
+            textfiles = get_all_textfiles(level)
         for textfile in textfiles:
             try:
-                simparams,scanparams,ions,data,gasbins = read_values(textfile)
-                q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions = ions,data = data, gasbins = gasbins, readonly = True)
+                readvalsoutput = quasar_sphere.read_values(textfile)
+                q = quasar_sphere.QuasarSphere(readvalsoutput = readvalsoutput)
                 if self.pass_safety_check(q):
                     self.quasarLineup.append(q)
                 elif cleanup:
@@ -353,7 +364,7 @@ class MultiQuasarSpherePlotter():
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
         for i in range(len(quasarArray)):
-            gq = GeneralizedQuasarSphere(quasarArray[i],distance=distances)
+            gq = quasar_sphere.GeneralizedQuasarSphere(quasarArray[i],distance=distances)
             if gq.number == 0:
                 xs[i] = np.empty(0)
                 ys[i] = np.empty(0)
@@ -780,7 +791,7 @@ class MultiQuasarSpherePlotter():
             rlims = [0.1,np.inf]
         vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
         distances = "kpc" if xVar == "r" else "Rvir"
-        gq = GeneralizedQuasarSphere(self.currentQuasarArray,distance = distances)
+        gq = quasar_sphere.GeneralizedQuasarSphere(self.currentQuasarArray,distance = distances)
         xs = gq.info[:, vardict[xVar]]
         ys = self.get_yVar_from_str(gq,ion)
         rs = gq.info[:,3]

@@ -4,13 +4,13 @@ import numpy as np
 import os
 import datetime
 try:
-    from quasarscan import parse_vela_metadata
+    from quasarscan import parse_metadata
     from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
     level = 0
 except:
-    import parse_vela_metadata
+    import parse_metadata
     import ion_lists
     import gasbinning
     import roman
