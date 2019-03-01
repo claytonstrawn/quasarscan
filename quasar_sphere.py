@@ -151,8 +151,8 @@ class QuasarSphere(GeneralizedQuasarSphere):
         if abs(self.redshift - 5) <= .5: self.rounded_redshift = 5.00
         if abs(self.redshift - 6) <= .5: self.rounded_redshift = 6.00
         if abs(self.redshift - 8) <= 1: self.rounded_redshift = 8.00
-        if abs(self.redshift - 10) <= 1: self.rounded_redshift = 10.00
-        if abs(self.redshift - 20) <= 1: self.rounded_redshift = 20.00
+        if abs(self.redshift - 10) <= 2: self.rounded_redshift = 10.00
+        if abs(self.redshift - 20) <= 5: self.rounded_redshift = 20.00
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
         self.Rvir = self.simparams[5]
         self.dspath = self.simparams[6]

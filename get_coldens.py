@@ -17,7 +17,7 @@ yt.funcs.mylog.setLevel(50)
 
 def get_cmd_args():
     filename = sys.argv[1]
-    save = sys.argv[2]
+    save = int(sys.argv[2])
     parallel = sys.argv[3]=='p'
     return filename,save,parallel
 
@@ -87,24 +87,36 @@ for i in range(0, len(bins)-1):
                 total_nucleus = np.sum(field_data[("gas","%s_nuclei_mass_density"%atom)]/(mh*trident.ion_balance.atomic_mass[atom]) * dl)
             vector[11+j*(num_bin_vars+2)+1] = cdens / total_nucleus
             for k in range(num_bin_vars):
-                variable_name,edges,units = q.gasbins.get_field_binedges_for_num(k)
-                if units:
-                    data = field_data[variable_name].in_units(units)
-                else:
-                    data = field_data[variable_name]
-                abovelowerbound = data>edges[0]
-                belowupperbound = data<edges[1]
-                withinbounds = np.logical_and(abovelowerbound,belowupperbound)
-                coldens_in_line = (field_data[("gas",quasar_sphere.ion_to_field_name(ion))][withinbounds])*(dl[withinbounds])
-                coldens_in_bin = np.sum(coldens_in_line)
-                vector[11+j*(num_bin_vars+2)+k+2] = coldens_in_bin/cdens
-        Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
-            np.sum(field_data[('gas',"H_nuclei_mass_density")]*dl)
-        vector[-1] = Z
-        n = np.average(field_data['density'],weights=field_data['density']*dl)
-        vector[-2] = n
-        T = np.average(field_data['temperature'],weights=field_data['density']*dl)
-        vector[-3] = T
+                try:
+                    variable_name,edges,units = q.gasbins.get_field_binedges_for_num(k)
+                    if units:
+                        data = field_data[variable_name].in_units(units)
+                    else:
+                        data = field_data[variable_name]
+                    abovelowerbound = data>edges[0]
+                    belowupperbound = data<edges[1]
+                    withinbounds = np.logical_and(abovelowerbound,belowupperbound)
+                    coldens_in_line = (field_data[("gas",quasar_sphere.ion_to_field_name(ion))][withinbounds])*(dl[withinbounds])
+                    coldens_in_bin = np.sum(coldens_in_line)
+                    vector[11+j*(num_bin_vars+2)+k+2] = coldens_in_bin/cdens
+                except Exception as e:
+                    print "Could not bin into %s with edges %s because of error %s"%(variable_name,edges,e)
+        try:
+            Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
+                np.sum(field_data[('gas',"H_nuclei_density")]*mh*dl)
+            vector[-1] = Z
+        except Exception as e:
+            print "Could not get average metallicity because of error %s"%(e)
+        try:
+            n = np.average(field_data['density'],weights=field_data['density']*dl)
+            vector[-2] = n
+        except Exception as e:
+            print "Could not get average density because of error %s"%(e)
+        try:
+            T = np.average(field_data['temperature'],weights=field_data['density']*dl)
+            vector[-3] = T
+        except Exception as e:
+            print "Could not get average temperature because of error %s"%(e)
         try:
             os.remove("ray"+ident+".h5")
         except:

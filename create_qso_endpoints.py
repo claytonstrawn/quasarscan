@@ -125,7 +125,7 @@ if __name__ == "__main__":
     #testsphere = 6*Rvir,12,12,12,2*Rvir,10
     defaultions = ion_lists.agoraions
     gasbins = gasbinning.GasBinsHolder("all")
-    scanparams, info = create_QSO_endpoints(testsphere,convert,defaultions,L=L,center=center,gasbins = gasbins)
+    scanparams, info = create_QSO_endpoints(defaultsphere,convert,defaultions,L=L,center=center,gasbins = gasbins)
     simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert]
     q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= defaultions,data=info,gasbins= gasbins)
     q.save_values(at_level = 0)
