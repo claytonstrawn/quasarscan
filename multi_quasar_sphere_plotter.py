@@ -134,7 +134,7 @@ class MultiQuasarSpherePlotter():
 
     #tests each condition, each condition is a safety check
     def pass_safety_check(self, q):
-        minlength = 1
+        minlength = 2
         minions = []
         if q.length_reached < minlength:
             print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
@@ -564,7 +564,7 @@ class MultiQuasarSpherePlotter():
     def plot_err(self, ion, quasarArray = None, xVar = "rdivR", save_fig = False, \
                  labels = None,extra_title = "",rlims = None,tolerance = 1e-5, \
                  dots = False,logx = False,logy = True, average = None,custom_name = None, \
-                 coloration = None, visibility_threshold = None):
+                 coloration = None, visibility_threshold = None, plot_empties = False):
         print("Current constraints (name): "+self.currentQuasarArrayName)
         if not average is None:
             oldplots = self.plots
@@ -610,13 +610,16 @@ class MultiQuasarSpherePlotter():
             return
         
         labels, redundancy = self.get_redundancy_from_labels(labels)
-
+        empty = True
         if plot_type in [0,1,2,3]:
+            empty = True
             for i in range(len(yarys)):
                 xarys[i] = xarys[i][yarys[i]>0]
                 yarys[i] = yarys[i][yarys[i]>0]
                 if logy:
                     yarys[i] = np.log10(yarys[i])
+                if len(yarys) > 0 and len(yarys[i]) > 0:
+                    empty = False
         elif plot_type in [4]:
             for i in range(len(yarys)):
                 for j in range(len(yarys[i])):
@@ -628,6 +631,11 @@ class MultiQuasarSpherePlotter():
                         yarys[i][j] = np.log10(yarys[i][j])
                     if logx:
                         xarys[i][j] = np.log10(xarys[i][j])
+                    if len(yarys) > 0 and len(yarys[i]) > 0 and len(yarys[i][j]) > 0:
+                        empty = False
+        if empty and not plot_empties:
+            return None
+
         if visibility_threshold:
             if plot_type in [0,1,2,3]:
                 xarys_visible = np.empty(len(xarys),dtype = object)
@@ -747,6 +755,8 @@ class MultiQuasarSpherePlotter():
         
         if not average is None:
             self.setPlots(oldplots)
+
+        plt.show()
         
         return plt
 
@@ -784,7 +794,7 @@ class MultiQuasarSpherePlotter():
     #             reset = False, labels = None,extra_title = "",rlims = None,\
     #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
     def plot_hist(self, ion, xVar = "rdivR",extra_title = "",rlims = None,weights = True,\
-                  save_fig = False, tolerance = 1e-5,ns = (42,15),logx = False, logy = True):
+                  save_fig = False, tolerance = 1e-5,ns = (42,15),logx = False, logy = True, plot_empties = False):
         hotcustom = self.definecolorbar()
         plt.register_cmap(cmap=hotcustom)
         if rlims is None:
@@ -815,6 +825,8 @@ class MultiQuasarSpherePlotter():
         else:
             weight = xs*0.0+1.0
             cbarlabel = "Total number of lines"
+        if len(ys) == 0 and not plot_empties:
+            return None
         H, xedges, yedges = np.histogram2d(xs, ys, bins=ns,weights = weight)
         H = H.T
         X, Y = np.meshgrid(xedges, yedges)
@@ -834,7 +846,7 @@ class MultiQuasarSpherePlotter():
             plt.xlabel('log ' + sightline_unit_labels[xVar])
         else:
             plt.xlim(get_new_axislim(plt.xlim()))
-
+        plt.show()
         return plt
 
 class MultiSphereSorter(object):
