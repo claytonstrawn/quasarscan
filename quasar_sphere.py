@@ -144,15 +144,16 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.redshift = self.simparams[1]
         self.rounded_redshift = self.redshift
         if abs(self.redshift - 1) <= .05: self.rounded_redshift = 1.00
-        if abs(self.redshift - 1.5) <= .05: self.rounded_redshift = 1.50
-        if abs(self.redshift - 2) <= .05: self.rounded_redshift = 2.00
-        if abs(self.redshift - 3) <= .05: self.rounded_redshift = 3.00
-        if abs(self.redshift - 4) <= .05: self.rounded_redshift = 4.00
-        if abs(self.redshift - 5) <= .5: self.rounded_redshift = 5.00
-        if abs(self.redshift - 6) <= .5: self.rounded_redshift = 6.00
-        if abs(self.redshift - 8) <= 1: self.rounded_redshift = 8.00
-        if abs(self.redshift - 10) <= 2: self.rounded_redshift = 10.00
-        if abs(self.redshift - 20) <= 5: self.rounded_redshift = 20.00
+        elif abs(self.redshift - 1.5) <= .05: self.rounded_redshift = 1.50
+        elif abs(self.redshift - 2) <= .05: self.rounded_redshift = 2.00
+        elif abs(self.redshift - 3) <= .05: self.rounded_redshift = 3.00
+        elif abs(self.redshift - 4) <= .05: self.rounded_redshift = 4.00
+        elif abs(self.redshift - 5) <= .5: self.rounded_redshift = 5.00
+        elif abs(self.redshift - 6) <= .5: self.rounded_redshift = 6.00
+        elif abs(self.redshift - 8) <= 1: self.rounded_redshift = 8.00
+        elif abs(self.redshift - 10) <= 2: self.rounded_redshift = 10.00
+        elif abs(self.redshift - 15) <= 2: self.rounded_redshift = 15.00
+        elif abs(self.redshift - 20) <= 4: self.rounded_redshift = 20.00
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
         self.Rvir = self.simparams[5]
         self.dspath = self.simparams[6]
