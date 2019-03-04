@@ -26,9 +26,9 @@ def dict_of_vela_info(quantity,loud = False):
     #Setting up the dictionary of the desired property, where the dictionary key is the name of the galaxy folder : the redshift, and the dictionary value is the respective desired property quantity
     ret_dict = {}
     if os.path.isdir("galaxy_catalogs"):
-        basepath = "galaxy_catalogs/"
+        basepath = "galaxy_catalogs/galaxy_catalogs_vela/"
     else: 
-        basepath = "quasarscan/galaxy_catalogs/"
+        basepath = "quasarscan/galaxy_catalogs/galaxy_catalogs_vela/"
     for version in range(1,3):
         if version == 1:
             folderstart = "VELA"

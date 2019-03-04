@@ -5,7 +5,10 @@ import numpy as np
 functions = {'VELA':parse_vela_metadata.dict_of_vela_info,'NIHAO':parse_nihao_metadata.dict_of_nihao_info}
 avalsdict = {'VELA':parse_vela_metadata.adict,'NIHAO':parse_nihao_metadata.adict}
 
-
+#the problem is that NIHAO is not organized nice round expansion factors (a)
+#this will probably be more common, so I will use it as the default behavior
+#so I need this function to find the best a value in a given system, starting from redshift 
+#(which is what people are more likely to be interested in asking for)
 def get_closest_value_for_a(redshift,simname,name):
     try:
         a0 = 1./(redshift+1)
