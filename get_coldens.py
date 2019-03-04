@@ -1,7 +1,10 @@
 import yt
 import numpy as np
 import trident
-import quasar_sphere
+try:
+    from quasarscan import quasar_sphere
+except:
+    import quasar_sphere
 import sys
 import os
 import datetime
@@ -21,10 +24,17 @@ def get_cmd_args():
     parallel = sys.argv[3]=='p'
     return filename,save,parallel
 
+
 atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
         'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
         'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn']
-fields_to_keep = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
+fields_to_keep_art = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
+fields_to_keep_ramses = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
+fields_to_keep_gizmo = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
+fields_to_keep_gadget = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
+fields_to_keep_gear = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
+fields_to_keep_enzo = [('gas',"H_nuclei_density"),('gas',"metal_density"),('gas',"density"),('gas',"temperature"),('gas',"radial_velocity"),('gas', 'cell_volume')]
+fields_to_keep_dict = {'art':fields_to_keep_art,'ramses':fields_to_keep_ramses,'gizmo':fields_to_keep_gizmo,'gadget':fields_to_keep_gadget,'gear':fields_to_keep_gear,'enzo':fields_to_keep_enzo}
 
 def atoms_from_ions(ions):
     toret = []
@@ -33,7 +43,6 @@ def atoms_from_ions(ions):
     return list(set(toret))
 
 filename,save,parallel = get_cmd_args()
-
 if parallel:
     yt.enable_parallelism()
 try:
@@ -42,12 +51,19 @@ except:
     readvalsoutput = quasar_sphere.read_values(filename.split('quasarscan/')[1])
 test = False
 q = quasar_sphere.QuasarSphere(readvalsoutput=readvalsoutput)
+fields_to_keep = fields_to_keep_dict[q.code]
+
 g = q.gasbins
 for atom in atoms:
-    if atom in atoms_from_ions(q.ions):
+    if q.code == 'art' and atom in atoms_from_ions(q.ions):
         fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
-        
-ds = yt.load(q.dspath)
+if q.code == 'art':
+    h,d,s = quasar_sphere.get_aux_files_art(q.dspath)
+    ds = yt.load(q.dspath,file_particle_header=h,\
+                                  file_particle_data=d,\
+                                  file_particle_stars=s)
+else:
+    ds = yt.load(q.dspath)
 if ('deposit','Gas_mass') in ds.derived_field_list:
     def gas_mass(field, data):
         return data['deposit','Gas_mass']
@@ -78,13 +94,13 @@ for i in range(0, len(bins)-1):
         for j in range(len(q.ions)):
             ion = q.ions[j]
             dl = field_data['dl']
-            cdens = np.sum(field_data[("gas",quasar_sphere.ion_to_field_name(ion))] * dl)
+            ionfield = field_data[("gas",quasar_sphere.ion_to_field_name(ion))]
+            cdens = np.sum(ionfield * dl)
             vector[11+j*(num_bin_vars+2)] = cdens
             atom = ion.split(" ")[0]
-            if atom == "H":
-                total_nucleus = np.sum(field_data[('gas','H_nuclei_density')]*dl)
-            else:
-                total_nucleus = np.sum(field_data[("gas","%s_nuclei_mass_density"%atom)]/(mh*trident.ion_balance.atomic_mass[atom]) * dl)
+            total_nucleus = np.sum(ionfield[ionfield>0]/\
+                                       field_data[("gas",quasar_sphere.ion_to_field_name(ion).replace("number_density","ion_fraction"))][ionfield>0]\
+                                        * dl[ionfield>0])
             vector[11+j*(num_bin_vars+2)+1] = cdens / total_nucleus
             for k in range(num_bin_vars):
                 try:
@@ -96,7 +112,7 @@ for i in range(0, len(bins)-1):
                     abovelowerbound = data>edges[0]
                     belowupperbound = data<edges[1]
                     withinbounds = np.logical_and(abovelowerbound,belowupperbound)
-                    coldens_in_line = (field_data[("gas",quasar_sphere.ion_to_field_name(ion))][withinbounds])*(dl[withinbounds])
+                    coldens_in_line = (ionfield[withinbounds])*(dl[withinbounds])
                     coldens_in_bin = np.sum(coldens_in_line)
                     vector[11+j*(num_bin_vars+2)+k+2] = coldens_in_bin/cdens
                 except Exception as e:

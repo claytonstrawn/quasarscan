@@ -16,6 +16,14 @@ except:
     import roman
     level = 1
 
+def get_aux_files_art(dspath):
+    projectdir = dspath.split("10MpcBox")[0]
+    a0 = dspath.split("a0.")[1][:3]
+    file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
+    file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
+    file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
+    return file_particle_header,file_particle_data,file_particle_stars    
+
 def ions_to_field_name(ions):
     lst = []
     for ion in ions:

@@ -110,7 +110,13 @@ def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,ions,gasbins=None,\
 if __name__ == "__main__":
     name = sys.argv[1]
     path = sys.argv[2]
-    ds = yt.load(path)
+    if 'art' in name:
+        h,d,s = quasar_sphere.get_aux_files_art(path)
+        ds = yt.load(path,file_particle_header=h,\
+                                  file_particle_data=d,\
+                                  file_particle_stars=s)
+    else:
+        ds = yt.load(path)
     z = ds.current_redshift
     Rvir = parse_metadata.get_value("Rvir",name,z)
     if Rvir is None:
