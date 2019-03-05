@@ -13,10 +13,10 @@ def dict_of_nihao_info(quantity,loud = False):      #aexp,Rvir,Mvir_gas,Mvir_sta
     
     #Setting up the dictionary of the desired property, where the dictionary key is the name of the galaxy folder : the redshift, and the dictionary value is the respective desired property quantity
     ret_dict = {}
-    if os.path.isdir("galaxy_catalogs_nihao"):
-        basepath = "galaxy_catalogs_nihao/"
+    if os.path.isdir("galaxy_catalogs"):
+        basepath = "galaxy_catalogs/galaxy_catalogs_nihao/"
     else: 
-        basepath = "quasarscan/galaxy_catalogs_nihao/"
+        basepath = "quasarscan/galaxy_catalogs/galaxy_catalogs_nihao/"
     allfiles = os.listdir(basepath)
 
     for folder in allfiles:

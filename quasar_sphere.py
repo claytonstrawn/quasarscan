@@ -86,7 +86,7 @@ class GeneralizedQuasarSphere(object):
             currentpos += size
             
     def get_ion_column_num(self,ion):
-        intensivesdict = {'Z':-1,'n':-2,'T':-3}
+        intensivesdict = {'Z':-1,'rho':-2,'T':-3}
         if not ":" in ion:
             bintype = "cdens"
         else:
@@ -99,7 +99,7 @@ class GeneralizedQuasarSphere(object):
             plus = 1
         else:
             plus = self.gasbins.get_all_keys().index(bintype)+2
-        if ion in ['Z','n','T']:
+        if ion in intensivesdict.keys():
             return len(self.info[0])+intensivesdict[ion]
         try:
             return 11 + self.ions.index(ion)*(self.gasbins.get_length()+2)+plus
@@ -162,35 +162,32 @@ class QuasarSphere(GeneralizedQuasarSphere):
         elif abs(self.redshift - 10) <= 2: self.rounded_redshift = 10.00
         elif abs(self.redshift - 15) <= 2: self.rounded_redshift = 15.00
         elif abs(self.redshift - 20) <= 4: self.rounded_redshift = 20.00
+        else: self.rounded_redshift = self.redshift
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
         self.Rvir = self.simparams[5]
+        self.Rvir_is_real = str(parse_metadata.get_value("Rvir",self.name,redshift = self.redshift)==self.Rvir)
         self.dspath = self.simparams[6]
         self.a0 = 1./(1+self.redshift)
         self.L = np.array([self.simparams[7], self.simparams[8], self.simparams[9]])
+        self.L_mag = np.sqrt(np.sum(self.L**2))
+
+        #start looking for metadata files
         self.code_unit_in_kpc = self.simparams[10]
-        try:
-            #this shouldn't work until we make a generic metadata reader
-            assert "this thing" == "doesn't work"
-            self.Mvir = get_metadata(self.name,self.a0,"Mvir")
-            self.gas_Rvir = float(parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0])
-            self.star_Rvir = float(parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simname][self.a0])
-            self.dm_Rvir = float(parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simname][self.a0])
-            self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
+        self.Mvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
+        self.gas_Rvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
+        self.star_Rvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
+        self.dm_Rvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
+        self.sfr = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
+        if self.sfr and self.star_Rvir:
             self.ssfr = self.sfr / self.star_Rvir
-            self.L_mag = np.sqrt(np.sum(self.L**2))
-            aDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
+        else:
+            self.ssfr = None
+        try:
+            aDict = parse_metadata.avalsdict[self.simname]
             aDict.sort()
             self.final_a0 = float(aDict[-1])
         except:
-            self.Mvir = None
-            self.gas_Rvir = None
-            self.star_Rvir = None
-            self.dm_Rvir =None
-            self.sfr = None
-            self.ssfr = None
-            self.L_mag =None
             self.final_a0 = None
-            #Unable to load all metadata info!
 
     def get_criteria_at_a(self, a, criteria):
         if float(self.final_a0) < float(a):

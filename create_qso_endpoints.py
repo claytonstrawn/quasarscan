@@ -121,14 +121,13 @@ if __name__ == "__main__":
     Rvir = parse_metadata.get_value("Rvir",name,z)
     if Rvir is None:
         Rvir = 100#kpc
-    center = [0.50570774, 0.5021925,  0.50058842]#ds.find_max(('gas','density'))[1] (removed for speed)
+    ds.find_max(('gas','density'))[1]
     L = parse_metadata.get_value("L",name,z)
     if L is None:
-        #sp = ds.sphere(center,(Rvir,"kpc"))
         L = np.array([0,0,1.])
     convert = float(ds.length_unit.in_units('kpc').value)
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
-    #testsphere = 6*Rvir,12,12,12,2*Rvir,10
+    testsphere = 6*Rvir,12,12,12,2*Rvir,10
     defaultions = ion_lists.agoraions
     gasbins = gasbinning.GasBinsHolder("all")
     scanparams, info = create_QSO_endpoints(defaultsphere,convert,defaultions,L=L,center=center,gasbins = gasbins)
