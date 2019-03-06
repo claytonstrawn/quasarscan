@@ -121,7 +121,7 @@ if __name__ == "__main__":
     Rvir = parse_metadata.get_value("Rvir",name,z)
     if Rvir is None:
         Rvir = 100#kpc
-    ds.find_max(('gas','density'))[1]
+    center = ds.find_max(('gas','density'))[1]
     L = parse_metadata.get_value("L",name,z)
     if L is None:
         L = np.array([0,0,1.])
