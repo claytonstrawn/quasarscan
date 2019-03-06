@@ -15,12 +15,15 @@ def get_closest_value_for_a(redshift,simname,name):
     a0 = 1./(redshift+1)
     avals = avalsdict[simname]
     best = '-1.0'
-    for a in avals[name].keys():
-        if np.abs(a0-float(a))<np.abs(float(best)-a0):
-            best = a
-    if a0-float(a)>.2:
+    try:
+        for a in avals[name].keys():
+            if np.abs(a0-float(a))<np.abs(float(best)-a0):
+                best = a
+        if a0-float(a)>.2:
+            return None
+        return float(best)
+    except:
         return None
-    return float(best)
 
 def get_value(quantity, name, redshift = None,a = None):
     simname = name.split("_")[0]
