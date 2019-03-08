@@ -162,7 +162,6 @@ class QuasarSphere(GeneralizedQuasarSphere):
         elif abs(self.redshift - 15) <= 2: self.rounded_redshift = 15.00
         elif abs(self.redshift - 20) <= 4: self.rounded_redshift = 20.00
         else: self.rounded_redshift = self.redshift
-        self.save_values()
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
         self.Rvir = self.simparams[5]
         self.Rvir_is_real = str(parse_metadata.get_value("Rvir",self.name,redshift = self.redshift)==self.Rvir)

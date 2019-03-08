@@ -1,4 +1,3 @@
-import numpy as np
 import os
 def dict_of_vela_info(quantity,loud = False):
     #This is a guide for what info can be found in what column, starting from column 0.
@@ -36,7 +35,7 @@ def dict_of_vela_info(quantity,loud = False):
             folderstart = "VELA_v2_"
         for i in range(35):
             folder = folderstart+"%02i"%i
-            ret_dict[folder] = {}
+            ret_dict["VELA_v%d_art_%02d"%(version,i)] = {}
             if quantity in quantity_dict_Mstar.keys():
                 pathname = basepath + folder + "/galaxy_catalogue/Mstar.txt"
             elif quantity in quantity_dict_Nir_disc_cat.keys():
@@ -55,15 +54,15 @@ def dict_of_vela_info(quantity,loud = False):
             
             # the following lines including the while loop retrieve the desired property value by iterating through the textfile line by line 
             line = f.readline() 
-            a = line.split()[0]
+            a = float(line.split()[0])
             while 1:
                 if numvals == 1:
-                    ret_dict[folder][a] = line.split()[index]
+                    ret_dict["VELA_v%d_art_%02d"%(version,i)][a] = float(line.split()[index])
                 else:
-                    ret_dict[folder][a] = [line.split()[index[0]],line.split()[index[1]],line.split()[index[2]]]
+                    ret_dict["VELA_v%d_art_%02d"%(version,i)][a] = [float(line.split()[index[0]]),float(line.split()[index[1]]),float(line.split()[index[2]])]
                 line = f.readline()[:]
                 try:
-                    a = line.split()[0]
+                    a = float(line.split()[0])
                 except:
                     break
                     f.close()

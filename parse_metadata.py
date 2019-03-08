@@ -9,34 +9,35 @@ avalsdict = {'VELA':parse_vela_metadata.adict,'NIHAO':parse_nihao_metadata.adict
 #this will probably be more common, so I will use it as the default behavior
 #so I need this function to find the best a value in a given system, starting from redshift 
 #(which is what people are more likely to be interested in asking for)
-def get_closest_value_for_a(redshift,simname,name):
+
+def get_closest_value_for_a(simname,name,redshift=None,a0=None,loud = False):
     if simname not in functions.keys():
+        if loud:
+            print "that simulation %s does not have metadata in parse_metadata yet"%simname
         return None
-    a0 = 1./(redshift+1)
+    if redshift:
+        a0 = 1./(redshift+1)
+    elif a0:
+        a0 = a0
+    else:
+        print "called without specifying a time"
+        return None
     avals = avalsdict[simname]
-    best = '-1.0'
-    try:
-        for a in avals[name].keys():
-            if np.abs(a0-float(a))<np.abs(float(best)-a0):
-                best = a
-        if a0-float(a)>.2:
-            return None
-        return float(best)
-    except:
-        return None
+    best = -1.0
+    for a in avals[name].keys():
+        if np.abs(a0-a)<np.abs(best-a0):
+            best = a
+    if np.abs(a0-best)>.2:
+        return -1.0
+    return best
 
 def get_value(quantity, name, redshift = None,a = None):
     simname = name.split("_")[0]
-    if a:
-        a0 = a
-    elif redshift:
-        a0 = get_closest_value_for_a(redshift,simname,name)
-    else:
-        print "called without specifying a time"
-        raise ValueError
-    if a0 is None:
+    a0 = get_closest_value_for_a(simname,name,redshift=redshift,a0=a)
+    if a0 == -1.0:
         print "simulation %s does not reach redshift %s"%(name,redshift)
-    try: 
-        return float(functions[simname](quantity)[name][a0])
-    except:
-        return None
+        return np.nan
+    if simname in functions.keys():
+        return functions[simname](quantity)[name][a0]
+    else:
+        return np.nan
