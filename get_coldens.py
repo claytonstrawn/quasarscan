@@ -37,7 +37,7 @@ except:
 test = False
 q = quasar_sphere.QuasarSphere(readvalsoutput=readvalsoutput)
 
-ds,fields_to_keep = code_specific_setup.load_and_setup(q.code)
+ds,fields_to_keep = code_specific_setup.load_and_setup(q.dspath,q.code)
 
 num_bin_vars = q.gasbins.get_length()
 starting_point = q.length_reached 

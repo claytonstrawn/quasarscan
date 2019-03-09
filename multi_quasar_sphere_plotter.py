@@ -17,7 +17,7 @@ except:
 
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
-def get_all_textfiles(inquasarscan = True):
+def get_all_textfiles(inquasarscan = 1):
     
     #pathname by default starts in output
     path = "output"

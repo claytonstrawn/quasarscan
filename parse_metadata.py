@@ -3,6 +3,7 @@ import parse_nihao_metadata
 import numpy as np
 
 functions = {'VELA':parse_vela_metadata.dict_of_vela_info,'NIHAO':parse_nihao_metadata.dict_of_nihao_info}
+available_quantities = {'VELA':list(parse_vela_metadata.quantity_dict.keys()),'NIHAO':list(parse_nihao_metadata.quantity_dict.keys())}
 avalsdict = {'VELA':parse_vela_metadata.adict,'NIHAO':parse_nihao_metadata.adict}
 
 #the problem is that NIHAO is not organized nice round expansion factors (a)
@@ -37,7 +38,7 @@ def get_value(quantity, name, redshift = None,a = None):
     if a0 == -1.0:
         print "simulation %s does not reach redshift %s"%(name,redshift)
         return np.nan
-    if simname in functions.keys():
+    if simname in functions.keys() and quantity in available_quantities[simname]:
         return functions[simname](quantity)[name][a0]
     else:
         return np.nan

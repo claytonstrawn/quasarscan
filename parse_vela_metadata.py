@@ -1,13 +1,19 @@
 import os
-def dict_of_vela_info(quantity,loud = False):
+
+quantity_dict_Mstar = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
+                "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
+                "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
+                "gas_10kpc":8,"star_10kpc":9,"dm_10kpc":10,\
+                "gas_Rdisk":11,"star_Rdisk":12,"dm_Rdisk":13}
+quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7],"L_mag":11}
+quantity_dict_Nir_spherical_galaxy_cat = {"SFR":13}
+
+quantity_dict = quantity_dict_Mstar.copy()
+quantity_dict.update(quantity_dict_Nir_disc_cat)
+quantity_dict.update(quantity_dict_Nir_spherical_galaxy_cat)
+
+def dict_of_vela_info(quantity,loud = 0):
     #This is a guide for what info can be found in what column, starting from column 0.
-    quantity_dict_Mstar = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
-                    "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
-                    "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
-                    "gas_10kpc":8,"star_10kpc":9,"dm_10kpc":10,\
-                    "gas_Rdisk":11,"star_Rdisk":12,"dm_Rdisk":13}
-    quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7],"L_mag":11}
-    quantity_dict_Nir_spherical_galaxy_cat = {"SFR":13}
     
     #This calculates the column index as well as the number of data points for one piece of info
     if quantity in quantity_dict_Mstar.keys():
@@ -42,7 +48,7 @@ def dict_of_vela_info(quantity,loud = False):
                 pathname = basepath + folder + "/galaxy_catalogue/Nir_disc_cat.txt"
             elif quantity in quantity_dict_Nir_spherical_galaxy_cat.keys():
                 pathname = basepath + folder + "/galaxy_catalogue/Nir_spherical_galaxy_cat.txt"
-            else: 
+            elif loud > 1: 
                 print("where is %s stored? We don't know :("%quantity)
             try:
                 f = open(pathname)

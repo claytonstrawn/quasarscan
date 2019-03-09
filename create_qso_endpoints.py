@@ -117,13 +117,17 @@ if __name__ == "__main__":
                                   file_particle_stars=s)
     else:
         ds = yt.load(path)
-    z = ds.current_redshift
+    try:
+        z = ds.current_redshift
+    except:
+        a = ds.current_time
+        z = 1./a-1.
     Rvir = parse_metadata.get_value("Rvir",name,z)
-    if Rvir is None:
+    if np.isnan(Rvir):
         Rvir = 100#kpc
     center = ds.find_max(('gas','density'))[1]
     L = parse_metadata.get_value("L",name,z)
-    if L is None:
+    if np.isnan(L).all():
         L = np.array([0,0,1.])
     convert = float(ds.length_unit.in_units('kpc').value)
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448

@@ -20,10 +20,13 @@ namedict = {'g2.63e10': 'NIHAO_v1_tipsy_01',
  'g1.92e12': 'NIHAO_v1_tipsy_17',
  'g2.79e12': 'NIHAO_v1_tipsy_18'}
 
-def dict_of_nihao_info(quantity,loud = False):      #aexp,Rvir,Mvir_gas,Mvir_star,Mvir_dm,Mvir,fb/fbcosmo,fs/fbcosmo,Mgcold,Mgcool,Mgwarm,Mgwhot,Mghot,Mgcold(r>0.1Rvir),cool,warm,whot,hot 
+quantity_dict_Mvir_fbar = {"a":0,"Rvir":1,"gas_Rvir":2,"star_Rvir":3,"dm_Rvir":4,"Mvir":5}
+quantity_dict = quantity_dict_Mvir_fbar.copy()
+
+
+def dict_of_nihao_info(quantity,loud = 0):      #aexp,Rvir,Mvir_gas,Mvir_star,Mvir_dm,Mvir,fb/fbcosmo,fs/fbcosmo,Mgcold,Mgcool,Mgwarm,Mgwhot,Mghot,Mgcold(r>0.1Rvir),cool,warm,whot,hot 
     
     #This is a guide for what info can be found in what column, starting from column 0.
-    quantity_dict_Mvir_fbar = {"a":0,"Rvir":1,"gas_Rvir":2,"star_Rvir":3,"dm_Rvir":4,"Mvir":5}
     # NEED SFR
     
     #This calculates the column index as well as the number of data points for one piece of info
@@ -46,7 +49,7 @@ def dict_of_nihao_info(quantity,loud = False):      #aexp,Rvir,Mvir_gas,Mvir_sta
         ret_dict[name] = {}
         if quantity in quantity_dict_Mvir_fbar.keys():
             pathname = basepath + folder + "/Mvir_fbar_R200.out"
-        else: 
+        elif loud > 1: 
             print("where is %s stored? We don't know :("%quantity)
         try:
             f = open(pathname)
