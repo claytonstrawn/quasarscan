@@ -110,6 +110,10 @@ def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,ions,gasbins=None,\
 if __name__ == "__main__":
     name = sys.argv[1]
     path = sys.argv[2]
+    if len(sys.argv)==4:
+        ionlist = sys.argv[3]
+    else:
+        ionlist = None
     if 'art' in name:
         h,d,s = quasar_sphere.get_aux_files_art(path)
         ds = yt.load(path,file_particle_header=h,\
@@ -133,9 +137,16 @@ if __name__ == "__main__":
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
     testsphere = 6*Rvir,12,12,12,2*Rvir,10
     defaultions = ion_lists.agoraions
+    if ionlist:
+        try:
+            ions = ion_lists.dict_of_ionlists[ionlist]
+        except:
+            ions = ionlist.replace("[","").replace("[","").split(",")
+    else:
+        ions = defaultions
     gasbins = gasbinning.GasBinsHolder("all")
-    scanparams, info = create_QSO_endpoints(defaultsphere,convert,defaultions,L=L,center=center,gasbins = gasbins)
+    scanparams, info = create_QSO_endpoints(defaultsphere,convert,ions,L=L,center=center,gasbins = gasbins)
     simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert]
-    q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= defaultions,data=info,gasbins= gasbins)
+    q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= ions,data=info,gasbins= gasbins)
     q.save_values(at_level = 0)
 
