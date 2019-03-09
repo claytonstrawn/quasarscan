@@ -120,7 +120,7 @@ if __name__ == "__main__":
     try:
         z = ds.current_redshift
     except:
-        a = ds.current_time
+        a = ds.current_time.value
         z = 1./a-1.
     Rvir = parse_metadata.get_value("Rvir",name,z)
     if np.isnan(Rvir):
