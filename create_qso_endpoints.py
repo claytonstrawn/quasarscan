@@ -125,7 +125,7 @@ if __name__ == "__main__":
     Rvir = parse_metadata.get_value("Rvir",name,z)
     if np.isnan(Rvir):
         Rvir = 100#kpc
-    center = ds.find_max(('gas','density'))[1]
+    center = ds.find_max(('gas','density'))[1].value
     L = parse_metadata.get_value("L",name,z)
     if np.isnan(L).all():
         L = np.array([0,0,1.])
