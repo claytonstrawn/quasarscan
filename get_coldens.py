@@ -38,7 +38,7 @@ test = False
 q = quasar_sphere.QuasarSphere(readvalsoutput=readvalsoutput)
 
 ds,fields_to_keep = code_specific_setup.load_and_setup(q.dspath,q.code)
-
+convert_unit = ds.length_unit.units
 num_bin_vars = q.gasbins.get_length()
 starting_point = q.length_reached 
 bins = np.append(np.arange(starting_point,q.length,save)[:-1],q.length)
@@ -52,8 +52,8 @@ for i in range(0, len(bins)-1):
         index = vector[0]
         tprint("<line %d, starting process> "%index)
         ident = str(index)
-        start = vector[5:8]
-        end = vector[8:11]
+        start = yt.YTArray(vector[5:8],convert_unit)
+        end = yt.YTArray(vector[8:11],convert_unit)
         ray = trident.make_simple_ray(ds,
             start_position=start,
             end_position=end,

@@ -128,7 +128,7 @@ if __name__ == "__main__":
     if np.isnan(L).all():
         L = np.array([0,0,1.])
     convert_unit = ds.length_unit.units
-    convert = ds.length_unit.in_units('kpc')
+    convert = ds.length_unit.in_units('kpc').value
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
     testsphere = 6*Rvir,12,12,12,2*Rvir,10
     defaultions = ion_lists.agoraions
