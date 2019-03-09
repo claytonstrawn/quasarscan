@@ -68,7 +68,7 @@ def weights(array,function):
     probs /= np.sum(probs)
     return probs
 
-def create_QSO_endpoints(sphere, convert_kpc_to_unitary,ions,gasbins=None,\
+def create_QSO_endpoints(sphere, code_unit,ions,gasbins=None,\
                          L = None, center=None, endonsph = False):
     R=sphere[0]
     n_th=sphere[1]
@@ -80,8 +80,6 @@ def create_QSO_endpoints(sphere, convert_kpc_to_unitary,ions,gasbins=None,\
     th_arr = np.linspace(0,np.pi,n_th,endpoint = False)
     phi_arr = np.linspace(0,2*np.pi,n_phi,endpoint = False)
 
-    R *= convert_kpc_to_unitary
-    r_arr *= convert_kpc_to_unitary
     scanparams = [None]*7
     scanparams[0] = R
     scanparams[1] = len(th_arr)
@@ -105,8 +103,8 @@ def create_QSO_endpoints(sphere, convert_kpc_to_unitary,ions,gasbins=None,\
         phi= np.random.choice(phi_arr)
         alpha = 2*np.pi*np.random.random()
         info[i][:5] = np.array([i,theta,phi,r,alpha])
-        info[i][5:8] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[0]) + center
-        info[i][8:11] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]) + center 
+        info[i][5:8] = (yt.YTArray(np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[0]),'kpc') + center).in_units(code_unit).value
+        info[i][8:11] = (yt.YTArray(np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]),'kpc') + center).in_units(code_unit).value
     return scanparams,info
 
 if __name__ == "__main__":
@@ -124,12 +122,12 @@ if __name__ == "__main__":
         z = 1./a-1.
     Rvir = parse_metadata.get_value("Rvir",name,z)
     if np.isnan(Rvir):
-        Rvir = 100#kpc #This is ridiculous X.X
-    center = ds.find_max(('gas','density'))[1].in_units('unitary').value
+        Rvir = 100#kpc
+    center = ds.find_max(('gas','density'))[1]
     L = parse_metadata.get_value("L",name,z)
     if np.isnan(L).all():
         L = np.array([0,0,1.])
-    convert = float(ds.length_unit.in_units('unitary').value/ds.length_unit.in_units('kpc').value)
+    convert = ds.length_unit.units
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
     testsphere = 6*Rvir,12,12,12,2*Rvir,10
     defaultions = ion_lists.agoraions
