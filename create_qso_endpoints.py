@@ -141,7 +141,7 @@ if __name__ == "__main__":
         ions = defaultions
     gasbins = gasbinning.GasBinsHolder("all")
     scanparams, info = create_QSO_endpoints(defaultsphere,convert_unit,ions,L=L,center=center,gasbins = gasbins)
-    center = center.in_units(code_unit).value
+    center = center.in_units(convert_unit).value
     simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert]
     q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= ions,data=info,gasbins= gasbins)
     q.save_values(at_level = 0)
