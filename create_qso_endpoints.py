@@ -127,7 +127,8 @@ if __name__ == "__main__":
     L = parse_metadata.get_value("L",name,z)
     if np.isnan(L).all():
         L = np.array([0,0,1.])
-    convert = ds.length_unit.units
+    convert_unit = ds.length_unit.units
+    convert = ds.length_unit.in_units('kpc')
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
     testsphere = 6*Rvir,12,12,12,2*Rvir,10
     defaultions = ion_lists.agoraions
@@ -139,7 +140,8 @@ if __name__ == "__main__":
     else:
         ions = defaultions
     gasbins = gasbinning.GasBinsHolder("all")
-    scanparams, info = create_QSO_endpoints(defaultsphere,convert,ions,L=L,center=center,gasbins = gasbins)
+    scanparams, info = create_QSO_endpoints(defaultsphere,convert_unit,ions,L=L,center=center,gasbins = gasbins)
+    center = center.in_units(code_unit).value
     simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert]
     q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= ions,data=info,gasbins= gasbins)
     q.save_values(at_level = 0)
