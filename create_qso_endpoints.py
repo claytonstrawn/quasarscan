@@ -9,12 +9,14 @@ try:
     from quasarscan import quasar_sphere
     from quasarscan import ion_lists
     from quasarscan import gasbinning
+    from quasarscan import code_specific_setup
 
 except:
     import parse_metadata
     import quasar_sphere
     import ion_lists
     import gasbinning
+    import code_specific_setup
 
 def convert_to_xyz(r, theta, phi):
     return np.array([r*np.sin(theta)*np.cos(phi),r*np.sin(theta)*np.sin(phi),r*np.cos(theta)])
@@ -23,7 +25,7 @@ def convert_to_xyz(r, theta, phi):
 def rotation_matrix(axis, theta):
     """
     Return the rotation matrix associated with counterclockwise rotation about
-    the given axis by theta radians.
+    the given axis by theta radians. (taken from stack exchange question)
     """
     axis = np.asarray(axis)
     axis = axis/np.sqrt(np.dot(axis, axis))
@@ -66,7 +68,7 @@ def weights(array,function):
     probs /= np.sum(probs)
     return probs
 
-def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,ions,gasbins=None,\
+def create_QSO_endpoints(sphere, convert_kpc_to_unitary,ions,gasbins=None,\
                          L = None, center=None, endonsph = False):
     R=sphere[0]
     n_th=sphere[1]
@@ -78,8 +80,8 @@ def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,ions,gasbins=None,\
     th_arr = np.linspace(0,np.pi,n_th,endpoint = False)
     phi_arr = np.linspace(0,2*np.pi,n_phi,endpoint = False)
 
-    R /= convert_code_unit_to_kpc
-    r_arr /= convert_code_unit_to_kpc
+    R *= convert_kpc_to_unitary
+    r_arr *= convert_kpc_to_unitary
     scanparams = [None]*7
     scanparams[0] = R
     scanparams[1] = len(th_arr)
@@ -114,13 +116,7 @@ if __name__ == "__main__":
         ionlist = sys.argv[3]
     else:
         ionlist = None
-    if 'art' in name:
-        h,d,s = quasar_sphere.get_aux_files_art(path)
-        ds = yt.load(path,file_particle_header=h,\
-                                  file_particle_data=d,\
-                                  file_particle_stars=s)
-    else:
-        ds = yt.load(path)
+    ds = code_specific_setup.ytload(path,name.split("_")[2])
     try:
         z = ds.current_redshift
     except:
@@ -128,12 +124,12 @@ if __name__ == "__main__":
         z = 1./a-1.
     Rvir = parse_metadata.get_value("Rvir",name,z)
     if np.isnan(Rvir):
-        Rvir = 100#kpc
-    center = ds.find_max(('gas','density'))[1].value
+        Rvir = 100#kpc #This is ridiculous X.X
+    center = ds.find_max(('gas','density'))[1].in_units('unitary').value
     L = parse_metadata.get_value("L",name,z)
     if np.isnan(L).all():
         L = np.array([0,0,1.])
-    convert = float(ds.length_unit.in_units('kpc').value)
+    convert = float(ds.length_unit.in_units('unitary').value/ds.length_unit.in_units('kpc').value)
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
     testsphere = 6*Rvir,12,12,12,2*Rvir,10
     defaultions = ion_lists.agoraions
