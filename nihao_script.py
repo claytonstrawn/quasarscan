@@ -51,7 +51,7 @@ import yt
 import trident
 import numpy as np
 
-filename = "/vol/sci/astro/home/cjstrawn/sample_file/g2.19e11.00752"
+filename = "files_to_process/g2.19e11.00672"
 
 print "attempting to load file %s"%filename
 ds = yt.load(filename)
@@ -62,11 +62,17 @@ def gas_mass(field,data):
 	return data['deposit','Gas_mass']
 ds.add_field(('gas','mass'),units = 'g', function = gas_mass,sampling_type = 'cell')
 
-print "attempting to make very small sightline"
-ray_start = c
-ray_end = c+yt.YTArray([1,1,1],'kpc')
-ray = trident.make_simple_ray(ds,start_position = ray_start,\
-						end_position = ray_end, fields = [('gas','mass'),('gas','metallicity')])
+print "attempting to make very small sightline, from center"
+ray_start,ray_end = c + yt.YTArray([0,1,0],'kpc'), c+yt.YTArray([1,0,0],'kpc')
+ray = trident.make_simple_ray(ds,start_position = ray_start,end_position = ray_end, fields = [('gas','mass'),('gas','metallicity')])
+
+print "attempting to make very small sightline, through center"
+ray_start,ray_end = c + yt.YTArray([0,1,0],'kpc'), c+yt.YTArray([0,-1,0],'kpc')
+ray = trident.make_simple_ray(ds,start_position = ray_start,end_position = ray_end, fields = [('gas','mass'),('gas','metallicity')])
+
+print "attempting to make very small sightline, not through center"
+ray_start,ray_end = c + yt.YTArray([0,1,0],'kpc'), c+yt.YTArray([1,0,0],'kpc')
+ray = trident.make_simple_ray(ds,start_position = ray_start,end_position = ray_end, fields = [('gas','mass'),('gas','metallicity')])
 
 print "attempting to add ion fields to sightline"
 ions = ['H I','O VI']

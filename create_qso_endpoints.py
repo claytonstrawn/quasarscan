@@ -68,7 +68,7 @@ def weights(array,function):
     probs /= np.sum(probs)
     return probs
 
-def create_QSO_endpoints(sphere, code_unit,ions,gasbins=None,\
+def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,\
                          L = None, center=None, endonsph = False):
     R=sphere[0]
     n_th=sphere[1]
@@ -95,7 +95,8 @@ def create_QSO_endpoints(sphere, code_unit,ions,gasbins=None,\
     if L is None:
         L = np.array([0,0,1.])
     if center is None:
-        center = np.array([0,0,0.])
+        center = yt.YTArray([0,0,0],'kpc')
+        code_unit = 'kpc'
     rot_matrix = get_rotation_matrix(L)
     for i in range(int(length)):
         theta = np.random.choice(th_arr,p = weightth)
@@ -140,7 +141,7 @@ if __name__ == "__main__":
     else:
         ions = defaultions
     gasbins = gasbinning.GasBinsHolder("all")
-    scanparams, info = create_QSO_endpoints(defaultsphere,convert_unit,ions,L=L,center=center,gasbins = gasbins)
+    scanparams, info = create_QSO_endpoints(defaultsphere,ions,convert_unit = convert_unit,L=L,center=center,gasbins = gasbins)
     center = center.in_units(convert_unit).value
     simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert]
     q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= ions,data=info,gasbins= gasbins)

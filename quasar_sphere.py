@@ -143,7 +143,10 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.simnum   = name_fields[3]
         self.redshift = self.simparams[1]
         self.rounded_redshift = self.redshift
-        if abs(self.redshift - 1) <= .05: self.rounded_redshift = 1.00
+        if abs(self.redshift - 0.0) <= .05: self.rounded_redshift = 0.00
+        elif abs(self.redshift - 0.25) <= .05: self.rounded_redshift = 0.25
+        elif abs(self.redshift - 0.5) <= .05: self.rounded_redshift = 0.50
+        elif abs(self.redshift - 1) <= .05: self.rounded_redshift = 1.00
         elif abs(self.redshift - 1.5) <= .05: self.rounded_redshift = 1.50
         elif abs(self.redshift - 2) <= .05: self.rounded_redshift = 2.00
         elif abs(self.redshift - 3) <= .05: self.rounded_redshift = 3.00
@@ -166,10 +169,10 @@ class QuasarSphere(GeneralizedQuasarSphere):
         #start looking for metadata files
         self.code_unit_in_kpc = self.simparams[10]
         self.Mvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
-        self.gas_Rvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
-        self.star_Rvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
-        self.dm_Rvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
-        self.sfr = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
+        self.gas_Rvir = parse_metadata.get_value("gas_Rvir",self.name,redshift = self.redshift)
+        self.star_Rvir = parse_metadata.get_value("star_Rvir",self.name,redshift = self.redshift)
+        self.dm_Rvir = parse_metadata.get_value("dm_Rvir",self.name,redshift = self.redshift)
+        self.sfr = parse_metadata.get_value("SFR",self.name,redshift = self.redshift)
         if self.sfr and self.star_Rvir:
             self.ssfr = self.sfr / self.star_Rvir
         else:
@@ -182,16 +185,15 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.final_a0 = None
 
     def get_criteria_at_a(self, a, criteria):
-        if float(self.final_a0) < float(a):
+        if self.final_a0 < a:
             print "Inputted a value that exceeds the greatest 'a' value in %s" %(self.simname)
         if criteria == "ssfr":
-            sfr_dict = parse_vela_metadata.dict_of_vela_info("SFR")
-            star_Rvir_dict = parse_vela_metadata.dict_of_vela_info("star_Rvir")
-            return float(sfr_dict[self.simname][a])/float(star_Rvir_dict[self.simname][a])
+            sfr = parse_metadata.get_value("SFR",self.name,redshift = self.redshift)
+            star_Rvir = parse_metadata.get_value("star_Rvir",self.name,redshift = self.redshift)
+            return sfr/star_Rvir
         if criteria == "sfr":
             criteria = "SFR"
-        criteria_dict = parse_vela_metadata.dict_of_vela_info(criteria)
-        return float(criteria_dict[self.simname][a])
+        return parse_metadata.get_value(criteria,self.name, redshift = self.redshift)
     #renames basic scanparams data into new instance variables
     def add_extra_scanparam_fields(self):
         self.R = self.scanparams[0]

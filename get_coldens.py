@@ -39,6 +39,7 @@ q = quasar_sphere.QuasarSphere(readvalsoutput=readvalsoutput)
 
 ds,fields_to_keep = code_specific_setup.load_and_setup(q.dspath,q.code)
 convert_unit = ds.length_unit.units
+print convert_unit
 num_bin_vars = q.gasbins.get_length()
 starting_point = q.length_reached 
 bins = np.append(np.arange(starting_point,q.length,save)[:-1],q.length)
