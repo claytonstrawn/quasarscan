@@ -56,8 +56,8 @@ def fields_to_keep_in_sightline(code):
         print "please edit that file first."
         raise KeyError
     elif code == 'art':
-        fields_to_keep.append[('gas',"metal_density")]
-        fields_to_keep.append[('gas', 'cell_volume')]
+        fields_to_keep.append(('gas',"metal_density"))
+        fields_to_keep.append(('gas', 'cell_volume'))
         def atoms_from_ions(ions):
             toret = []
             for ion in ions:
@@ -77,7 +77,7 @@ def fields_to_keep_in_sightline(code):
     elif code == 'enzo':
         print "code %s not implemented yet!"%code
     elif code == 'tipsy':
-        fields_to_keep.append[('gas','metallicity')]        
+        fields_to_keep.append(('gas','metallicity'))       
     return fields_to_keep
 
 def load_and_setup(path,code):
