@@ -54,6 +54,7 @@ for i in range(0, len(bins)-1):
         ident = str(index)
         start = yt.YTArray(vector[5:8],convert_unit)
         end = yt.YTArray(vector[8:11],convert_unit)
+        print start,end, center
         ray = trident.make_simple_ray(ds,
             start_position=start,
             end_position=end,
