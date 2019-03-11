@@ -77,7 +77,7 @@ def fields_to_keep_in_sightline(code):
     elif code == 'enzo':
         print "code %s not implemented yet!"%code
     elif code == 'tipsy':
-        print "code %s not implemented yet!"%code
+        fields_to_keep.append[('gas','metallicity')]        
     return fields_to_keep
 
 def load_and_setup(path,code):
