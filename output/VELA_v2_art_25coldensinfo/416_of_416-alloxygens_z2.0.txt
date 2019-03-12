@@ -1,5 +1,5 @@
 Simparams: [dsname, z, center[0], center[1], center[2], Rvir, pathname, L[0], L[1], L[2], convert]
-Simparams: ['VELA_v2_art_25', 2.0297674385006843, 0.5496797561645507, 0.45991992950439453, 0.46767330169677734, 65.0, '/global/cscratch1/sd/cstrawn/VELA_v2_25/10MpcBox_csf512_a0.330.d', 0.0507762, -0.459811, 237.86, 9430.238339394133]
+Simparams: ['VELA_v2_art_25', 2.0297674385006843, 0.5496797561645507, 0.45991992950439453, 0.46767330169677734, 65.0, '/global/cscratch1/sd/cstrawn/VELA_v2_25/10MpcBox_csf512_a0.330.d', 0.0507762, -0.459811, 237.86, 0.00010604185854164183, 'code_units']
 Scanparams: [R, n_th, n_phi, n_r, r_max, num_lines, line_reached]
 Scanparams: [0.04135632483124031, 12, 12, 12, 1.5, 416, 416]
 Ions: ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX', 'H I', 'H II']

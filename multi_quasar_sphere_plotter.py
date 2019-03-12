@@ -107,7 +107,7 @@ class MultiQuasarSpherePlotter():
                 print(textfile + " could not load because:")
                 print(e)
                 if throwErrors:
-                    raise ValueError
+                    raise e
         self.quasarArray = np.array(self.quasarLineup)
         self.currentQuasarArray = []
         for q in self.quasarArray:
@@ -120,17 +120,17 @@ class MultiQuasarSpherePlotter():
 
     #tests each condition, each condition is a safety check
     def pass_safety_check(self, q,require_metadata = False):
-        minlength = 100
+        minlength = 10
         minions = []
         if q.length_reached < minlength:
-            print "Length for %s is not valid." %(q.name + "z" + str(q.rounded_redshift))
+            print "Length for %s at redshift %s is not valid." %(q.name, str(q.rounded_redshift))
             return False
         elif not all(x in q.ions for x in minions):
-            print "Not all necessary ions present in %s."%(q.name + "z" + str(q.rounded_redshift))
+            print "Not all necessary ions present in %s at redshift %s."%(q.name, str(q.rounded_redshift))
             return False
         if require_metadata:
             if q.final_a0 is None:
-                print "metadata for %s is not valid." %(q.name + "z" + str(q.rounded_redshift))
+                print "metadata for %s at redshift %s is not valid." %(q.name,str(q.rounded_redshift))
                 return False
         return True
         
@@ -343,6 +343,8 @@ class MultiQuasarSpherePlotter():
     def get_xy_type1(self,xVar,yVar,quasarArray,rlims):
         if rlims is None:
             rlims = [0.1,np.inf]
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
         vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
         distances = "kpc" if xVar == "r" else "Rvir"
         gqary = []
@@ -365,6 +367,8 @@ class MultiQuasarSpherePlotter():
     def get_xy_type2(self,xVar,yVar,quasarArray,rlims):
         if rlims is None:
             rlims = np.array([0.1,1.0])
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
         for i in range(len(quasarArray)):
@@ -375,8 +379,12 @@ class MultiQuasarSpherePlotter():
                 x = eval("q."+xVar)
                 y = self.get_yVar_from_str(q,yVar)
                 rs = q.info[:,3]
-                acceptedLines = np.logical_and(rlims[0]*q.Rvir<=rs*q.code_unit_in_kpc,\
-                                               rs*q.code_unit_in_kpc<=rlims[1]*q.Rvir)
+                convert = 1.0
+                if q.code_unit != "kpc":
+                    convert/=q.conversion_factor
+                convert/=q.Rvir
+                acceptedLines = np.logical_and(rlims[0]<=rs*convert,\
+                                               rs*convert<=rlims[1])
                 y = y[acceptedLines]
                 xs[i] = np.append(xs[i],np.tile(x,len(y)))
                 ys[i] = np.append(ys[i],y)
@@ -399,6 +407,8 @@ class MultiQuasarSpherePlotter():
     def get_xy_type4(self, xVar, yVar, quasarArray, rlims):
         if rlims is None:
             rlims = [0.1,1.0]
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
         for i in range(len(quasarArray)):
@@ -409,8 +419,12 @@ class MultiQuasarSpherePlotter():
                 x = self.get_yVar_from_str(q,xVar)
                 y = self.get_yVar_from_str(q,yVar)
                 rs = q.info[:,3]
-                acceptedLines = np.logical_and(rlims[0]*q.Rvir<=rs*q.code_unit_in_kpc,\
-                                               rs*q.code_unit_in_kpc<=rlims[1]*q.Rvir)
+                convert = 1.0
+                if q.code_unit != "kpc":
+                    convert/=q.conversion_factor
+                convert/=q.Rvir
+                acceptedLines = np.logical_and(rlims[0]<=rs*convert,\
+                                               rs*convert<=rlims[1])
                 x = x[acceptedLines]
                 y = y[acceptedLines]
                 xs[i][j] = x
@@ -556,8 +570,8 @@ class MultiQuasarSpherePlotter():
                  dots = False,logx = False,logy = True, average = None,custom_name = None, \
                  coloration = None, visibility_threshold = None, plot_empties = False):
         print("Current constraints (name): "+self.currentQuasarArrayName)
+        oldplots = self.plots
         if not average is None:
-            oldplots = self.plots
             self.setPlots(average)
         if xVar == 'rdivR':
             self.constrain_current_Quasar_Array("Rvir_is_real",['True'],changeArrayName=False)
@@ -768,8 +782,7 @@ class MultiQuasarSpherePlotter():
             name = self.get_savefig_name(ion_name,labels,xVar_name,plot_type,custom_name = custom_name)
             plt.savefig("plots/"+name + ".png")
             return plt,"plots/"+name + ".png"
-        if not average is None:
-            self.setPlots(oldplots)
+        self.setPlots(oldplots)
         return plt
 
     def definecolorbar(self):
@@ -819,6 +832,8 @@ class MultiQuasarSpherePlotter():
             return None
         if rlims is None:
             rlims = [0.1,np.inf]
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
         vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
         if xVar == 'rdivR':
             self.constrain_current_Quasar_Array("Rvir_is_real",['True'],changeArrayName=False)

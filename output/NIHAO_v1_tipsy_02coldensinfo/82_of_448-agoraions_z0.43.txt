@@ -1,5 +1,5 @@
 Simparams: [dsname, z, center[0], center[1], center[2], Rvir, pathname, L[0], L[1], L[2], convert]
-Simparams: ['NIHAO_v1_tipsy_02', 0.4369206708132436, 322.97125790776954, -4158.985038723518, -1847.1675222123192, 119.679091571, 'files_to_process/g2.19e11.00672', 0.0, 0.0, 1.0, 62229.4464542655]
+Simparams: ['NIHAO_v1_tipsy_02', 0.4369206708132436, 322.97125790776954, -4158.985038723518, -1847.1675222123192, 119.679091571, 'files_to_process/g2.19e11.00672', 0.0, 0.0, 1.0, 62229.4464542655, 'kpc']
 Scanparams: [R, n_th, n_phi, n_r, r_max, num_lines, line_reached]
 Scanparams: [718.074549426, 12, 12, 12, 239.358183142, 448, 82]
 Ions: ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX', 'H I', 'H II', 'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII', 'Ne I', 'Ne II', 'Ne III', 'Ne IV', 'Ne V', 'Ne VI', 'Ne VII', 'Ne VIII', 'Ne IX', 'C I', 'C II', 'C III', 'C IV', 'C V', 'C VI', 'C VII']

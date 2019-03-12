@@ -66,12 +66,11 @@ class GeneralizedQuasarSphere(object):
                 pos_in_q = q.get_ion_column_num(ion)
                 pos_in_self = self.get_ion_column_num(ion)
                 self.info[currentpos:currentpos+size,pos_in_self] = q.info[:size,pos_in_q]
-                if distance == "kpc":
-                    convert = q.code_unit_in_kpc
-                elif distance == "Rvir":
-                    convert = q.code_unit_in_kpc/q.Rvir
-                else:
-                    print "not sure what distance = %s means..."%distance
+                convert = 1.0
+                if q.code_unit != "kpc":
+                    convert/=q.conversion_factor
+                if distance == "Rvir":
+                    convert/=q.Rvir
             self.info[currentpos:currentpos+size,-1] = q.info[:size,-1]
             self.info[currentpos:currentpos+size,-2] = q.info[:size,-2] 
             self.info[currentpos:currentpos+size,-3] = q.info[:size,-3] 
@@ -157,7 +156,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         elif abs(self.redshift - 10) <= 2: self.rounded_redshift = 10.00
         elif abs(self.redshift - 15) <= 2: self.rounded_redshift = 15.00
         elif abs(self.redshift - 20) <= 4: self.rounded_redshift = 20.00
-        else: self.rounded_redshift = self.redshift
+        else: self.rounded_redshift = float(str(self.redshift)[:3])
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
         self.Rvir = self.simparams[5]
         self.Rvir_is_real = str(parse_metadata.get_value("Rvir",self.name,redshift = self.redshift)==self.Rvir)
@@ -165,9 +164,9 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.a0 = 1./(1+self.redshift)
         self.L = np.array([self.simparams[7], self.simparams[8], self.simparams[9]])
         self.L_mag = np.sqrt(np.sum(self.L**2))
-
+        self.conversion_factor = self.simparams[10]
+        self.code_unit = self.simparams[11]
         #start looking for metadata files
-        self.code_unit_in_kpc = self.simparams[10]
         self.Mvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
         self.gas_Rvir = parse_metadata.get_value("gas_Rvir",self.name,redshift = self.redshift)
         self.star_Rvir = parse_metadata.get_value("star_Rvir",self.name,redshift = self.redshift)
@@ -203,7 +202,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.rmax = self.scanparams[4]
         self.length = self.scanparams[5] 
         self.length_reached = self.scanparams[6]
-    
+
     def save_values(self,dest = None,at_level = 1):
         if len(self.info[0]) <= 11:
             print "No ions!"
