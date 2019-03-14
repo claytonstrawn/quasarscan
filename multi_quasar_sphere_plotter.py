@@ -2,18 +2,27 @@ import numpy as np
 import os
 import sys
 import matplotlib.pyplot as plt
-from quasar_scan import *
-import gasbinning
-from parse_vela_metadata import Rdict, Ldict
+try:
+    from quasarscan import quasar_sphere
+    from quasarscan import ion_lists
+    from quasarscan import gasbinning
+    from quasarscan import roman
+    level = 0
+except:
+    import quasar_sphere
+    import ion_lists
+    import gasbinning
+    import roman
+    level = 1
 
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
-def get_all_textfiles(inquasarscan = True):
+def get_all_textfiles(inquasarscan = 1):
     
     #pathname by default starts in output
-    path = "output2.0"
+    path = "output"
     if not inquasarscan:
-        path = "quasarscan/output2.0"
+        path = "quasarscan/output"
     textfiles = []
     
     #gets all folders in output
@@ -26,20 +35,6 @@ def get_all_textfiles(inquasarscan = True):
                 if not fileName.startswith("."):
                     textfiles.append(os.path.join(folderPath,fileName))
     print ("All textfiles loaded!")
-    return textfiles
-
-def get_VELA_folder_textfiles(folderName):
-    
-    #pathname by default starts in output
-    path = "output2.0/" + folderName + "coldensinfo"
-    
-    textfiles = []
-    
-    #gets all folders in output
-    dirs = os.listdir(path)
-    for fileName in dirs:
-        folderPath = path + "/"
-        textfiles.append(os.path.join(path,fileName))
     return textfiles
     
 def sort_ions(ions,flat = True):
@@ -72,10 +67,10 @@ def sort_ions(ions,flat = True):
         toreturn = [item for sublist in toreturn for item in sublist]
     return toreturn
 
-stringcriteria = ["ions","version","simname","simnum","has_intensives"]
-intensives = ["Z","T","n"]
-intensiveslabels = {"Z":"avg log metallicity","T":"avg log temperature","n":"avg log density"}
-intensivespositions = {"Z":-1,"T":-2,"n":-3}
+stringcriteria = ["ions","simname","version","code","simnum","Rvir_is_real"]
+intensives = ["Z","T","rho"]
+intensiveslabels = {"Z":"avg log metallicity","T":"avg log temperature","rho":"avg log density"}
+intensivespositions = {"Z":-1,"T":-2,"rho":-3}
 sightline_xVars = ["r","rdivR","theta","phi"]
 param_xVars = ["redshift","a0","Mvir","gas_Rvir","star_Rvir","dm_Rvir","sfr","ssfr","L_mag"]
 sightline_unit_labels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
@@ -92,17 +87,17 @@ class MultiQuasarSpherePlotter():
     
     #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
     #                     all textfiles in output are loaded
-    def __init__(self, textfiles = None, cleanup = False,plots = "mean"):
+    def __init__(self, textfiles = None, cleanup = False,plots = "mean",throwErrors = False):
         self.plots = "mean"
         self.avgfn = np.mean
         self.setPlots(plots)
         self.quasarLineup = []
         if textfiles is None:
-            textfiles = get_all_textfiles()
+            textfiles = get_all_textfiles(level)
         for textfile in textfiles:
             try:
-                simparams,scanparams,ions,data,gasbins = read_values(textfile)
-                q = QuasarSphere(simparams = simparams,scanparams = scanparams,ions = ions,data = data, gasbins = gasbins, readonly = True)
+                readvalsoutput = quasar_sphere.read_values(textfile)
+                q = quasar_sphere.QuasarSphere(readvalsoutput = readvalsoutput)
                 if self.pass_safety_check(q):
                     self.quasarLineup.append(q)
                 elif cleanup:
@@ -111,6 +106,8 @@ class MultiQuasarSpherePlotter():
             except Exception as e:
                 print(textfile + " could not load because:")
                 print(e)
+                if throwErrors:
+                    raise e
         self.quasarArray = np.array(self.quasarLineup)
         self.currentQuasarArray = []
         for q in self.quasarArray:
@@ -122,20 +119,19 @@ class MultiQuasarSpherePlotter():
             print ("There are no quasarspheres stored in currentQuasarArray!")
 
     #tests each condition, each condition is a safety check
-    def pass_safety_check(self, q):
-        minlength = 1
+    def pass_safety_check(self, q,require_metadata = False):
+        minlength = 10
         minions = []
         if q.length_reached < minlength:
-            print "Length for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
+            print "Length for %s at redshift %s is not valid." %(q.name, str(q.rounded_redshift))
             return False
         elif not all(x in q.ions for x in minions):
-            print "Not all necessary ions present in %s."%(q.simname + "z" + str(q.rounded_redshift))
+            print "Not all necessary ions present in %s at redshift %s."%(q.name, str(q.rounded_redshift))
             return False
-        try:
-            q.final_a0
-        except: 
-            print "metadata for %s is not valid." %(q.simname + "z" + str(q.rounded_redshift))
-            return False
+        if require_metadata:
+            if q.final_a0 is None:
+                print "metadata for %s at redshift %s is not valid." %(q.name,str(q.rounded_redshift))
+                return False
         return True
         
     def reset_current_Quasar_Array(self):
@@ -206,7 +202,7 @@ class MultiQuasarSpherePlotter():
                 toReturn.append(q)
         self.currentQuasarArray = toReturn
     
-    def constrain_current_Quasar_Array(self, constrainCriteria, bins, exploration_mode = False,atEnd = False,splitEven = None):
+    def constrain_current_Quasar_Array(self, constrainCriteria, bins=None, exploration_mode = False,atEnd = False,splitEven = None,changeArrayName = True):
         if len(self.currentQuasarArray)>0 and not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -239,29 +235,29 @@ class MultiQuasarSpherePlotter():
         
         self.currentQuasarArray = np.unique(np.concatenate(temp))
         
-        self.currentQuasarArrayName += constrainCriteria 
-        if not constrainCriteria in stringcriteria:
-            if bins[0] == 0.0:
-                lowlabel = "lessthan"
-            elif bins[0] > 100 or bins[0]<.1:
-                lowlabel = "%1.1e"%bins[0]
+        if changeArrayName:
+            self.currentQuasarArrayName += constrainCriteria 
+            if not constrainCriteria in stringcriteria:
+                if bins[0] == 0.0:
+                    lowlabel = "lessthan"
+                elif bins[0] > 100 or bins[0]<.1:
+                    lowlabel = "%1.1e"%bins[0]
+                else:
+                    lowlabel = "%1.1f"%bins[0]
+                if bins[1] == np.inf:
+                    highlabel = "andhigher"
+                elif bins[1] > 100 or bins[1]<.1:
+                    highlabel = "-%1.1e"%bins[1]
+                else:
+                    highlabel = "-%1.1f"%bins[1]
+                if lowlabel == "lessthan" and highlabel == "andhigher":
+                    self.currentQuasarArrayName += "any"
+                else:
+                    self.currentQuasarArrayName += "%s%s"%(lowlabel,highlabel)
             else:
-                lowlabel = "%1.1f"%bins[0]
-            if bins[1] == np.inf:
-                highlabel = "andhigher"
-            elif bins[1] > 100 or bins[1]<.1:
-                highlabel = "-%1.1e"%bins[1]
-            else:
-                highlabel = "-%1.1f"%bins[1]
-            self.currentQuasarArrayName += "%s%s"%(lowlabel,highlabel)
-        else:
-            for acceptedValue in bins:
-                self.currentQuasarArrayName += acceptedValue.replace(" ","")
+                for acceptedValue in bins:
+                    self.currentQuasarArrayName += acceptedValue.replace(" ","")
         return bins
-    #summary: plots an a pyplot errorbar graph with the x-axis being either theta, phi, or the radius; 
-    #         the y-axis points are the mean column densities with a spread of +/- the error
-    #         quasarArray is the array of quasars to be plotted
-
 
     def setPlots(self,plots,quartiles = None):
         if isinstance(plots,tuple):
@@ -347,13 +343,15 @@ class MultiQuasarSpherePlotter():
     def get_xy_type1(self,xVar,yVar,quasarArray,rlims):
         if rlims is None:
             rlims = [0.1,np.inf]
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
         vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
         distances = "kpc" if xVar == "r" else "Rvir"
         gqary = []
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
         for i in range(len(quasarArray)):
-            gq = GeneralizedQuasarSphere(quasarArray[i],distance=distances)
+            gq = quasar_sphere.GeneralizedQuasarSphere(quasarArray[i],distance=distances)
             if gq.number == 0:
                 xs[i] = np.empty(0)
                 ys[i] = np.empty(0)
@@ -369,6 +367,8 @@ class MultiQuasarSpherePlotter():
     def get_xy_type2(self,xVar,yVar,quasarArray,rlims):
         if rlims is None:
             rlims = np.array([0.1,1.0])
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
         for i in range(len(quasarArray)):
@@ -379,8 +379,12 @@ class MultiQuasarSpherePlotter():
                 x = eval("q."+xVar)
                 y = self.get_yVar_from_str(q,yVar)
                 rs = q.info[:,3]
-                acceptedLines = np.logical_and(rlims[0]*q.Rvir<=rs*q.code_unit_in_kpc,\
-                                               rs*q.code_unit_in_kpc<=rlims[1]*q.Rvir)
+                convert = 1.0
+                if q.code_unit != "kpc":
+                    convert/=q.conversion_factor
+                convert/=q.Rvir
+                acceptedLines = np.logical_and(rlims[0]<=rs*convert,\
+                                               rs*convert<=rlims[1])
                 y = y[acceptedLines]
                 xs[i] = np.append(xs[i],np.tile(x,len(y)))
                 ys[i] = np.append(ys[i],y)
@@ -403,6 +407,8 @@ class MultiQuasarSpherePlotter():
     def get_xy_type4(self, xVar, yVar, quasarArray, rlims):
         if rlims is None:
             rlims = [0.1,1.0]
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
         for i in range(len(quasarArray)):
@@ -413,8 +419,12 @@ class MultiQuasarSpherePlotter():
                 x = self.get_yVar_from_str(q,xVar)
                 y = self.get_yVar_from_str(q,yVar)
                 rs = q.info[:,3]
-                acceptedLines = np.logical_and(rlims[0]*q.Rvir<=rs*q.code_unit_in_kpc,\
-                                               rs*q.code_unit_in_kpc<=rlims[1]*q.Rvir)
+                convert = 1.0
+                if q.code_unit != "kpc":
+                    convert/=q.conversion_factor
+                convert/=q.Rvir
+                acceptedLines = np.logical_and(rlims[0]<=rs*convert,\
+                                               rs*convert<=rlims[1])
                 x = x[acceptedLines]
                 y = y[acceptedLines]
                 xs[i][j] = x
@@ -535,7 +545,7 @@ class MultiQuasarSpherePlotter():
             beginning = beginning[:-1]
         return retlabels,beginning
 
-    def get_ylabel_cd(self,ion,islogy):
+    def get_ylabel_cd(self,ion,ion_name,islogy):
         if ion in intensives:
             ylabel = intensiveslabels[ion]
             cd = ""
@@ -543,32 +553,59 @@ class MultiQuasarSpherePlotter():
             ylabel = param_unit_labels[yVar]
             cd = ""
         elif ":" in ion and ion.split(":")[1] != "cdens":
-            ylabel = "%sfraction of %s in state"%(islogy,ion.split(":")[0])
-            cd = "fraction "
+            if ion.split(":")[1] == "fraction":
+                ylabel = "%sfraction of %s in state: %s"%(islogy,ion.split(" ")[0],ion.split(":")[0])
+            elif len(ion_name)>10:
+                ylabel = "%sfraction of %s in state"%(islogy,ion.split(":")[0])
+            else:
+                ylabel = "%sfraction of %s in state: %s"%(islogy,ion.split(":")[0],ion_name)
+            cd = "Fraction "
         else:
-            ylabel = "%scol dens"%islogy
+            ylabel = "%scol dens %s"%(islogy,ion_name)
             cd = "Column Density "
         return ylabel,cd  
 
     def plot_err(self, ion, quasarArray = None, xVar = "rdivR", save_fig = False, \
                  labels = None,extra_title = "",rlims = None,tolerance = 1e-5, \
                  dots = False,logx = False,logy = True, average = None,custom_name = None, \
-                 coloration = None, visibility_threshold = None):
+                 coloration = None, visibility_threshold = None, plot_empties = False):
         print("Current constraints (name): "+self.currentQuasarArrayName)
+        oldplots = self.plots
         if not average is None:
-            oldplots = self.plots
             self.setPlots(average)
+        if xVar == 'rdivR':
+            self.constrain_current_Quasar_Array("Rvir_is_real",['True'],changeArrayName=False)
+            if len(self.currentQuasarArray) == 0:
+                print "You don't know Rvir for any galaxies! Plot with different xVar."
+        if isinstance(ion,tuple):
+            ion_name = ion[1]   
+            ion = ion[0]
+        elif isinstance(ion,str):
+            ion_name = ion
+        if isinstance(xVar,tuple):
+            xVar_name = xVar[1] 
+            xVar = xVar[0]
+        else:
+            xVar_name = xVar
         plt.figure()
         if isinstance(ion,list):
-            ions = ion
             plot_type = 0
-            for ion in ions:
-                assert not ion in intensives
-            assert quasarArray is None
             assert labels is None
-            labels = ions
+            assert quasarArray is None
+            ions = ion
+            labels = []
+            ions_notuple = []
+            for ion in ions:
+                if isinstance(ion,tuple):
+                    ion_name = ion[1]
+                    ion = ion[0]
+                else:
+                    ion_name = ion
+                labels.append(ion_name)
+                ions_notuple.append(ion)
+                assert not ion in intensives
             xerr = None
-            xarys,yarys = self.get_xy_type0(xVar,ions,quasarArray,rlims)
+            xarys,yarys = self.get_xy_type0(xVar,ions_notuple,quasarArray,rlims)
         elif not quasarArray is None and xVar in sightline_xVars:
             plot_type = 1
             assert isinstance(ion,str)
@@ -591,6 +628,9 @@ class MultiQuasarSpherePlotter():
             xerr = None
             xarys,yarys = self.get_xy_type3(xVar,yVar,quasarArray)
         elif xVar not in sightline_xVars + param_xVars:
+            if isinstance(xVar,tuple):
+                xVar = xVar[0]
+                xVar_name = xVar[1]   
             yVar = ion
             plot_type = 4
             xarys,yarys = self.get_xy_type4(xVar,yVar,quasarArray,rlims)
@@ -599,13 +639,16 @@ class MultiQuasarSpherePlotter():
             return
         
         labels, redundancy = self.get_redundancy_from_labels(labels)
-
+        empty = True
         if plot_type in [0,1,2,3]:
+            empty = True
             for i in range(len(yarys)):
                 xarys[i] = xarys[i][yarys[i]>0]
                 yarys[i] = yarys[i][yarys[i]>0]
                 if logy:
                     yarys[i] = np.log10(yarys[i])
+                if len(yarys) > 0 and len(yarys[i]) > 0:
+                    empty = False
         elif plot_type in [4]:
             for i in range(len(yarys)):
                 for j in range(len(yarys[i])):
@@ -617,6 +660,33 @@ class MultiQuasarSpherePlotter():
                         yarys[i][j] = np.log10(yarys[i][j])
                     if logx:
                         xarys[i][j] = np.log10(xarys[i][j])
+                    if len(yarys) > 0 and len(yarys[i]) > 0 and len(yarys[i][j]) > 0:
+                        empty = False
+
+        islogy = "log " if logy else ""
+        ylabel, cd = self.get_ylabel_cd(ion,ion_name,islogy)
+        if plot_type in [1,2,3,4]:
+            ylabel = ylabel
+        if plot_type in [0]:
+            ionstr = redundancy
+        elif plot_type in [1,2,3]:
+            ionstr = ion_name
+        elif plot_type in [4]:
+            ionstr = ""
+        ionstr = ion_name if plot_type in [1,2,3] else redundancy
+        if empty and not plot_empties:
+            print '%s %sAverages (%s) %s was not plotted because no nonzero values were recorded'%\
+            (ionstr, cd, self.plots, extra_title)
+            return None
+        plt.ylabel(ylabel)
+        if xVar in sightline_xVars:
+            plt.xlabel(sightline_unit_labels[xVar])
+        elif xVar in param_xVars:
+            plt.xlabel(param_unit_labels[xVar])
+        else:
+            plt.xlabel(xVar_name)
+        plt.title('%s %sAverages (%s) %s'%(ionstr, cd, self.plots, extra_title))
+
         if visibility_threshold:
             if plot_type in [0,1,2,3]:
                 xarys_visible = np.empty(len(xarys),dtype = object)
@@ -651,35 +721,14 @@ class MultiQuasarSpherePlotter():
             xs,ys,xerrs,yerrs = self.process_errbars_vertandhoriz(xarys,yarys)
             if visibility_threshold:
                 xs_visible,ys_visible,xerrs_visible,yerrs_visible = self.process_errbars_vertandhoriz(xarys_visible,yarys_visible)
-        islogy = "log " if logy else ""
-        ylabel, cd = self.get_ylabel_cd(ion,islogy)
-        if plot_type in [1,2,3,4]:
-            ylabel = ion +" "+ ylabel
-        plt.ylabel(ylabel)
-        if xVar in sightline_xVars:
-            plt.xlabel(sightline_unit_labels[xVar])
-        elif xVar in param_xVars:
-            plt.xlabel(param_unit_labels[xVar])
-        if plot_type in [0]:
-            ionstr = redundancy
-        elif plot_type in [1,2,3]:
-            ionstr = ion
-        elif plot_type in [4]:
-            ionstr = ""
-        ionstr = ion if plot_type in [1,2,3] else redundancy
-        plt.title('%s %sAverages (%s) %s'%(ionstr, cd, self.plots, extra_title))
-
 
         for i in range(len(xs)):
             x = xs[i]
             y = ys[i]
             if plot_type == 4:
                 islogx = "log " if logx else ""
-                if xVar in sightline_xVars:
-                    plt.xlabel(sightline_unit_labels[xVar])
-                else:
-                    xlabel, _ = self.get_ylabel_cd(xVar,islogx)
-                    plt.xlabel(xVar +" "+ xlabel)
+                xlabel, _ = self.get_ylabel_cd(xVar,xVar_name,islogx)
+                plt.xlabel(xlabel)
             yerr = np.transpose(yerrs[i])
             xerr = np.transpose(xerrs[i]) if not (xerrs is None) else None
             label = labels[i] if not visibility_threshold else None
@@ -730,13 +779,10 @@ class MultiQuasarSpherePlotter():
             plt.xscale('log')
             
         if save_fig:
-            name = self.get_savefig_name(ion,labels,xVar,plot_type,custom_name = custom_name)
+            name = self.get_savefig_name(ion_name,labels,xVar_name,plot_type,custom_name = custom_name)
             plt.savefig("plots/"+name + ".png")
             return plt,"plots/"+name + ".png"
-        
-        if not average is None:
-            self.setPlots(oldplots)
-        
+        self.setPlots(oldplots)
         return plt
 
     def definecolorbar(self):
@@ -773,14 +819,29 @@ class MultiQuasarSpherePlotter():
     #             reset = False, labels = None,extra_title = "",rlims = None,\
     #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
     def plot_hist(self, ion, xVar = "rdivR",extra_title = "",rlims = None,weights = True,\
-                  save_fig = False, tolerance = 1e-5,ns = (42,15),logx = False, logy = True):
+                  save_fig = False, tolerance = 1e-5,ns = (42,15),logx = False, logy = True, plot_empties = False):
         hotcustom = self.definecolorbar()
+        plt.figure()
+        if isinstance(ion,tuple):
+            ion_name = ion[1]
+            ion = ion[0]
+        else:
+            ion_name = ion
         plt.register_cmap(cmap=hotcustom)
+        if len(self.currentQuasarArray) == 0:
+            return None
         if rlims is None:
             rlims = [0.1,np.inf]
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
         vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
+        if xVar == 'rdivR':
+            self.constrain_current_Quasar_Array("Rvir_is_real",['True'],changeArrayName=False)
+            if len(self.currentQuasarArray) == 0:
+                print "You don't know Rvir for any galaxies! Plot with different xVar from 'rdivR'."
+                return
         distances = "kpc" if xVar == "r" else "Rvir"
-        gq = GeneralizedQuasarSphere(self.currentQuasarArray,distance = distances)
+        gq = quasar_sphere.GeneralizedQuasarSphere(self.currentQuasarArray,distance = distances)
         xs = gq.info[:, vardict[xVar]]
         ys = self.get_yVar_from_str(gq,ion)
         rs = gq.info[:,3]
@@ -804,15 +865,17 @@ class MultiQuasarSpherePlotter():
         else:
             weight = xs*0.0+1.0
             cbarlabel = "Total number of lines"
+        if len(ys) == 0 and not plot_empties:
+            return None
         H, xedges, yedges = np.histogram2d(xs, ys, bins=ns,weights = weight)
         H = H.T
         X, Y = np.meshgrid(xedges, yedges)
         plt.pcolormesh(X,Y, H, cmap=hotcustom)
         plt.colorbar(label = cbarlabel)
-        ylabel,cd = self.get_ylabel_cd(ion,islogy)
+        ylabel,cd = self.get_ylabel_cd(ion,ion_name,islogy)
         plt.ylabel(ylabel)
         plt.xlabel(sightline_unit_labels[xVar])
-        plt.title('%s %sDistribution %s'%(ion, cd, extra_title))
+        plt.title('%s Distribution %s'%(ion_name, extra_title))
         def get_new_axislim(current,divideBy = 20):
             x1 = current[0]
             x2 = current[1]
@@ -823,7 +886,6 @@ class MultiQuasarSpherePlotter():
             plt.xlabel('log ' + sightline_unit_labels[xVar])
         else:
             plt.xlim(get_new_axislim(plt.xlim()))
-
         return plt
 
 class MultiSphereSorter(object):
@@ -885,27 +947,13 @@ class MultiSphereSorter(object):
             resArray[i] = np.array(toAdd)
         return np.array(resArray)   
     
-    '''These are all the same as sort_by_default
-    def sort_by_redshift(self, mq, criteria, bins):
-    def sort_by_rmax(self, mq, criteria, bins):
-    def sort_by_a0(self, mq, criteria, bins):
-    def sort_by_length(self, mq, criteria, bins):
-    def sort_by_R(self, mq, criteria, bins):    
-    def sort_by_len_th_arr(self, mq, criteria, bins):    
-    def sort_by_len_r_arr(self, mq, criteria, bins):
-    def sort_by_len_phi_arr(self, mq, criteria, bins):
-    def sort_by_Rvir(self, mq, criteria, bins):
-    def sort_by_gas_Rvir(self, mq, criteria, bins):
-    def sort_by_dm_Rvir(self, mq, criteria, bins):
-    def sort_by_star_Rvir(self, mq, criteria, bins):
-    def sort_by_sfr(self, mq, criteria, bins):
-    '''
-    
     def sort_by_default(self, criteria, bins, atEnd = False):
         if len(bins) == 1:
             criteriaArray = self.get_criteria_array(criteria, atEnd = atEnd)
             resArray = []
             for index in range(len(criteriaArray)):
+                if criteriaArray[index] is np.nan:
+                    continue
                 intersection = np.intersect1d(bins, criteriaArray[index])
                 if len(intersection) > 0:
                     resArray.append(self.array[index]) 
@@ -922,6 +970,7 @@ class MultiSphereSorter(object):
         if criteria in stringcriteria:
             print("cannot splitEven over string criteria")
         criteriaArray = self.get_criteria_array(criteria, atEnd = atEnd)
+        criteriaArray = criteriaArray[criteriaArray>-1]
         sortedcriteriaArray = np.sort(criteriaArray)
         quotient = len(sortedcriteriaArray) // num
         if quotient == 0:
@@ -984,15 +1033,3 @@ class MultiSphereSorter(object):
                     uniqueName = "%s < %s < %s"%(lowstr,criteria,highstr)
                 labels.append(uniqueName)
         return labels
-
-def print_general_shape(ary,name = "ary",indent=0,showitems = False):
-    if indent == 0:
-        print name+": len()="+str(len(ary))
-        indent += 1
-    for i,a in enumerate(ary):
-        try:
-            print '---_'*indent+str(len(a))
-            print_general_shape(a,indent = indent+1)
-        except:
-            if showitems:
-                print '---_'*indent+"*item*"+str(a)

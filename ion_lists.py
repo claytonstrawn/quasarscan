@@ -57,6 +57,9 @@ joeions = ['C III', 'C IV', 'H I','H II', 'Mg II', 'Mg X', 'N II', 'N III', 'N I
 'O III', 'O IV', 'O V', 'O VI','O VII','O VIII', 'O IX', 'S II', 'S III', 'S IV', 'S V', 'S VI']
 alloxygens = ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX', 'H I',\
 'H II']
+agoraions = ['O I', 'O II', 'O III', 'O IV','O V', 'O VI', 'O VII', 'O VIII', 'O IX', 'H I','H II',\
+'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII', 'Ne I','Ne II',\
+'Ne III','Ne IV','Ne V','Ne VI','Ne VII','Ne VIII','Ne IX','C I','C II','C III','C IV','C V','C VI','C VII']
 
 def stringform(lst):
     toret = "["
@@ -65,3 +68,13 @@ def stringform(lst):
         toret += ", "
     toret = toret[:-2]
     return toret + "]"
+
+def filename_stringform(lst):
+    ionsstr = ""
+    for ion in lst:
+        ionsstr += "_"+ion.replace(" ","")
+    return ionsstr
+
+dict_of_ionlists = {"truly_allions":truly_allions,"allions":allions,"joeions":joeions,"alloxygens":alloxygens,"agoraions":agoraions}
+dict_of_ionstrs = {stringform(truly_allions):"truly_allions",stringform(allions):"allions",stringform(joeions):"joeions",stringform(alloxygens):"alloxygens",stringform(agoraions):"agoraions"}
+dict_of_ionstrsfilename = {filename_stringform(truly_allions):"truly_allions",filename_stringform(allions):"allions",filename_stringform(joeions):"joeions",filename_stringform(alloxygens):"alloxygens",filename_stringform(agoraions):"agoraions"}

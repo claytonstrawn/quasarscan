@@ -47,7 +47,10 @@ def main(filetype):
 	print "attempting to add derived gas mass field"
 	def gas_mass(field,data):
 		return data['deposit','Gas_mass']
-	ds.add_field(('gas','mass'),units = 'g', function = gas_mass,sampling_type = 'cell')
+	try:
+		ds.all_data['gas','mass']
+	except:
+		ds.add_field(('gas','mass'),units = 'g', function = gas_mass,sampling_type = 'cell')
 
 	print "attempting to make very small sightline"
 	ray_start = c

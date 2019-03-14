@@ -1,5 +1,4 @@
 import numpy as np
-from yt import YTArray
 
 class GasBin(object):
 
@@ -44,8 +43,8 @@ class GasBin(object):
 density_bin = GasBin("density",["low","medium","selfshielding","starforming"],["0.0","1e-2","1e-1","1e1","np.inf"])
 temperature_bin = GasBin("temperature",["cold","cool","warm_hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"])
 radial_velocity_bin = GasBin("radial_velocity",["inflow","tangential","outflow"],['-np.inf','-10','10','np.inf'],units = "km/s")
-resolution_bin = GasBin("resolution",["high","medium","low"],['0.00e+00', '1.70e+05', '3.40e+05', 'np.inf'],field = ('gas','dx'),units = "cpc")
-possible_bin_types = ["density","temperature","radial_velocity","resolution"]
+#resolution_bin = GasBin("resolution",["high","medium","low"],['0.00e+00', '1.70e+05', '3.40e+05', 'np.inf'],field = ('gas','dx'),units = "cpc")
+possible_bin_types = ["density","temperature","radial_velocity"]#,"resolution"]
 
 
 class GasBinsHolder(object):
@@ -91,7 +90,9 @@ class GasBinsHolder(object):
         if "radial_velocity" in bins:
             self.bin_types.append(radial_velocity_bin)
         if "resolution" in bins:
-            self.bin_types.append(resolution_bin)
+            pass
+            #not sure how this works in demeshed
+            #self.bin_types.append(resolution_bin)
 
     def combine_holders(self,other):
         if len(self.bin_types) == 0:
@@ -150,15 +151,3 @@ class GasBinsHolder(object):
                 to_return+=", %s%s"%(current_to_add,specific_val)
             current_to_add = append
         return to_return.replace("filler, ","")
-
-    def add_temperature(self):
-        if "temperature" in self.bin_types:
-            return
-        self.bin_types += ["temperature"]
-        self.bins_dict["temperature:cold"] = YTArray([0.0,10.0**3.8],"K")
-        self.bins_dict["temperature:cool"] = YTArray([10.0**3.8,10.0**4.5],"K")
-
-    def add_resolution(self):
-        if "resolution" in self.bin_types:
-            return
-        print "add_resolution is not yet implemented" 
