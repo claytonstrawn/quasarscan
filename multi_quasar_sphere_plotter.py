@@ -1,6 +1,8 @@
 import numpy as np
 import os
 import sys
+import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 try:
     from quasarscan import quasar_sphere
@@ -17,24 +19,31 @@ except:
 
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
-def get_all_textfiles(inquasarscan = 1):
+def get_all_textfiles(inquasarscan = 1,loadonly = 'all'):
     
     #pathname by default starts in output
     path = "output"
     if not inquasarscan:
         path = "quasarscan/output"
     textfiles = []
-    
+    def one_is_in_name(name,loadonly):
+        if loadonly == 'all':
+            return True
+        if isinstance(loadonly,str):
+            loadonly = [loadonly]
+        for sim in loadonly:
+            if sim in name:
+                return True
+        return False
     #gets all folders in output
     dirs = os.listdir(path)
     for folderName in dirs:
-        if not folderName.startswith("."):
+        if not folderName.startswith(".") and one_is_in_name(folderName,loadonly):
             folderPath = path + "/" + folderName
             folderDirs = os.listdir(folderPath)
             for fileName in folderDirs:
                 if not fileName.startswith("."):
                     textfiles.append(os.path.join(folderPath,fileName))
-    print ("All textfiles loaded!")
     return textfiles
     
 def sort_ions(ions,flat = True):
@@ -87,19 +96,19 @@ class MultiQuasarSpherePlotter():
     
     #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
     #                     all textfiles in output are loaded
-    def __init__(self, textfiles = None, cleanup = False,plots = "mean",throwErrors = False):
+    def __init__(self, loadonly = "all",textfiles = None, cleanup = False,plots = "mean",throwErrors = False):
         self.plots = "mean"
         self.avgfn = np.mean
         self.setPlots(plots)
-        self.quasarLineup = []
+        self.quasarArray = []
         if textfiles is None:
-            textfiles = get_all_textfiles(level)
+            textfiles = get_all_textfiles(level,loadonly = loadonly)
         for textfile in textfiles:
             try:
                 readvalsoutput = quasar_sphere.read_values(textfile)
                 q = quasar_sphere.QuasarSphere(readvalsoutput = readvalsoutput)
                 if self.pass_safety_check(q):
-                    self.quasarLineup.append(q)
+                    self.quasarArray.append(q)
                 elif cleanup:
                     todo = raw_input("file %s did not pass safety check. Remove it? (y/n)"%textfile).lower()
                     os.remove(textfile) if todo == 'y' else None
@@ -108,11 +117,8 @@ class MultiQuasarSpherePlotter():
                 print(e)
                 if throwErrors:
                     raise e
-        self.quasarArray = np.array(self.quasarLineup)
-        self.currentQuasarArray = []
-        for q in self.quasarArray:
-            self.currentQuasarArray.append(q)
-        self.currentQuasarArray = np.array(self.currentQuasarArray)
+        self.quasarArray = np.array(self.quasarArray)
+        self.currentQuasarArray = np.copy(self.quasarArray)
         self.currentQuasarArrayName = ''
         
         if len(self.currentQuasarArray) == 0:
@@ -202,7 +208,8 @@ class MultiQuasarSpherePlotter():
                 toReturn.append(q)
         self.currentQuasarArray = toReturn
     
-    def constrain_current_Quasar_Array(self, constrainCriteria, bins=None, exploration_mode = False,atEnd = False,splitEven = None,changeArrayName = True):
+    def constrain_current_Quasar_Array(self, constrainCriteria, bins=None, exploration_mode = False,atEnd = False,\
+        splitEven = None,changeArrayName = True, set_main_array = False):
         if len(self.currentQuasarArray)>0 and not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -234,6 +241,8 @@ class MultiQuasarSpherePlotter():
             return
         
         self.currentQuasarArray = np.unique(np.concatenate(temp))
+        if set_main_array:
+            self.quasarArray = np.copy(self.currentQuasarArray)
         
         if changeArrayName:
             self.currentQuasarArrayName += constrainCriteria 
