@@ -23,10 +23,10 @@ def ions_to_field_name(ions):
         lst += [('gas',ion_to_field_name(ion))]
     return lst
 
-def ion_to_field_name(ion):
+def ion_to_field_name(ion,field_type = "number_density"):
     atom = ion.split(" ")[0]
     ionization = roman.from_roman(ion.split(" ")[1])-1
-    return "%s_p%s_number_density"%(atom,ionization)
+    return "%s_p%s_%s"%(atom,ionization,field_type)
 
 
 class GeneralizedQuasarSphere(object):

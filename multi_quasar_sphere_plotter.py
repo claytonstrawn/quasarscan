@@ -296,7 +296,10 @@ class MultiQuasarSpherePlotter():
     
     def get_yVar_from_str(self,gq,stringVar):
         def split_by_ops(s):
+            #NOTE: This will have a bug if a variable legitimately ends in e and adds/subtracts
+            #the next term! this is because e-XX is how python floats are written as strings
             s = s.replace("e-","_temp_minus_char_")
+            s = s.replace("e+","_temp_plus_char_")
             s = s.replace("(","_splitchar_")
             s = s.replace(")","_splitchar_")
             s = s.replace("/","_splitchar_")
@@ -304,6 +307,7 @@ class MultiQuasarSpherePlotter():
             s = s.replace("+","_splitchar_")
             s = s.replace("-","_splitchar_")
             s = s.replace("_temp_minus_char_","e-")
+            s = s.replace("_temp_plus_char_","e+")
             return filter(None,s.split("_splitchar_"))
         def bylength(word1,word2):
             return len(word2)-len(word1)

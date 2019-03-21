@@ -37,6 +37,8 @@ class GasBin(object):
     def get_keys(self):
         newlist = []
         for val in self.binnames:
+            #can't have that, it looks too much like scientific notation
+            assert val[-1] != 'e'
             newlist.append(self.name+":"+val)
         return newlist
 

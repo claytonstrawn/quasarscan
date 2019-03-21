@@ -1,2 +1,2 @@
 #!/bin/bash
-quasarscan/./run_one_new_snapshot_nersc.sh 2 20 200 4.0 0
+quasarscan/./run_one_new_snapshot_nersc.sh VELA_v2_art_05 /global/cscratch1/sd/cstrawn/VELA_v2_05/10MpcBox_csf512_a0.500.d 1.0 0kk

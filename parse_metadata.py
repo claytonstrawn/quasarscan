@@ -32,7 +32,9 @@ def get_closest_value_for_a(simname,name,redshift=None,a0=None,loud = False):
         return -1.0
     return best
 
-def get_value(quantity, name, redshift = None,a = None):
+def get_value(quantity, name, redshift = None,a = None, check_exists = False):
+    if check_exists:
+        return not np.isnan(get_value(quantity, name, redshift = redshift,a = a))
     simname = name.split("_")[0]
     a0 = get_closest_value_for_a(simname,name,redshift=redshift,a0=a)
     if a0 == -1.0:

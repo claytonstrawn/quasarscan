@@ -130,7 +130,6 @@ if __name__ == "__main__":
         L = np.array([0,0,1.])
     convert_unit = ds.length_unit.units
     convert = ds.length_unit.in_units('kpc').value.item()
-    print convert, convert_unit
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
     testsphere = 6*Rvir,12,12,12,2*Rvir,10
     defaultions = ion_lists.agoraions
@@ -138,7 +137,7 @@ if __name__ == "__main__":
         try:
             ions = ion_lists.dict_of_ionlists[ionlist]
         except:
-            ions = ionlist.replace("[","").replace("[","").split(",")
+            ions = ionlist.replace("[","").replace("]","").split(",")
     else:
         ions = defaultions
     gasbins = gasbinning.GasBinsHolder("all")

@@ -1,12 +1,15 @@
 import yt
+from yt.utilities.physical_constants import mh
 import numpy as np
 import trident
 try:
     from quasarscan import quasar_sphere
     from quasarscan import code_specific_setup
+    level = 0
 except:
     import quasar_sphere
     import code_specific_setup
+    level = 1
 import sys
 import os
 import datetime
@@ -31,15 +34,15 @@ if parallel:
     yt.enable_parallelism()
 try:
     readvalsoutput = quasar_sphere.read_values(filename)
-except:
+except IOError:
+    print "unable to read from %s, checking after 'quasarscan'"%filename
     readvalsoutput = quasar_sphere.read_values(filename.split('quasarscan/')[1])
 
 test = False
 q = quasar_sphere.QuasarSphere(readvalsoutput=readvalsoutput)
 
-ds,fields_to_keep = code_specific_setup.load_and_setup(q.dspath,q.code)
+ds,fields_to_keep = code_specific_setup.load_and_setup(q.dspath,q.code,q.ions)
 convert_unit = ds.length_unit.units
-print convert_unit
 num_bin_vars = q.gasbins.get_length()
 starting_point = q.length_reached 
 bins = np.append(np.arange(starting_point,q.length,save)[:-1],q.length)
@@ -55,7 +58,6 @@ for i in range(0, len(bins)-1):
         ident = str(index)
         start = yt.YTArray(vector[5:8],convert_unit)
         end = yt.YTArray(vector[8:11],convert_unit)
-        print start,end, q.center
         ray = trident.make_simple_ray(ds,
             start_position=start,
             end_position=end,
@@ -72,7 +74,7 @@ for i in range(0, len(bins)-1):
             vector[11+j*(num_bin_vars+2)] = cdens
             atom = ion.split(" ")[0]
             total_nucleus = np.sum(ionfield[ionfield>0]/\
-                                       field_data[("gas",quasar_sphere.ion_to_field_name(ion).replace("number_density","ion_fraction"))][ionfield>0]\
+                                       field_data[("gas",quasar_sphere.ion_to_field_name(ion,'ion_fraction'))][ionfield>0]\
                                         * dl[ionfield>0])
             vector[11+j*(num_bin_vars+2)+1] = cdens / total_nucleus
             for k in range(num_bin_vars):
