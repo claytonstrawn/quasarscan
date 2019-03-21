@@ -98,7 +98,7 @@ print output
 import yt
 import numpy as np
 
-myrange = range(0,1024,16)
+myrange = range(16,1025,16)
 mytable = np.zeros((3,len(myrange)))
 print "will open %d files"%len(myrange)
 for i in myrange:
