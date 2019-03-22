@@ -52,13 +52,13 @@ def add_necessary_fields_to_ds(ds):
             return data['deposit','Gas_mass']
         ds.add_field(('gas','mass'),units = 'g', function = gas_mass, sampling_type = 'cell')
         def _metal_density(field, data):
-            tr = data['gas','metallicity']
-            tr /= data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
+            tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
+            tr /= data['gas','metallicity'].in_units('dimensionless')
             return tr
         ds.add_field(('gas','metal_density'),
                        sampling_type="cell",
                        function=_metal_density,
-                       units=unit_system["density"])
+                       units='g/cm**3')
 
 def fields_to_keep_in_sightline(code,ions):
     fields_to_keep = [('gas',"H_nuclei_density"),('gas',"density"),('gas',"mass"),('gas',"temperature"),('gas',"radial_velocity")]

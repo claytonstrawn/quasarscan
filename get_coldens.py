@@ -20,7 +20,8 @@ def tprint(*args,**kwargs):
         print(datetime.datetime.now())
     print(args)
 
-yt.funcs.mylog.setLevel(50)
+
+#yt.funcs.mylog.setLevel(50)
 
 def get_cmd_args():
     filename = sys.argv[1]
@@ -58,12 +59,16 @@ for i in range(0, len(bins)-1):
         ident = str(index)
         start = yt.YTArray(vector[5:8],convert_unit)
         end = yt.YTArray(vector[8:11],convert_unit)
-        ray = trident.make_simple_ray(ds,
+        try:
+            ray = trident.make_simple_ray(ds,
             start_position=start,
             end_position=end,
             data_filename="ray"+ident+".h5",
             fields = fields_to_keep,
             ftype='gas')
+        except:
+            print "there was a problem in making the ray!"
+            continue
         trident.add_ion_fields(ray,q.ions)
         field_data = ray.all_data()
         for j in range(len(q.ions)):
