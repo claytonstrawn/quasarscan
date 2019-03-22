@@ -1,8 +1,6 @@
 import numpy as np
 import os
 import sys
-import matplotlib
-matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 try:
     from quasarscan import quasar_sphere
@@ -123,7 +121,10 @@ class MultiQuasarSpherePlotter():
         
         if len(self.currentQuasarArray) == 0:
             print ("There are no quasarspheres stored in currentQuasarArray!")
-
+    
+    def length():
+        return len(self.currentQuasarArray) 
+            
     #tests each condition, each condition is a safety check
     def pass_safety_check(self, q,require_metadata = False):
         minlength = 10
@@ -286,7 +287,7 @@ class MultiQuasarSpherePlotter():
         def getstderr(data):
             l = len(data[~np.isnan(data)])
             return np.array([np.nanstd(data)/np.sqrt(l),np.nanstd(data)/np.sqrt(l)])
-        if plots == "mean" or plots == "std":
+        if plots in ["mean","std"]:
             self.plots = "mean"
             self.avgfn = np.nanmean
             self.errfn = getstderr
@@ -302,7 +303,11 @@ class MultiQuasarSpherePlotter():
             self.plots = "scatter"
             self.avgfn = np.nanmean
             self.errfn = getstderr
-    
+        elif plots in ['covering_fraction','cvf']:
+            self.plots = "covering_fraction"
+            self.avgfn = np.nanmean
+            self.errfn = getstderr
+            
     def get_yVar_from_str(self,gq,stringVar):
         def split_by_ops(s):
             #NOTE: This will have a bug if a variable legitimately ends in e and adds/subtracts
@@ -708,6 +713,9 @@ class MultiQuasarSpherePlotter():
                     oldyarys = np.power(10,yarys[i]) if logy else yarys[i]
                     xarys_visible[i] = xarys[i][oldyarys>visibility_threshold]
                     yarys_visible[i] = yarys[i][oldyarys>visibility_threshold]
+                    if self.plots == "covering_fraction":
+                        yarys[i] = (oldyarys>visibility_threshold).astype(int)
+
             elif plot_type in [4]:
                 xarys_visible = np.empty(len(xarys),dtype = object)
                 yarys_visible = np.empty(len(xarys),dtype = object)
@@ -721,9 +729,6 @@ class MultiQuasarSpherePlotter():
                         yarys_visible[i][j] = yarys[i][j][oldyarys>visibility_threshold[0]]
                         yarys_visible[i][j] = yarys[i][j][oldxarys>visibility_threshold[1]]
                         xarys_visible[i][j] = xarys[i][j][oldxarys>visibility_threshold[1]]
-        if not average is None:
-            oldplots = self.plots
-            self.setPlots(average)
         if plot_type in [0,1,2,3]:
             xs,ys,yerrs = self.process_errbars_onlyvertical(xarys,yarys,tolerance)
             xerrs = None
@@ -744,13 +749,13 @@ class MultiQuasarSpherePlotter():
                 plt.xlabel(xlabel)
             yerr = np.transpose(yerrs[i])
             xerr = np.transpose(xerrs[i]) if not (xerrs is None) else None
-            label = labels[i] if not visibility_threshold else None
+            label = labels[i] if not (visibility_threshold and self.plots != 'covering_fraction') else None
             color = None
             if not (coloration is None):
                 color = coloration[i]
             #change fmt to . or _ for a dot or a horizontal line
-            fmtdict = {"mean":',',"median_std":',',"median":"."}
-            alpha_value = .3 if visibility_threshold else 1.
+            fmtdict = {"mean":',',"median_std":',',"covering_fraction":',',"median":"."}
+            alpha_value = .3 if (visibility_threshold and not self.plots == 'covering_fraction') else 1.
             if self.plots == "scatter" and dots:
                 print "average = scatter AND dots = True detected"
                 print "'scatter' gives all sightlines without averaging."
@@ -759,7 +764,7 @@ class MultiQuasarSpherePlotter():
                 return
             elif dots:
                 plt.plot(x,y,"o",label = label,color = color,alpha = alpha_value)
-                if visibility_threshold:
+                if visibility_threshold and self.plots != 'covering_fraction':
                     x_visible = xs_visible[i]
                     y_visible = ys_visible[i]
                     plt.plot(x_visible,y_visible,"o",color = color,label = labels[i])
@@ -780,7 +785,7 @@ class MultiQuasarSpherePlotter():
                     plt.plot(x_visible,y_visible,"o",label = labels[i],markersize = 2,color = color)
             else:
                 plt.errorbar(x,y, xerr = xerr, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label,color = color,alpha = alpha_value)
-                if visibility_threshold:
+                if visibility_threshold and self.plots != 'covering_fraction':
                     x_visible = xs_visible[i]
                     y_visible = ys_visible[i]
                     yerr_visible = np.transpose(yerrs_visible[i])
@@ -953,7 +958,7 @@ class MultiSphereSorter(object):
                 add = False
                 if criteria == "ions" and acceptedValues[i] in criteriaArray[j]:
                     add = True
-                elif acceptedValues[i] == criteriaArray[j]:
+                elif criteria != 'ions' and acceptedValues[i] == criteriaArray[j]:
                     add = True
                 if add:
                     toAdd.append(self.array[j])
