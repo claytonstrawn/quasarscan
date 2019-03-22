@@ -1,13 +1,9 @@
 #!/bin/bash
-module load python
-source activate myenv
-export HDF5_USE_FILE_LOCKING=FALSE
-srun -n 10 -u python -u quasarscan/get_coldens.py quasarscan/output/NIHAO_v1_tipsy_02coldensinfo/82_of_448-agoraions_z0.43.txt 96 p
-#in case you want to run one line interactively:
-#srun -n 32 -u python -u quasarscan/get_coldens.py quasarscan/output/AGORA_v1_art_01coldensinfo/96_of_448-agoraions_z15.0.txt 96 p
-#python quasarscan/get_coldens.py quasarscan/output/${simname}coldensinfo/0_of_448-agoraions_z$z.txt 96 p
-#not in parallel:
-#python quasarscan/get_coldens.py quasarscan/output/NIHAO_v1_tipsy_02coldensinfo/0_of_448-agoraions_z0.31.txt 2 n
-#python quasarscan/get_coldens.py quasarscan/output/${simname}coldensinfo/0_of_448-agoraions_z$z.txt 96 p
 
-echo "remember to rm $filename"
+source myenv/bin/activate.csh
+python quasarscan/create_qso_endpoints.py NIHAO_v1_tipsy_01 files_to_process/g2.63e10.00144
+srun -n 10 -u python -u quasarscan/get_coldens.py quasarscan/output/NIHAO_v1_tipsy_01coldensinfo/0_of_448-agoraions_z3.0.txt 96 p
+python quasarscan/create_qso_endpoints.py NIHAO_v1_tipsy_01 files_to_process/g2.63e10.00224
+srun -n 10 -u python -u quasarscan/get_coldens.py quasarscan/output/NIHAO_v1_tipsy_01coldensinfo/0_of_448-agoraions_z2.0.txt 96 p
+python quasarscan/create_qso_endpoints.py NIHAO_v1_tipsy_01 files_to_process/g2.63e10.00304
+srun -n 10 -u python -u quasarscan/get_coldens.py quasarscan/output/NIHAO_v1_tipsy_01coldensinfo/0_of_448-agoraions_z1.5.txt 96 p

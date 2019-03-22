@@ -104,7 +104,7 @@ print "will open %d files"%len(myrange)
 for i in myrange:
     mytable[0,i//16] = i
     str_num = str(i).zfill(5)
-    ds = yt.load("g2.63e10.%s"%str_num)
+    ds = yt.load("g2.19e11.%s"%str_num)
     mytable[1,i//16] = ds.current_redshift
     mytable[2,i//16] = ds.current_time
     
