@@ -291,11 +291,11 @@ class MultiQuasarSpherePlotter():
             self.plots = "mean"
             self.avgfn = np.nanmean
             self.errfn = getstderr
-        elif plots == "median" or plots == "med":
+        elif plots in ["median","med"]:
             self.plots = "median"
             self.avgfn = np.nanmedian
             self.errfn = getquartiles
-        elif plots == "med_noquartiles" or plots == "median_std":
+        elif plots in ["med_noquartiles","median_std"]:
             self.plots = "median_std"
             self.avgfn = np.nanmedian
             self.errfn = getstderr
@@ -578,6 +578,9 @@ class MultiQuasarSpherePlotter():
             else:
                 ylabel = "%sfraction of %s in state: %s"%(islogy,ion.split(":")[0],ion_name)
             cd = "Fraction "
+        elif self.plots == 'covering_fraction':
+            ylabel = ion_name + 'covering fraction'
+            cd = ""
         else:
             ylabel = "%scol dens %s"%(islogy,ion_name)
             cd = "Column Density "
@@ -661,22 +664,28 @@ class MultiQuasarSpherePlotter():
         if plot_type in [0,1,2,3]:
             empty = True
             for i in range(len(yarys)):
-                xarys[i] = xarys[i][yarys[i]>0]
-                yarys[i] = yarys[i][yarys[i]>0]
+                xarys[i] = xarys[i][yarys[i]>=0]
+                yarys[i] = yarys[i][yarys[i]>=0]
                 if logy:
+                    xarys[i] = xarys[i][yarys[i]>0]
+                    yarys[i] = yarys[i][yarys[i]>0]
                     yarys[i] = np.log10(yarys[i])
                 if len(yarys) > 0 and len(yarys[i]) > 0:
                     empty = False
         elif plot_type in [4]:
             for i in range(len(yarys)):
                 for j in range(len(yarys[i])):
-                    xarys[i][j] = xarys[i][j][yarys[i][j]>0]
-                    yarys[i][j] = yarys[i][j][yarys[i][j]>0]
-                    yarys[i][j] = yarys[i][j][xarys[i][j]>0]
-                    xarys[i][j] = xarys[i][j][xarys[i][j]>0]
+                    xarys[i][j] = xarys[i][j][yarys[i][j]>=0]
+                    yarys[i][j] = yarys[i][j][yarys[i][j]>=0]
+                    yarys[i][j] = yarys[i][j][xarys[i][j]>=0]
+                    xarys[i][j] = xarys[i][j][xarys[i][j]>=0]
                     if logy:
+                        xarys[i][j] = xarys[i][j][yarys[i][j]>0]
+                        yarys[i][j] = yarys[i][j][yarys[i][j]>0]
                         yarys[i][j] = np.log10(yarys[i][j])
                     if logx:
+                        yarys[i][j] = yarys[i][j][xarys[i][j]>0]
+                        xarys[i][j] = xarys[i][j][xarys[i][j]>0]
                         xarys[i][j] = np.log10(xarys[i][j])
                     if len(yarys) > 0 and len(yarys[i]) > 0 and len(yarys[i][j]) > 0:
                         empty = False
@@ -705,57 +714,31 @@ class MultiQuasarSpherePlotter():
             plt.xlabel(xVar_name)
         plt.title('%s %sAverages (%s) %s'%(ionstr, cd, self.plots, extra_title))
 
-        if visibility_threshold:
-            if plot_type in [0,1,2,3]:
-                xarys_visible = np.empty(len(xarys),dtype = object)
-                yarys_visible = np.empty(len(xarys),dtype = object)
-                for i in range(len(yarys)):
-                    oldyarys = np.power(10,yarys[i]) if logy else yarys[i]
-                    xarys_visible[i] = xarys[i][oldyarys>visibility_threshold]
-                    yarys_visible[i] = yarys[i][oldyarys>visibility_threshold]
-                    if self.plots == "covering_fraction":
-                        yarys[i] = (oldyarys>visibility_threshold).astype(int)
-
-            elif plot_type in [4]:
-                xarys_visible = np.empty(len(xarys),dtype = object)
-                yarys_visible = np.empty(len(xarys),dtype = object)
-                for i in range(len(yarys)):
-                    xarys_visible[i] = np.empty(len(yarys[i]), dtype = object)
-                    yarys_visible[i] = np.empty(len(yarys[i]), dtype = object)
-                    for j in range(len(yarys[i])):
-                        oldyarys = np.power(10,yarys[i][j]) if logy else yarys[i][j]
-                        oldxarys = np.power(10,xarys[i][j]) if logx else xarys[i][j]
-                        xarys_visible[i][j] = xarys[i][j][oldyarys>visibility_threshold[0]]
-                        yarys_visible[i][j] = yarys[i][j][oldyarys>visibility_threshold[0]]
-                        yarys_visible[i][j] = yarys[i][j][oldxarys>visibility_threshold[1]]
-                        xarys_visible[i][j] = xarys[i][j][oldxarys>visibility_threshold[1]]
+        if self.plots == 'covering_fraction':
+            assert visibility_threshold is not None and plot_type in [0,1,2,3]
+            for i in range(len(yarys)):
+                oldyarys = np.power(10,yarys[i]) if logy else yarys[i]
+                yarys[i] = (oldyarys>visibility_threshold).astype(int)
         if plot_type in [0,1,2,3]:
             xs,ys,yerrs = self.process_errbars_onlyvertical(xarys,yarys,tolerance)
             xerrs = None
-            if visibility_threshold:
-                xs_visible,ys_visible,yerrs_visible = self.process_errbars_onlyvertical(xarys_visible,yarys_visible,tolerance)
-                xerrs_visible = None
         elif plot_type in [4]:
             xs,ys,xerrs,yerrs = self.process_errbars_vertandhoriz(xarys,yarys)
-            if visibility_threshold:
-                xs_visible,ys_visible,xerrs_visible,yerrs_visible = self.process_errbars_vertandhoriz(xarys_visible,yarys_visible)
-
         for i in range(len(xs)):
             x = xs[i]
             y = ys[i]
-            if plot_type == 4:
+            if plot_type in [4]:
                 islogx = "log " if logx else ""
                 xlabel, _ = self.get_ylabel_cd(xVar,xVar_name,islogx)
                 plt.xlabel(xlabel)
             yerr = np.transpose(yerrs[i])
             xerr = np.transpose(xerrs[i]) if not (xerrs is None) else None
-            label = labels[i] if not (visibility_threshold and self.plots != 'covering_fraction') else None
+            label = labels[i]
             color = None
             if not (coloration is None):
                 color = coloration[i]
-            #change fmt to . or _ for a dot or a horizontal line
+            #change fmt to . or _ for a dot or a horizontal line. fmt of marker at center of 
             fmtdict = {"mean":',',"median_std":',',"covering_fraction":',',"median":"."}
-            alpha_value = .3 if (visibility_threshold and not self.plots == 'covering_fraction') else 1.
             if self.plots == "scatter" and dots:
                 print "average = scatter AND dots = True detected"
                 print "'scatter' gives all sightlines without averaging."
@@ -763,11 +746,7 @@ class MultiQuasarSpherePlotter():
                 print "please change one and try again"
                 return
             elif dots:
-                plt.plot(x,y,"o",label = label,color = color,alpha = alpha_value)
-                if visibility_threshold and self.plots != 'covering_fraction':
-                    x_visible = xs_visible[i]
-                    y_visible = ys_visible[i]
-                    plt.plot(x_visible,y_visible,"o",color = color,label = labels[i])
+                plt.plot(x,y,"o",label = label,color = color)
             elif self.plots == "scatter":
                 def flatten_if_needed(ary):
                     try:
@@ -778,22 +757,12 @@ class MultiQuasarSpherePlotter():
                         return ary
                 x = flatten_if_needed(xarys[i])
                 y = flatten_if_needed(yarys[i])
-                plt.plot(x,y,'o',label = label, markersize = 2,color = color,alpha = alpha_value)
-                if visibility_threshold:
-                    x_visible = flatten_if_needed(xarys_visible[i])
-                    y_visible = flatten_if_needed(yarys_visible[i])
-                    plt.plot(x_visible,y_visible,"o",label = labels[i],markersize = 2,color = color)
+                plt.plot(x,y,'o',label = label, markersize = 2,color = color)
             else:
-                plt.errorbar(x,y, xerr = xerr, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label,color = color,alpha = alpha_value)
-                if visibility_threshold and self.plots != 'covering_fraction':
-                    x_visible = xs_visible[i]
-                    y_visible = ys_visible[i]
-                    yerr_visible = np.transpose(yerrs_visible[i])
-                    xerr_visible = np.transpose(xerrs_visible[i]) if not (xerrs_visible is None) else None
-                    plt.errorbar(x_visible,y_visible, xerr = xerr_visible, yerr=yerr_visible, fmt=fmtdict[self.plots], capsize = 3, label = labels[i],color = color)
+                plt.errorbar(x,y, xerr = xerr, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)
         plt.legend()
         
-        if logx and not plot_type == 4:
+        if logx and not plot_type in [4]:
             plt.xscale('log')
             
         if save_fig:
