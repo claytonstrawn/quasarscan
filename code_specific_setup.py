@@ -1,7 +1,7 @@
 import yt
 
 codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy']
-yt_dstype_names = {'art':'art','ramses':'ramses','gizmo':'gizmo','gadget':'gadget','gear':'gear','enzo':'enzo','tipsy':'tipsy'}
+yt_dstype_names = {'art':'art','ramses':'ramses','gizmo':'gadget_hdf5','gadget':'gadget_hdf5','gear':'gadget_hdf5','enzo':None,'tipsy':'tipsy'}
 
 atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
         'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
@@ -26,31 +26,52 @@ def ytload(path,code):
         ds = yt.load(path)
     return ds
 
-def add_necessary_fields_to_ds(ds):
+def add_necessary_fields_to_ds(code,ds):
     dstype_name = ds.dataset_type
-    if dstype_name not in yt_dstype_names.keys():
+    if dstype_name not in yt_dstype_names.values():
         print "add_necessary_fields_to_ds was not prepared for the code %s!"%dstype_name
         print "please edit that file first."
         raise KeyError
-    else:
-        code = yt_dstype_names[dstype_name]
+    assert dstype_name == yt_dstype_names[code]
     if code == 'art':
         #yt has been updated to do ART pre-processing already by me
         pass
     elif code == 'ramses':
-        print "code %s not implemented yet!"%code
+        def _metal_density(field, data):
+            tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
+            tr /= data['gas','metallicity'].in_units('dimensionless')
+            return tr
+        ds.add_field(('gas','metal_density'),
+                       sampling_type="cell",
+                       function=_metal_density,
+                       units='g/cm**3')
     elif code == 'gizmo':
-        print "code %s not implemented yet!"%code
+        def _metal_density(field, data):
+            tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
+            tr /= data['gas','metallicity'].in_units('dimensionless')
+            return tr
+        ds.add_field(('gas','metal_density'),
+                       sampling_type="cell",
+                       function=_metal_density,
+                       units='g/cm**3')
     elif code == 'gadget':
-        print "code %s not implemented yet!"%code
+        def _metal_density(field, data):
+            tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
+            tr /= data['gas','metallicity'].in_units('dimensionless')
+            return tr
+        ds.add_field(('gas','metal_density'),
+                       sampling_type="cell",
+                       function=_metal_density,
+                       units='g/cm**3')
     elif code == 'gear':
         print "code %s not implemented yet!"%code
     elif code == 'enzo':
-        print "code %s not implemented yet!"%code
+        # no new fields needed for ENZO
+        pass
     elif code == 'tipsy':
-        def gas_mass(field, data):
+        def _gas_mass(field, data):
             return data['deposit','Gas_mass']
-        ds.add_field(('gas','mass'),units = 'g', function = gas_mass, sampling_type = 'cell')
+        ds.add_field(('gas','mass'),units = 'g', function = _gas_mass, sampling_type = 'cell')
         def _metal_density(field, data):
             tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
             tr /= data['gas','metallicity'].in_units('dimensionless')
@@ -78,31 +99,34 @@ def fields_to_keep_in_sightline(code,ions):
             if atom in atoms_from_ions(ions):
                 fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
     elif code == 'ramses':
-        print "code %s not implemented yet!"%code
+        fields_to_keep.append(('gas',"metal_density"))
     elif code == 'gizmo':
-        print "code %s not implemented yet!"%code
+        fields_to_keep.append(('gas',"metal_density"))
     elif code == 'gadget':
-        print "code %s not implemented yet!"%code
+        fields_to_keep.append(('gas',"metal_density"))
     elif code == 'gear':
         print "code %s not implemented yet!"%code
     elif code == 'enzo':
-        print "code %s not implemented yet!"%code
+        fields_to_keep.append(('gas','metal_density'))
+        fields_to_keep.append(('gas','metallicity'))
     elif code == 'tipsy':
         fields_to_keep.append(('gas',"metal_density"))
     return fields_to_keep
 
 def load_and_setup(path,code,ions):
+    if "_" in code:
+        code = code.split("_")[2]
     if code not in codes:
         print "load_and_setup was not prepared for the code %s!"%dstype_name
         print "Please edit that file first."
-        raise NotImplementedError    
+        raise NotImplementedError
     ds = ytload(path,code)
     try:
-        assert yt_dstype_names[ds.dataset_type] == code
+        assert yt_dstype_names[code] == ds.dataset_type
     except:
         print "the code stored at: %s is not of type %s, but of type %s"%(path,code,ds.dataset_type) 
         raise AssertionError
-    add_necessary_fields_to_ds(ds)
+    add_necessary_fields_to_ds(code,ds)
     fields_to_keep = fields_to_keep_in_sightline(code,ions)
     return ds, fields_to_keep
 

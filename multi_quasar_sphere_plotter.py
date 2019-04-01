@@ -122,8 +122,27 @@ class MultiQuasarSpherePlotter():
         if len(self.currentQuasarArray) == 0:
             print ("There are no quasarspheres stored in currentQuasarArray!")
     
-    def length():
-        return len(self.currentQuasarArray) 
+    def length(self):
+        return len(self.currentQuasarArray)
+    def list_all_QuasarSpheres(self, *criteria):
+        s = ""
+        for q in sorted(self.currentQuasarArray, key=lambda x: (x.name,x.rounded_redshift)):
+            s += q.name +" at z=%s ("%q.rounded_redshift
+            for c in criteria:
+                v = eval('q.%s'%c)
+                if isinstance(v,str):
+                    s+="%s = %s, "%(c,v)
+                elif .001<v<1:
+                    s+="%s = %0.3f, "%(c,v)
+                elif 1<v<1000:
+                    s+="%s = %3.0f, "%(c,v)
+                else:
+                    s+="%s = %1.3e, "%(c,v)
+            s = s[:-2]
+            if len(criteria)>0:
+                s+=")"
+            s+='\n'
+        print s[:-1]
             
     #tests each condition, each condition is a safety check
     def pass_safety_check(self, q,require_metadata = False):

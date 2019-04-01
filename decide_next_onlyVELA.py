@@ -97,9 +97,6 @@ def write_files(tocheck,cont = 0):
     f = open("quasarscan/nextfile.sh")
     currentfirstline = f.readline()
     currentsecondline = f.readline()
-    print secondline
-    print currentsecondline.strip()
-    print secondline == currentsecondline.strip()
     if (secondline == currentsecondline.strip()) and final and cont == 0 and not test:
         print("I already tried that, I guess it didn't work :(")
         add_to_blacklist(tocheck[0],tocheck[1])
@@ -116,6 +113,10 @@ def write_files(tocheck,cont = 0):
     f.close()
     
 def main_func():
+    f = open("quasarscan/nextfile.sh","w+")
+    f.write("first attempt\n")
+    f.write("first attempt\n")
+    f.close()
     #figure out what is next necessary file to scan
     #write a bash script to go get it, and to delete it after
     ionlists = [agoraions]

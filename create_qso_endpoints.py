@@ -69,13 +69,21 @@ def weights(array,function):
     return probs
 
 def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,\
-                         L = None, center=None, endonsph = False):
+                         L = None, center=None, endonsph = False, dsbounds = None):
     R=sphere[0]
     n_th=sphere[1]
     n_phi=sphere[2]
     n_r=sphere[3]
     rmax=sphere[4]
     length=sphere[5]
+    if dsbounds is not None and np.any(2*R>dsbounds):
+        ratio = float(rmax) / R
+        #this is the minimum ratio needed to ensure a sightline within a box of edge 2*R
+        #stays within the box
+        assert ratio < .57
+        R = np.min(dsbounds-center.in_units('kpc').value)
+        rmax = R*ratio
+        print "R > dsbounds: adjusting to R=%2.2f kpc, rmax = %2.2f kpc"%(R,rmax)
     r_arr = np.linspace(0,rmax,n_r)
     th_arr = np.linspace(0,np.pi,n_th,endpoint = False)
     phi_arr = np.linspace(0,2*np.pi,n_phi,endpoint = False)
@@ -132,6 +140,7 @@ if __name__ == "__main__":
     convert = ds.length_unit.in_units('kpc').value.item()
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
     testsphere = 6*Rvir,12,12,12,2*Rvir,10
+    dsbounds = ds.domain_width.to('kpc').value
     defaultions = ion_lists.agoraions
     if ionlist:
         try:
@@ -141,7 +150,7 @@ if __name__ == "__main__":
     else:
         ions = defaultions
     gasbins = gasbinning.GasBinsHolder("all")
-    scanparams, info = create_QSO_endpoints(defaultsphere,ions,code_unit = convert_unit,L=L,center=center,gasbins = gasbins)
+    scanparams, info = create_QSO_endpoints(defaultsphere,ions,code_unit = convert_unit,L=L,center=center,gasbins = gasbins,dsbounds=dsbounds)
     center = center.in_units(convert_unit).value
     simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert, str(convert_unit)]
     q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= ions,data=info,gasbins= gasbins)
