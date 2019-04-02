@@ -4,17 +4,18 @@ import numpy as np
 import os
 import datetime
 try:
-    from quasarscan import parse_vela_metadata
+    from quasarscan import parse_metadata
     from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
     level = 0
 except:
-    import parse_vela_metadata
+    import parse_metadata
     import ion_lists
     import gasbinning
     import roman
     level = 1
+ 
 
 def ions_to_field_name(ions):
     lst = []
@@ -22,10 +23,10 @@ def ions_to_field_name(ions):
         lst += [('gas',ion_to_field_name(ion))]
     return lst
 
-def ion_to_field_name(ion):
+def ion_to_field_name(ion,field_type = "number_density"):
     atom = ion.split(" ")[0]
     ionization = roman.from_roman(ion.split(" ")[1])-1
-    return "%s_p%s_number_density"%(atom,ionization)
+    return "%s_p%s_%s"%(atom,ionization,field_type)
 
 
 class GeneralizedQuasarSphere(object):
@@ -65,12 +66,11 @@ class GeneralizedQuasarSphere(object):
                 pos_in_q = q.get_ion_column_num(ion)
                 pos_in_self = self.get_ion_column_num(ion)
                 self.info[currentpos:currentpos+size,pos_in_self] = q.info[:size,pos_in_q]
-                if distance == "kpc":
-                    convert = q.code_unit_in_kpc
-                elif distance == "Rvir":
-                    convert = q.code_unit_in_kpc/q.Rvir
-                else:
-                    print "not sure what distance = %s means..."%distance
+                convert = 1.0
+                if q.code_unit != "kpc":
+                    convert/=q.conversion_factor
+                if distance == "Rvir":
+                    convert/=q.Rvir
             self.info[currentpos:currentpos+size,-1] = q.info[:size,-1]
             self.info[currentpos:currentpos+size,-2] = q.info[:size,-2] 
             self.info[currentpos:currentpos+size,-3] = q.info[:size,-3] 
@@ -78,7 +78,7 @@ class GeneralizedQuasarSphere(object):
             currentpos += size
             
     def get_ion_column_num(self,ion):
-        intensivesdict = {'Z':-1,'n':-2,'T':-3}
+        intensivesdict = {'Z':-1,'rho':-2,'T':-3}
         if not ":" in ion:
             bintype = "cdens"
         else:
@@ -91,7 +91,7 @@ class GeneralizedQuasarSphere(object):
             plus = 1
         else:
             plus = self.gasbins.get_all_keys().index(bintype)+2
-        if ion in ['Z','n','T']:
+        if ion in intensivesdict.keys():
             return len(self.info[0])+intensivesdict[ion]
         try:
             return 11 + self.ions.index(ion)*(self.gasbins.get_length()+2)+plus
@@ -135,7 +135,6 @@ class QuasarSphere(GeneralizedQuasarSphere):
     #finds and saves stellar mass, total mass (virial mass), and the star formation rate
     def add_extra_simparam_fields(self):
         self.name     = self.simparams[0]
-        print self.name
         name_fields   = self.name.split("_")
         self.simname  = name_fields[0]
         self.version  = name_fields[1]
@@ -143,57 +142,60 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.simnum   = name_fields[3]
         self.redshift = self.simparams[1]
         self.rounded_redshift = self.redshift
-        if abs(self.redshift - 1) <= .05: self.rounded_redshift = 1.00
-        if abs(self.redshift - 1.5) <= .05: self.rounded_redshift = 1.50
-        if abs(self.redshift - 2) <= .05: self.rounded_redshift = 2.00
-        if abs(self.redshift - 3) <= .05: self.rounded_redshift = 3.00
-        if abs(self.redshift - 4) <= .05: self.rounded_redshift = 4.00
-        if abs(self.redshift - 5) <= .5: self.rounded_redshift = 5.00
-        if abs(self.redshift - 6) <= .5: self.rounded_redshift = 6.00
-        if abs(self.redshift - 8) <= 1: self.rounded_redshift = 8.00
-        if abs(self.redshift - 10) <= 1: self.rounded_redshift = 10.00
-        if abs(self.redshift - 20) <= 1: self.rounded_redshift = 20.00
+        if abs(self.redshift - 0.0) <= .05: self.rounded_redshift = 0.00
+        elif abs(self.redshift - 0.25) <= .05: self.rounded_redshift = 0.25
+        elif abs(self.redshift - 0.5) <= .05: self.rounded_redshift = 0.50
+        elif abs(self.redshift - 1) <= .05: self.rounded_redshift = 1.00
+        elif abs(self.redshift - 1.5) <= .1: self.rounded_redshift = 1.50
+        elif abs(self.redshift - 2) <= .1: self.rounded_redshift = 2.00
+        elif abs(self.redshift - 3) <= .1: self.rounded_redshift = 3.00
+        elif abs(self.redshift - 4) <= .1: self.rounded_redshift = 4.00
+        elif abs(self.redshift - 5) <= .5: self.rounded_redshift = 5.00
+        elif abs(self.redshift - 6) <= .5: self.rounded_redshift = 6.00
+        elif abs(self.redshift - 8) <= 1: self.rounded_redshift = 8.00
+        elif abs(self.redshift - 10) <= 2: self.rounded_redshift = 10.00
+        elif abs(self.redshift - 15) <= 2: self.rounded_redshift = 15.00
+        elif abs(self.redshift - 20) <= 4: self.rounded_redshift = 20.00
+        else: self.rounded_redshift = float(str(self.redshift)[:3])
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
         self.Rvir = self.simparams[5]
+        self.Rvir_is_real = str(parse_metadata.get_value("Rvir",self.name,redshift = self.redshift)==self.Rvir)
         self.dspath = self.simparams[6]
         self.a0 = 1./(1+self.redshift)
         self.L = np.array([self.simparams[7], self.simparams[8], self.simparams[9]])
-        self.code_unit_in_kpc = self.simparams[10]
-        try:
-            #this shouldn't work until we make a generic metadata reader
-            assert "this thing" == "doesn't work"
-            self.Mvir = get_metadata(self.name,self.a0,"Mvir")
-            self.gas_Rvir = float(parse_vela_metadata.dict_of_vela_info("gas_Rvir")[self.simname][self.a0])
-            self.star_Rvir = float(parse_vela_metadata.dict_of_vela_info("star_Rvir")[self.simname][self.a0])
-            self.dm_Rvir = float(parse_vela_metadata.dict_of_vela_info("dm_Rvir")[self.simname][self.a0])
-            self.sfr = float(parse_vela_metadata.dict_of_vela_info("SFR")[self.simname][self.a0])
+        self.L_mag = np.sqrt(np.sum(self.L**2))
+        self.conversion_factor = self.simparams[10]
+        self.code_unit = self.simparams[11]
+        #start looking for metadata files
+        self.Mvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
+        self.gas_Rvir = parse_metadata.get_value("gas_Rvir",self.name,redshift = self.redshift)
+        self.Mgas = self.gas_Rvir
+        self.star_Rvir = parse_metadata.get_value("star_Rvir",self.name,redshift = self.redshift)
+        self.Mstar = self.star_Rvir
+        self.dm_Rvir = parse_metadata.get_value("dm_Rvir",self.name,redshift = self.redshift)
+        self.Mdm = self.dm_Rvir
+        self.sfr = parse_metadata.get_value("SFR",self.name,redshift = self.redshift)
+        if self.sfr and self.star_Rvir:
             self.ssfr = self.sfr / self.star_Rvir
-            self.L_mag = np.sqrt(np.sum(self.L**2))
-            aDict = parse_vela_metadata.dict_of_vela_info("a")[self.simname].keys()
+        else:
+            self.ssfr = None
+        try:
+            aDict = parse_metadata.avalsdict[self.simname]
             aDict.sort()
             self.final_a0 = float(aDict[-1])
         except:
-            self.Mvir = None
-            self.gas_Rvir = None
-            self.star_Rvir = None
-            self.dm_Rvir =None
-            self.sfr = None
-            self.ssfr = None
-            self.L_mag =None
             self.final_a0 = None
-            #Unable to load all metadata info!
 
     def get_criteria_at_a(self, a, criteria):
-        if float(self.final_a0) < float(a):
+        if self.final_a0 < a:
             print "Inputted a value that exceeds the greatest 'a' value in %s" %(self.simname)
         if criteria == "ssfr":
-            sfr_dict = parse_vela_metadata.dict_of_vela_info("SFR")
-            star_Rvir_dict = parse_vela_metadata.dict_of_vela_info("star_Rvir")
-            return float(sfr_dict[self.simname][a])/float(star_Rvir_dict[self.simname][a])
+            sfr = parse_metadata.get_value("SFR",self.name,redshift = self.redshift)
+            star_Rvir = parse_metadata.get_value("star_Rvir",self.name,redshift = self.redshift)
+            return sfr/star_Rvir
         if criteria == "sfr":
             criteria = "SFR"
-        criteria_dict = parse_vela_metadata.dict_of_vela_info(criteria)
-        return float(criteria_dict[self.simname][a])
+        return parse_metadata.get_value(criteria,self.name, redshift = self.redshift)
     #renames basic scanparams data into new instance variables
     def add_extra_scanparam_fields(self):
         self.R = self.scanparams[0]
@@ -203,7 +205,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.rmax = self.scanparams[4]
         self.length = self.scanparams[5] 
         self.length_reached = self.scanparams[6]
-    
+
     def save_values(self,dest = None,at_level = 1):
         if len(self.info[0]) <= 11:
             print "No ions!"

@@ -1,14 +1,19 @@
-import numpy as np
 import os
-def dict_of_vela_info(quantity,loud = False):
+
+quantity_dict_Mstar = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
+                "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
+                "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
+                "gas_10kpc":8,"star_10kpc":9,"dm_10kpc":10,\
+                "gas_Rdisk":11,"star_Rdisk":12,"dm_Rdisk":13}
+quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7],"L_mag":11}
+quantity_dict_Nir_spherical_galaxy_cat = {"SFR":13}
+
+quantity_dict = quantity_dict_Mstar.copy()
+quantity_dict.update(quantity_dict_Nir_disc_cat)
+quantity_dict.update(quantity_dict_Nir_spherical_galaxy_cat)
+
+def dict_of_vela_info(quantity,loud = 0):
     #This is a guide for what info can be found in what column, starting from column 0.
-    quantity_dict_Mstar = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
-                    "gas_Rvir":4,"star_Rvir":5,"dm_Rvir":6,\
-                    "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
-                    "gas_10kpc":8,"star_10kpc":9,"dm_10kpc":10,\
-                    "gas_Rdisk":11,"star_Rdisk":12,"dm_Rdisk":13}
-    quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7],"L_mag":11}
-    quantity_dict_Nir_spherical_galaxy_cat = {"SFR":13}
     
     #This calculates the column index as well as the number of data points for one piece of info
     if quantity in quantity_dict_Mstar.keys():
@@ -26,9 +31,9 @@ def dict_of_vela_info(quantity,loud = False):
     #Setting up the dictionary of the desired property, where the dictionary key is the name of the galaxy folder : the redshift, and the dictionary value is the respective desired property quantity
     ret_dict = {}
     if os.path.isdir("galaxy_catalogs"):
-        basepath = "galaxy_catalogs/"
+        basepath = "galaxy_catalogs/galaxy_catalogs_vela/"
     else: 
-        basepath = "quasarscan/galaxy_catalogs/"
+        basepath = "quasarscan/galaxy_catalogs/galaxy_catalogs_vela/"
     for version in range(1,3):
         if version == 1:
             folderstart = "VELA"
@@ -36,14 +41,14 @@ def dict_of_vela_info(quantity,loud = False):
             folderstart = "VELA_v2_"
         for i in range(35):
             folder = folderstart+"%02i"%i
-            ret_dict[folder] = {}
+            ret_dict["VELA_v%d_art_%02d"%(version,i)] = {}
             if quantity in quantity_dict_Mstar.keys():
                 pathname = basepath + folder + "/galaxy_catalogue/Mstar.txt"
             elif quantity in quantity_dict_Nir_disc_cat.keys():
                 pathname = basepath + folder + "/galaxy_catalogue/Nir_disc_cat.txt"
             elif quantity in quantity_dict_Nir_spherical_galaxy_cat.keys():
                 pathname = basepath + folder + "/galaxy_catalogue/Nir_spherical_galaxy_cat.txt"
-            else: 
+            elif loud > 1: 
                 print("where is %s stored? We don't know :("%quantity)
             try:
                 f = open(pathname)
@@ -55,15 +60,15 @@ def dict_of_vela_info(quantity,loud = False):
             
             # the following lines including the while loop retrieve the desired property value by iterating through the textfile line by line 
             line = f.readline() 
-            a = line.split()[0]
+            a = float(line.split()[0])
             while 1:
                 if numvals == 1:
-                    ret_dict[folder][a] = line.split()[index]
+                    ret_dict["VELA_v%d_art_%02d"%(version,i)][a] = float(line.split()[index])
                 else:
-                    ret_dict[folder][a] = [line.split()[index[0]],line.split()[index[1]],line.split()[index[2]]]
+                    ret_dict["VELA_v%d_art_%02d"%(version,i)][a] = [float(line.split()[index[0]]),float(line.split()[index[1]]),float(line.split()[index[2]])]
                 line = f.readline()[:]
                 try:
-                    a = line.split()[0]
+                    a = float(line.split()[0])
                 except:
                     break
                     f.close()

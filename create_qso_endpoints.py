@@ -9,12 +9,14 @@ try:
     from quasarscan import quasar_sphere
     from quasarscan import ion_lists
     from quasarscan import gasbinning
+    from quasarscan import code_specific_setup
 
 except:
     import parse_metadata
     import quasar_sphere
     import ion_lists
     import gasbinning
+    import code_specific_setup
 
 def convert_to_xyz(r, theta, phi):
     return np.array([r*np.sin(theta)*np.cos(phi),r*np.sin(theta)*np.sin(phi),r*np.cos(theta)])
@@ -23,7 +25,7 @@ def convert_to_xyz(r, theta, phi):
 def rotation_matrix(axis, theta):
     """
     Return the rotation matrix associated with counterclockwise rotation about
-    the given axis by theta radians.
+    the given axis by theta radians. (taken from stack exchange question)
     """
     axis = np.asarray(axis)
     axis = axis/np.sqrt(np.dot(axis, axis))
@@ -66,20 +68,26 @@ def weights(array,function):
     probs /= np.sum(probs)
     return probs
 
-def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,ions,gasbins=None,\
-                         L = None, center=None, endonsph = False):
+def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,\
+                         L = None, center=None, endonsph = False, dsbounds = None):
     R=sphere[0]
     n_th=sphere[1]
     n_phi=sphere[2]
     n_r=sphere[3]
     rmax=sphere[4]
     length=sphere[5]
+    if dsbounds is not None and np.any(2*R>dsbounds):
+        ratio = float(rmax) / R
+        #this is the minimum ratio needed to ensure a sightline within a box of edge 2*R
+        #stays within the box
+        assert ratio < .57
+        R = np.min(dsbounds-center.in_units('kpc').value)
+        rmax = R*ratio
+        print "R > dsbounds: adjusting to R=%2.2f kpc, rmax = %2.2f kpc"%(R,rmax)
     r_arr = np.linspace(0,rmax,n_r)
     th_arr = np.linspace(0,np.pi,n_th,endpoint = False)
     phi_arr = np.linspace(0,2*np.pi,n_phi,endpoint = False)
 
-    R /= convert_code_unit_to_kpc
-    r_arr /= convert_code_unit_to_kpc
     scanparams = [None]*7
     scanparams[0] = R
     scanparams[1] = len(th_arr)
@@ -95,7 +103,8 @@ def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,ions,gasbins=None,\
     if L is None:
         L = np.array([0,0,1.])
     if center is None:
-        center = np.array([0,0,0.])
+        center = yt.YTArray([0,0,0],'kpc')
+        code_unit = 'kpc'
     rot_matrix = get_rotation_matrix(L)
     for i in range(int(length)):
         theta = np.random.choice(th_arr,p = weightth)
@@ -103,30 +112,47 @@ def create_QSO_endpoints(sphere, convert_code_unit_to_kpc,ions,gasbins=None,\
         phi= np.random.choice(phi_arr)
         alpha = 2*np.pi*np.random.random()
         info[i][:5] = np.array([i,theta,phi,r,alpha])
-        info[i][5:8] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[0]) + center
-        info[i][8:11] = np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]) + center 
+        info[i][5:8] = (yt.YTArray(np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[0]),'kpc') + center).in_units(code_unit).value
+        info[i][8:11] = (yt.YTArray(np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]),'kpc') + center).in_units(code_unit).value
     return scanparams,info
 
 if __name__ == "__main__":
     name = sys.argv[1]
     path = sys.argv[2]
-    ds = yt.load(path)
-    z = ds.current_redshift
+    if len(sys.argv)==4:
+        ionlist = sys.argv[3]
+    else:
+        ionlist = None
+    ds = code_specific_setup.ytload(path,name.split("_")[2])
+    try:
+        z = ds.current_redshift
+    except:
+        a = ds.current_time.value
+        z = 1./a-1.
     Rvir = parse_metadata.get_value("Rvir",name,z)
-    if Rvir is None:
+    if np.isnan(Rvir):
         Rvir = 100#kpc
-    center = [0.50570774, 0.5021925,  0.50058842]#ds.find_max(('gas','density'))[1] (removed for speed)
+    center = ds.find_max(('gas','density'))[1]
     L = parse_metadata.get_value("L",name,z)
-    if L is None:
-        #sp = ds.sphere(center,(Rvir,"kpc"))
+    if np.isnan(L).all():
         L = np.array([0,0,1.])
-    convert = float(ds.length_unit.in_units('kpc').value)
+    convert_unit = ds.length_unit.units
+    convert = ds.length_unit.in_units('kpc').value.item()
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
-    #testsphere = 6*Rvir,12,12,12,2*Rvir,10
+    testsphere = 6*Rvir,12,12,12,2*Rvir,10
+    dsbounds = ds.domain_width.to('kpc').value
     defaultions = ion_lists.agoraions
+    if ionlist:
+        try:
+            ions = ion_lists.dict_of_ionlists[ionlist]
+        except:
+            ions = ionlist.replace("[","").replace("]","").split(",")
+    else:
+        ions = defaultions
     gasbins = gasbinning.GasBinsHolder("all")
-    scanparams, info = create_QSO_endpoints(testsphere,convert,defaultions,L=L,center=center,gasbins = gasbins)
-    simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert]
-    q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= defaultions,data=info,gasbins= gasbins)
+    scanparams, info = create_QSO_endpoints(defaultsphere,ions,code_unit = convert_unit,L=L,center=center,gasbins = gasbins,dsbounds=dsbounds)
+    center = center.in_units(convert_unit).value
+    simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert, str(convert_unit)]
+    q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= ions,data=info,gasbins= gasbins)
     q.save_values(at_level = 0)
 
