@@ -1,10 +1,11 @@
 import parse_vela_metadata
 import parse_nihao_metadata
+import parse_agora_metadata
 import numpy as np
 
-functions = {'VELA':parse_vela_metadata.dict_of_vela_info,'NIHAO':parse_nihao_metadata.dict_of_nihao_info}
-available_quantities = {'VELA':list(parse_vela_metadata.quantity_dict.keys()),'NIHAO':list(parse_nihao_metadata.quantity_dict.keys())}
-avalsdict = {'VELA':parse_vela_metadata.adict,'NIHAO':parse_nihao_metadata.adict}
+functions = {'VELA':parse_vela_metadata.dict_of_vela_info,'NIHAO':parse_nihao_metadata.dict_of_nihao_info,'AGORA':parse_agora_metadata.dict_of_agora_info}
+available_quantities = {'VELA':list(parse_vela_metadata.quantity_dict.keys()),'NIHAO':list(parse_nihao_metadata.quantity_dict.keys()),'AGORA':list(parse_agora_metadata.quantity_dict.keys())}
+avalsdict = {'VELA':parse_vela_metadata.adict,'NIHAO':parse_nihao_metadata.adict,'AGORA':parse_agora_metadata.adict}
 
 #the problem is that NIHAO is not organized nice round expansion factors (a)
 #this will probably be more common, so I will use it as the default behavior

@@ -35,10 +35,7 @@ class GeneralizedQuasarSphere(object):
             list_of_quasar_spheres = [list_of_quasar_spheres]
         self.number = len(list_of_quasar_spheres)
         self.distance = distance
-        if self.number > 0:
-            self.gasbins = list_of_quasar_spheres[0].gasbins
-        else:
-            self.gasbins = gasbinning.GasBinsHolder(bins = None)
+        self.gasbins = gasbinning.GasBinsHolder(bins = None)
         
         ions_lists = []
         sum_of_lengths = 0
@@ -56,7 +53,6 @@ class GeneralizedQuasarSphere(object):
         self.length = sum_of_lengths
         num_extra_columns = self.gasbins.get_length()
         self.info = np.zeros((self.length,11+len(self.ions)*(num_extra_columns+2)+3))
-
         currentpos = 0
         for i in range(self.number):
             q = list_of_quasar_spheres[i]
@@ -77,6 +73,7 @@ class GeneralizedQuasarSphere(object):
             self.info[currentpos:currentpos+size,3]*=convert
             currentpos += size
             
+        
     def get_ion_column_num(self,ion):
         intensivesdict = {'Z':-1,'rho':-2,'T':-3}
         if not ":" in ion:
@@ -179,11 +176,11 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.ssfr = self.sfr / self.star_Rvir
         else:
             self.ssfr = None
-        try:
-            aDict = parse_metadata.avalsdict[self.simname]
-            aDict.sort()
-            self.final_a0 = float(aDict[-1])
-        except:
+        if 1:
+            aDict = parse_metadata.avalsdict[self.simname][self.name]
+            aDict_list = sorted(aDict.keys())
+            self.final_a0 = aDict_list[-1]
+        else:
             self.final_a0 = None
 
     def get_criteria_at_a(self, a, criteria):

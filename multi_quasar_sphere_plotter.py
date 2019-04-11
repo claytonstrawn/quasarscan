@@ -79,19 +79,16 @@ intensives = ["Z","T","rho"]
 intensiveslabels = {"Z":"avg log metallicity","T":"avg log temperature","rho":"avg log density"}
 intensivespositions = {"Z":-1,"T":-2,"rho":-3}
 sightline_xVars = ["r","rdivR","theta","phi"]
-param_xVars = ["redshift","a0","Mvir","gas_Rvir","star_Rvir","dm_Rvir","sfr","ssfr","L_mag"]
+param_xVars = ["redshift","a0","Mvir","gas_Rvir","star_Rvir","dm_Rvir","sfr","ssfr","L_mag","Mstar","Mgas"]
 sightline_unit_labels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
            "theta":"viewing angle (rad)","theta_r>0":"viewing angle (rad)","phi" \
            :"azimuthal viewing angle (rad)"}
 param_unit_labels = {"redshift":"z","a0":"a","Mvir":"Virial Mass (Msun)",\
-                    "gas_Rvir":"Gas Mass within Rvir (Msun)","star_Rvir":"Stellar Mass within Rvir (Msun)",\
-                    "dm_Rvir":"Dark Matter Mass within Rvir (Msun)","sfr":"Star Formation Rate (Msun yr-1)",\
+                    "gas_Rvir":"Gas Mass within Rvir (Msun)","Mgas":"Gas Mass within Rvir (Msun)","star_Rvir":"Stellar Mass within Rvir (Msun)",\
+                    "Mstar":"Stellar Mass within Rvir (Msun)","dm_Rvir":"Dark Matter Mass within Rvir (Msun)","sfr":"Star Formation Rate (Msun yr-1)",\
                     "ssfr":"Specific Star Formation Rate (Msun yr-1 Mstar-1)","L_mag":"Magnitude of Angular Momentum"}
 
 class MultiQuasarSpherePlotter():
-    #USER MUST EXPLICITLY CALL GET_QUASAR TO INPUT INTO ALL OTHER MULTIQUASARSPHEREPLOTTER METHODS AS NECESSARY
-    
-    
     #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
     #                     all textfiles in output are loaded
     def __init__(self, loadonly = "all",textfiles = None, cleanup = False,plots = "mean",throwErrors = False):
@@ -187,6 +184,11 @@ class MultiQuasarSpherePlotter():
             bins = np.array([0.0, bins, np.inf])
         elif isinstance(bins, str) and criteria in stringcriteria:
              bins = [bins]
+        if isinstance(atEnd,float):
+            self.constrain_current_Quasar_Array("final_a0",[atEnd,np.inf],changeArrayName=False)
+            if len(self.currentQuasarArray) == 0:
+                print "No galaxies get to that high of a0"
+            atEnd = True
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
         if splitEven:
             labels, bins, quasarBins = sorter.splitEven(criteria,splitEven,atEnd = atEnd)
@@ -242,6 +244,11 @@ class MultiQuasarSpherePlotter():
                 return
         elif isinstance(bins,str) and constrainCriteria in stringcriteria:
             bins = [bins]
+        if isinstance(atEnd,float):
+            self.constrain_current_Quasar_Array("final_a0",[atEnd,np.inf],changeArrayName=False)
+            if len(self.currentQuasarArray) == 0:
+                print "No galaxies get to that high of a0"
+            atEnd = True
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
         if splitEven is None:
             labels, bins, temp = sorter.sort(constrainCriteria,bins,atEnd = atEnd)
@@ -587,7 +594,7 @@ class MultiQuasarSpherePlotter():
             ylabel = intensiveslabels[ion]
             cd = ""
         elif ion in param_xVars:
-            ylabel = param_unit_labels[yVar]
+            ylabel = param_unit_labels[ion]
             cd = ""
         elif ":" in ion and ion.split(":")[1] != "cdens":
             if ion.split(":")[1] == "fraction":
@@ -783,12 +790,12 @@ class MultiQuasarSpherePlotter():
         
         if logx and not plot_type in [4]:
             plt.xscale('log')
-            
+        
+        self.setPlots(oldplots)            
         if save_fig:
             name = self.get_savefig_name(ion_name,labels,xVar_name,plot_type,custom_name = custom_name)
             plt.savefig("plots/"+name + ".png")
             return plt,"plots/"+name + ".png"
-        self.setPlots(oldplots)
         return plt
 
     def definecolorbar(self):
@@ -1007,7 +1014,7 @@ class MultiSphereSorter(object):
             final_a = np.zeros(len(quasar_array))
             for i in range(len(quasar_array)):
                 final_a[i] = quasar_array[i].final_a0
-            min_a = "%1.3f"%min(final_a)
+            min_a = min(final_a)
             criteria_final = np.zeros(len(quasar_array))
             for index in range(len(quasar_array)):
                 q = quasar_array[index]
