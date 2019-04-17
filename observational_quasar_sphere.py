@@ -11,13 +11,18 @@ except:
 #input: level (0 meaning working directory is '~', 1 meaning, working directory is '~/quasarscan')
 #output: list of strings, names of the files where observations are being stored
 def get_all_textfiles(level):
-    return 
+    return files
+
+#input: filename to go into
+#output: a line of headers representing columns, and the lines of the file
+def read_textfile(filename):
+    return headers, lines
 
 class Observation(quasar_sphere.GeneralizedQuasarSphere):
-    # input: the filename from get_all_textfiles()
+    # input: the info from read_textfile
     # output: None
     # action: read the file, add all of the relevant attributes listed here to the object
-    def __init__(self, textfilename):
+    def __init__(self, header, line_from_file):
         self.number = 1 # 1 galaxy
         self.length = 1 # 1 sightline
         self.gasbins = None
