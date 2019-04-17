@@ -60,3 +60,11 @@ class Observation(quasar_sphere.GeneralizedQuasarSphere):
     #output: the position i, i.e. you'll find that value in info[0,i]
     def get_ion_column_num(self,ion):
         return num
+    
+#input: somewhere data is
+#output: None
+#action: save a text file which Observation can read later
+def read_from_table(pdf_file):
+    #might be interactive? or require pdf crawling
+    #which are tricky things
+    return 
