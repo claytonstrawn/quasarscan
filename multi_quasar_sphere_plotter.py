@@ -113,6 +113,7 @@ class MultiQuasarSpherePlotter():
                 if throwErrors:
                     raise e
         self.quasarArray = np.array(self.quasarArray)
+        self.observedQuasarArray = np.array(self.quasarArray)
         self.currentQuasarArray = np.copy(self.quasarArray)
         self.currentQuasarArrayName = ''
         
