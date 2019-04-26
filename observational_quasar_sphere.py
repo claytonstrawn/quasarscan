@@ -38,17 +38,22 @@ class Observation(quasar_sphere.GeneralizedQuasarSphere):
         self.version  = None
         self.code     = None
         self.simnum   = None
+        self.Rvir_is_real = None
+        self.code_unit = None
+        self.cgm_name=None
+        self.sightline =None
+        #above are strings
+        
+        #below are numbers
         self.redshift = None
         self.rounded_redshift = None
         self.center = None
         self.Rvir = None
-        self.Rvir_is_real = None
         self.dspath = None
         self.a0 = None
         self.L = None
         self.L_mag = None
         self.conversion_factor = None
-        self.code_unit = None
         self.Mvir = None
         self.gas_Rvir = None
         self.Mgas = self.gas_Rvir
