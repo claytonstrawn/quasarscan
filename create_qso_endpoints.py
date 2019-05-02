@@ -68,7 +68,7 @@ def weights(array,function):
     probs /= np.sum(probs)
     return probs
 
-def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,\
+def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,include_0 = True,\
                          L = None, center=None, endonsph = False, dsbounds = None):
     R=sphere[0]
     n_th=sphere[1]
@@ -85,6 +85,8 @@ def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,\
         rmax = R*ratio
         print "R > dsbounds: adjusting to R=%2.2f kpc, rmax = %2.2f kpc"%(R,rmax)
     r_arr = np.linspace(0,rmax,n_r)
+    if not include_0:
+        r_arr = r_arr[1:]
     th_arr = np.linspace(0,np.pi,n_th,endpoint = False)
     phi_arr = np.linspace(0,2*np.pi,n_phi,endpoint = False)
 

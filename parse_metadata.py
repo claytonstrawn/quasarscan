@@ -17,7 +17,7 @@ def get_closest_value_for_a(simname,name,redshift=None,a0=None,loud = False):
         if loud:
             print "that simulation %s does not have metadata in parse_metadata yet"%simname
         return None
-    if redshift:
+    if not redshift is None:
         a0 = 1./(redshift+1)
     elif a0:
         a0 = a0
