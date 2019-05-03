@@ -100,10 +100,13 @@ def fields_to_keep_in_sightline(code,ions):
                 fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
     elif code == 'ramses':
         fields_to_keep.append(('gas',"metal_density"))
+        fields_to_keep.append(('gas','metallicity'))
     elif code == 'gizmo':
         fields_to_keep.append(('gas',"metal_density"))
+        fields_to_keep.append(('gas','metallicity'))
     elif code == 'gadget':
         fields_to_keep.append(('gas',"metal_density"))
+        fields_to_keep.append(('gas','metallicity'))
     elif code == 'gear':
         print "code %s not implemented yet!"%code
     elif code == 'enzo':
