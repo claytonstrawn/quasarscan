@@ -111,6 +111,7 @@ def fields_to_keep_in_sightline(code,ions):
         fields_to_keep.append(('gas','metallicity'))
     elif code == 'tipsy':
         fields_to_keep.append(('gas',"metal_density"))
+        fields_to_keep.append(('gas',"metallicity"))
     return fields_to_keep
 
 def load_and_setup(path,code,ions):

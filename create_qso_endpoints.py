@@ -139,6 +139,9 @@ if __name__ == "__main__":
     if np.isnan(L).all():
         L = np.array([0,0,1.])
     convert_unit = ds.length_unit.units
+    include_0 = True
+    if ds.dataset_type == 'tipsy':
+        include_0 = False
     convert = ds.length_unit.in_units('kpc').value.item()
     defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
     testsphere = 6*Rvir,12,12,12,2*Rvir,10
@@ -152,7 +155,7 @@ if __name__ == "__main__":
     else:
         ions = defaultions
     gasbins = gasbinning.GasBinsHolder("all")
-    scanparams, info = create_QSO_endpoints(defaultsphere,ions,code_unit = convert_unit,L=L,center=center,gasbins = gasbins,dsbounds=dsbounds)
+    scanparams, info = create_QSO_endpoints(defaultsphere,ions,code_unit = convert_unit,L=L,center=center,gasbins = gasbins,dsbounds=dsbounds,include_0 = include_0)
     center = center.in_units(convert_unit).value
     simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert, str(convert_unit)]
     q = quasar_sphere.QuasarSphere(simparams=simparams,scanparams= scanparams,ions= ions,data=info,gasbins= gasbins)

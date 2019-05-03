@@ -691,8 +691,8 @@ class MultiQuasarSpherePlotter():
         if plot_type in [0,1,2,3]:
             empty = True
             for i in range(len(yarys)):
-                xarys[i] = xarys[i][yarys[i]>=0]
-                yarys[i] = yarys[i][yarys[i]>=0]
+                xarys[i] = xarys[i][np.logical_and(yarys[i]>=0,yarys[i]<np.inf)]
+                yarys[i] = yarys[i][np.logical_and(yarys[i]>=0,yarys[i]<np.inf)]
                 if logy:
                     xarys[i] = xarys[i][yarys[i]>0]
                     yarys[i] = yarys[i][yarys[i]>0]
@@ -702,10 +702,10 @@ class MultiQuasarSpherePlotter():
         elif plot_type in [4]:
             for i in range(len(yarys)):
                 for j in range(len(yarys[i])):
-                    xarys[i][j] = xarys[i][j][yarys[i][j]>=0]
-                    yarys[i][j] = yarys[i][j][yarys[i][j]>=0]
-                    yarys[i][j] = yarys[i][j][xarys[i][j]>=0]
-                    xarys[i][j] = xarys[i][j][xarys[i][j]>=0]
+                    xarys[i][j] = xarys[i][j][np.logical_and(yarys[i][j]>=0,yarys[i][j]<np.inf)]
+                    yarys[i][j] = yarys[i][j][np.logical_and(yarys[i][j]>=0,yarys[i][j]<np.inf)]
+                    yarys[i][j] = yarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
+                    xarys[i][j] = xarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
                     if logy:
                         xarys[i][j] = xarys[i][j][yarys[i][j]>0]
                         yarys[i][j] = yarys[i][j][yarys[i][j]>0]
