@@ -90,8 +90,7 @@ param_unit_labels = {"redshift":"z","a0":"a","Mvir":"Virial Mass (Msun)",\
 class MultiQuasarSpherePlotter():
     #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
     #                     all textfiles in output are loaded
-    def __init__(self, loadonly = "all",textfiles = None, cleanup = False,plots = "mean",throwErrors = False):
-        self.debug = None
+    def __init__(self, loadonly = "all",textfiles = None, cleanup = False,plots = "mean",throwErrors = False,safetycheck = True):
         self.plots = "mean"
         self.avgfn = np.mean
         self.setPlots(plots)
@@ -102,7 +101,7 @@ class MultiQuasarSpherePlotter():
             try:
                 readvalsoutput = quasar_sphere.read_values(textfile)
                 q = quasar_sphere.QuasarSphere(readvalsoutput = readvalsoutput)
-                if self.pass_safety_check(q):
+                if safetycheck and self.pass_safety_check(q):
                     self.quasarArray.append(q)
                 elif cleanup:
                     todo = raw_input("file %s did not pass safety check. Remove it? (y/n)"%textfile).lower()

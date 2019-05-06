@@ -82,7 +82,7 @@ def add_necessary_fields_to_ds(code,ds):
                        units='g/cm**3')
 
 def fields_to_keep_in_sightline(code,ions):
-    fields_to_keep = [('gas',"H_nuclei_density"),('gas',"density"),('gas',"mass"),('gas',"temperature"),('gas',"radial_velocity")]
+    fields_to_keep = [('gas',"density"),('gas',"mass"),('gas',"temperature"),('gas',"radial_velocity")]
     if code not in codes:
         print "set_up_fields_for_sims was not prepared for the code %s!"%code
         print "please edit that file first."
@@ -98,6 +98,7 @@ def fields_to_keep_in_sightline(code,ions):
         for atom in atoms:
             if atom in atoms_from_ions(ions):
                 fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
+        fields_to_keep.append(('gas',"H_nuclei_density"))
     elif code == 'ramses':
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas','metallicity'))
@@ -115,6 +116,7 @@ def fields_to_keep_in_sightline(code,ions):
     elif code == 'tipsy':
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas',"metallicity"))
+        fields_to_keep.append(('gas',"H_nuclei_density"))
     return fields_to_keep
 
 def load_and_setup(path,code,ions):
