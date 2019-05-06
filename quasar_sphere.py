@@ -143,6 +143,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         elif abs(self.redshift - 1) <= .05: self.rounded_redshift = 1.00
         elif abs(self.redshift - 1.5) <= .1: self.rounded_redshift = 1.50
         elif abs(self.redshift - 2) <= .1: self.rounded_redshift = 2.00
+        elif abs(self.redshift - 2.5) <= .1: self.rounded_redshift = 2.50
         elif abs(self.redshift - 3) <= .1: self.rounded_redshift = 3.00
         elif abs(self.redshift - 4) <= .1: self.rounded_redshift = 4.00
         elif abs(self.redshift - 5) <= .5: self.rounded_redshift = 5.00
