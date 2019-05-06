@@ -63,8 +63,6 @@ class GeneralizedQuasarSphere(object):
                 pos_in_self = self.get_ion_column_num(ion)
                 self.info[currentpos:currentpos+size,pos_in_self] = q.info[:size,pos_in_q]
                 convert = 1.0
-                if q.code_unit != "kpc":
-                    convert/=q.conversion_factor
                 if distance == "Rvir":
                     convert/=q.Rvir
             self.info[currentpos:currentpos+size,-1] = q.info[:size,-1]
@@ -203,7 +201,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.length = self.scanparams[5] 
         self.length_reached = self.scanparams[6]
 
-    def save_values(self,dest = None,at_level = 1):
+    def save_values(self,dest = None,at_level = 1,test = False):
         if len(self.info[0]) <= 11:
             print "No ions!"
         linesfinished = self.length_reached
@@ -225,6 +223,9 @@ class QuasarSphere(GeneralizedQuasarSphere):
                 os.makedirs(foldername)
             specificfilename = "%s_of_%s-"%(str(linesfinished),str(numlines)) +ionsstr+"_z"+str(redshift)[:4]+".txt"
             filename = foldername+"/"+specificfilename
+            if test:
+                print filename
+                return
             prev = os.listdir(foldername)
             for item in prev:
                 if item.endswith("of_%s-"%str(numlines) +ionsstr+"_z"+str(redshift)[:4]+".txt"):

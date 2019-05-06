@@ -14,7 +14,6 @@ except:
     import gasbinning
     import roman
     level = 1
-
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
 def get_all_textfiles(inquasarscan = 1,loadonly = 'all'):
@@ -92,6 +91,7 @@ class MultiQuasarSpherePlotter():
     #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
     #                     all textfiles in output are loaded
     def __init__(self, loadonly = "all",textfiles = None, cleanup = False,plots = "mean",throwErrors = False):
+        self.debug = None
         self.plots = "mean"
         self.avgfn = np.mean
         self.setPlots(plots)
@@ -128,7 +128,7 @@ class MultiQuasarSpherePlotter():
             s += q.name +" at z=%s ("%q.rounded_redshift
             for c in criteria:
                 v = eval('q.%s'%c)
-                if isinstance(v,str):
+                if isinstance(v,str) or isinstance(v,list):
                     s+="%s = %s, "%(c,v)
                 elif .001<v<1:
                     s+="%s = %0.3f, "%(c,v)
@@ -232,7 +232,7 @@ class MultiQuasarSpherePlotter():
         self.currentQuasarArray = toReturn
     
     def constrain_current_Quasar_Array(self, constrainCriteria, bins=None, exploration_mode = False,atEnd = False,\
-        splitEven = None,changeArrayName = True, set_main_array = False):
+        splitEven = None,changeArrayName = True, set_main_array = False, exclude = False):
         if len(self.currentQuasarArray)>0 and not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
             print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             return
@@ -245,6 +245,13 @@ class MultiQuasarSpherePlotter():
                 return
         elif isinstance(bins,str) and constrainCriteria in stringcriteria:
             bins = [bins]
+        if exclude:
+            possible_bins = []
+            for q in self.currentQuasarArray:
+                possible_bins.append(eval("q.%s"%constrainCriteria))
+            possible_bins = set(possible_bins)
+            excluded_bins = bins
+            bins = list(possible_bins.difference(set(bins)))
         if isinstance(atEnd,float):
             self.constrain_current_Quasar_Array("final_a0",[atEnd,np.inf],changeArrayName=False)
             if len(self.currentQuasarArray) == 0:
@@ -292,6 +299,9 @@ class MultiQuasarSpherePlotter():
                 else:
                     self.currentQuasarArrayName += "%s%s"%(lowlabel,highlabel)
             else:
+                if exclude:
+                    self.currentQuasarArrayName += 'exclude'
+                    bins = excluded_bins
                 for acceptedValue in bins:
                     self.currentQuasarArrayName += acceptedValue.replace(" ","")
         return bins
@@ -314,10 +324,16 @@ class MultiQuasarSpherePlotter():
         def getstderr(data):
             l = len(data[~np.isnan(data)])
             return np.array([np.nanstd(data)/np.sqrt(l),np.nanstd(data)/np.sqrt(l)])
-        if plots in ["mean","std"]:
+        def getstddev(data):
+            return np.array([np.nanstd(data),np.nanstd(data)])
+        if plots in ["mean","stderr"]:
             self.plots = "mean"
             self.avgfn = np.nanmean
             self.errfn = getstderr
+        if plots in ["stddev"]:
+            self.plots = "stddev"
+            self.avgfn = np.nanmean
+            self.errfn = getstddev
         elif plots in ["median","med"]:
             self.plots = "median"
             self.avgfn = np.nanmedian
@@ -326,7 +342,7 @@ class MultiQuasarSpherePlotter():
             self.plots = "median_std"
             self.avgfn = np.nanmedian
             self.errfn = getstderr
-        elif plots == "scatter":
+        elif plots in ["scatter"]:
             self.plots = "scatter"
             self.avgfn = np.nanmean
             self.errfn = getstderr
@@ -424,12 +440,8 @@ class MultiQuasarSpherePlotter():
                 x = eval("q."+xVar)
                 y = self.get_yVar_from_str(q,yVar)
                 rs = q.info[:,3]
-                convert = 1.0
-                if q.code_unit != "kpc":
-                    convert/=q.conversion_factor
-                convert/=q.Rvir
-                acceptedLines = np.logical_and(rlims[0]<=rs*convert,\
-                                               rs*convert<=rlims[1])
+                acceptedLines = np.logical_and(rlims[0]<=rs/q.Rvir,\
+                                               rs/q.Rvir<=rlims[1])
                 y = y[acceptedLines]
                 xs[i] = np.append(xs[i],np.tile(x,len(y)))
                 ys[i] = np.append(ys[i],y)
@@ -476,11 +488,11 @@ class MultiQuasarSpherePlotter():
                 ys[i][j] = y
         return xs,ys
 
-    def values_within_tolerance(self,x_in_list,x_comp,tolerance):
-        if x_comp == 0:
-            return np.abs(x_in_list)<=tolerance
-        else:
-            return x_in_list/x_comp-1<=tolerance
+    def values_within_tolerance(self,x_in_list,x_comp,tolerance,symmetric = True):
+        tocompare = x_in_list-x_comp
+        if symmetric:
+            tocompare = np.abs(tocompare)
+        return np.logical_and(-1e-5<=tocompare,tocompare<=tolerance)
 
     def combine_xs(self,x_variable,tolerance):
         x_values_not_averaged = np.unique(x_variable)
@@ -494,7 +506,7 @@ class MultiQuasarSpherePlotter():
                 currentList.append(x_values_not_averaged[i+numtocombine])
                 numtocombine+=1
             i+=numtocombine
-            x_values.append(self.avgfn([currentList]))
+            x_values.append(np.min([currentList]))
         if i == len(x_values_not_averaged)-1:
             x_values.append(x_values_not_averaged[-1]) 
         return np.array(x_values)
@@ -511,7 +523,7 @@ class MultiQuasarSpherePlotter():
             mask = np.ones(len(unique_xs),dtype = bool)
             for j in range(len(unique_xs)):
                 x_value = unique_xs[j]
-                yvals = yarys[i][self.values_within_tolerance(xarys[i],x_value,tolerance)]
+                yvals = yarys[i][self.values_within_tolerance(xarys[i],x_value,tolerance,symmetric=False)]
                 if len(yvals) == 0:
                     mask[j] = False
                     continue
@@ -765,7 +777,7 @@ class MultiQuasarSpherePlotter():
             if not (coloration is None):
                 color = coloration[i]
             #change fmt to . or _ for a dot or a horizontal line. fmt of marker at center of 
-            fmtdict = {"mean":',',"median_std":',',"covering_fraction":',',"median":"."}
+            fmtdict = {"mean":',',"median_std":',',"covering_fraction":',',"stddev":'.',"median":"."}
             if self.plots == "scatter" and dots:
                 print "average = scatter AND dots = True detected"
                 print "'scatter' gives all sightlines without averaging."
@@ -843,6 +855,7 @@ class MultiQuasarSpherePlotter():
             ion_name = ion
         plt.register_cmap(cmap=hotcustom)
         if len(self.currentQuasarArray) == 0:
+            print "no quasarspheres"
             return None
         if rlims is None:
             rlims = [0.1,np.inf]
@@ -862,25 +875,33 @@ class MultiQuasarSpherePlotter():
         acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
         xs = xs[acceptedLines]
         ys = ys[acceptedLines]
+        self.debug = [np.copy(xs)]
         islogy = ""
         if logy:
             xs = xs[ys>0]
             ys = ys[ys>0]
             ys = np.log10(ys)
             islogy = "log "
+        unique_xs = self.combine_xs(xs,tolerance)
+        retxs = xs*0.0
+        for x_value in unique_xs:
+            mask = self.values_within_tolerance(xs,x_value,tolerance,symmetric=False).astype(float)
+            retxs+= (mask*x_value)
         if weights:
             weight = xs*0.0
-            for i in range(len(xs)):
-                if xs[i]!=0:
-                    weight[i] = 1.0/len(xs[abs(xs[i]/xs - 1)<tolerance])
-                else:
-                    weight[i] = 1.0/len(xs[xs<tolerance])
+            for i,x in enumerate(xs):
+                weight[i] = 1/np.sum(self.values_within_tolerance(xs,x,tolerance,symmetric=False).astype(float))
             cbarlabel = "Fraction of lines for fixed %s"%(xVar)
         else:
             weight = xs*0.0+1.0
             cbarlabel = "Total number of lines"
+        xs = retxs
+        self.debug.append(xs)
+        
         if len(ys) == 0 and not plot_empties:
+            print "No values found"
             return None
+        print xs,ys
         H, xedges, yedges = np.histogram2d(xs, ys, bins=ns,weights = weight)
         H = H.T
         X, Y = np.meshgrid(xedges, yedges)
