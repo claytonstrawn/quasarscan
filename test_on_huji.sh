@@ -1,8 +1,8 @@
 #!/bin/bash
 
 source myenv/bin/activate.csh
-python quasarscan/create_qso_endpoints.py NIHAO_v1_tipsy_14 files_to_process/g8.26e11.00112
-python quasarscan/get_coldens.py quasarscan/output/NIHAO_v1_tipsy_14coldensinfo/0_of_448-agoraions_z4.0.txt 96 n
+#python quasarscan/create_qso_endpoints.py NIHAO_v1_tipsy_14 files_to_process/g8.26e11.00112
+python quasarscan/get_coldens.py quasarscan/output/NIHAO_v1_tipsy_14coldensinfo/96_of_448-agoraions_z4.0.txt 96 n
 python quasarscan/create_qso_endpoints.py NIHAO_v1_tipsy_14 files_to_process/g8.26e11.00160
 python quasarscan/get_coldens.py quasarscan/output/NIHAO_v1_tipsy_14coldensinfo/0_of_448-agoraions_z3.0.txt 96 n
 python quasarscan/create_qso_endpoints.py NIHAO_v1_tipsy_14 files_to_process/g8.26e11.00192
