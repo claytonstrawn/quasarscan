@@ -175,11 +175,11 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.ssfr = self.sfr / self.star_Rvir
         else:
             self.ssfr = None
-        if 1:
+        try:
             aDict = parse_metadata.avalsdict[self.simname][self.name]
             aDict_list = sorted(aDict.keys())
             self.final_a0 = aDict_list[-1]
-        else:
+        except:
             self.final_a0 = None
 
     def get_criteria_at_a(self, a, criteria):

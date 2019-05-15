@@ -71,15 +71,21 @@ def add_necessary_fields_to_ds(code,ds):
     elif code == 'tipsy':
         def _gas_mass(field, data):
             return data['deposit','Gas_mass']
-        ds.add_field(('gas','mass'),units = 'g', function = _gas_mass, sampling_type = 'cell')
         def _metal_density(field, data):
             tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
             tr /= data['gas','metallicity'].in_units('dimensionless')
             return tr
-        ds.add_field(('gas','metal_density'),
+        try:
+            ds.add_field(('gas','mass'),units = 'g', function = _gas_mass, sampling_type = 'cell')
+        except:
+            pass
+        try:
+            ds.add_field(('gas','metal_density'),
                        sampling_type="cell",
                        function=_metal_density,
                        units='g/cm**3')
+        except:
+            pass
 
 def fields_to_keep_in_sightline(code,ions):
     fields_to_keep = [('gas',"density"),('gas',"mass"),('gas',"temperature"),('gas',"radial_velocity")]
