@@ -55,6 +55,7 @@ for i in range(0, len(bins)-1):
     for sto,in_vec in yt.parallel_objects(current_info, storage = my_storage):
         vector = np.copy(in_vec)
         index = vector[0]
+        toprint = "line %s, densities "str(int(index))
         tprint("<line %d, starting process> "%index)
         ident = str(index)
         start = yt.YTArray(vector[5:8],convert_unit)
@@ -98,6 +99,7 @@ for i in range(0, len(bins)-1):
                     vector[11+j*(num_bin_vars+2)+k+2] = coldens_in_bin/cdens
                 except Exception as e:
                     print "Could not bin into %s with edges %s because of error %s"%(variable_name,edges,e)
+            toprint+="%s:%e "%(ion,cdens)
         try:
             Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
                 np.sum(field_data[('gas',"H_nuclei_density")]*mh*dl)
@@ -118,7 +120,7 @@ for i in range(0, len(bins)-1):
             os.remove("ray"+ident+".h5")
         except:
             pass 
-        tprint("vector = "+str(vector))
+        tprint(toprint)
         sto.result_id = index
         sto.result = vector
     if yt.is_root():

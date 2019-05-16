@@ -123,6 +123,8 @@ class MultiQuasarSpherePlotter():
         return len(self.currentQuasarArray)
     def list_all_QuasarSpheres(self, *criteria):
         s = ""
+        if len(self.currentQuasarArray)==0:
+            print "no QuasarSpheres"
         for q in sorted(self.currentQuasarArray, key=lambda x: (x.name,x.rounded_redshift)):
             s += q.name +" at z=%s ("%q.rounded_redshift
             for c in criteria:
@@ -611,7 +613,7 @@ class MultiQuasarSpherePlotter():
         elif ":" in ion and ion.split(":")[1] != "cdens":
             if ion.split(":")[1] == "fraction":
                 ylabel = "%sfraction of %s in state: %s"%(islogy,ion.split(" ")[0],ion.split(":")[0])
-            elif len(ion_name)>10:
+            elif len(ion_name)>20:
                 ylabel = "%sfraction of %s in state"%(islogy,ion.split(":")[0])
             else:
                 ylabel = "%sfraction of %s in state: %s"%(islogy,ion.split(":")[0],ion_name)
@@ -627,9 +629,13 @@ class MultiQuasarSpherePlotter():
     def plot_err(self, ion, quasarArray = None, xVar = "rdivR", save_fig = False, \
                  labels = None,extra_title = "",rlims = None,tolerance = 1e-5, \
                  dots = False,logx = False,logy = True, average = None,custom_name = None, \
-                 coloration = None, visibility_threshold = None, plot_empties = False):
+                 coloration = None, visibility_threshold = None, plot_empties = False,lq = None):
         print("Current constraints (name): "+self.currentQuasarArrayName)
         oldplots = self.plots
+        if lq:
+            print lq
+            labels = lq[0]
+            quasarArray = lq[2]
         if not average is None:
             self.setPlots(average)
         if xVar == 'rdivR':
@@ -665,22 +671,29 @@ class MultiQuasarSpherePlotter():
                 assert not ion in intensives
             xerr = None
             xarys,yarys = self.get_xy_type0(xVar,ions_notuple,quasarArray,rlims)
-        elif not quasarArray is None and xVar in sightline_xVars:
+        elif isinstance(ion,str) and xVar in sightline_xVars:
             plot_type = 1
-            assert isinstance(ion,str)
+            if (quasarArray is None):
+                quasarArray = [self.currentQuasarArray]
+                labels = ['all']
             assert len(labels) == len(quasarArray)
             xerr = None
             xarys,yarys = self.get_xy_type1(xVar,ion,quasarArray,rlims)
-        elif (not quasarArray is None) and xVar in param_xVars and (not ion in param_xVars):
+        elif xVar in param_xVars and (not ion in param_xVars):
             plot_type = 2
             assert isinstance(ion,str)
+            if (quasarArray is None):
+                quasarArray = [self.currentQuasarArray]
+                labels = ['all']
             assert len(labels) == len(quasarArray)
             xerr = None
             xarys,yarys = self.get_xy_type2(xVar,ion,quasarArray,rlims)
         elif ion in param_xVars and xVar in param_xVars:
             yVar = ion
             plot_type = 3
-            assert not quasarArray is None
+            if (quasarArray is None):
+                quasarArray = [self.currentQuasarArray]
+                labels = ['all']
             assert len(labels) == len(quasarArray)
             if not dots is None: 
                 dots = True
@@ -690,6 +703,9 @@ class MultiQuasarSpherePlotter():
             if isinstance(xVar,tuple):
                 xVar = xVar[0]
                 xVar_name = xVar[1]   
+            if quasarArray is None:
+                quasarArray = [self.currentQuasarArray]
+                labels = ['all']
             yVar = ion
             plot_type = 4
             xarys,yarys = self.get_xy_type4(xVar,yVar,quasarArray,rlims)
@@ -900,7 +916,6 @@ class MultiQuasarSpherePlotter():
         if len(ys) == 0 and not plot_empties:
             print "No values found"
             return None
-        print xs,ys
         H, xedges, yedges = np.histogram2d(xs, ys, bins=ns,weights = weight)
         H = H.T
         X, Y = np.meshgrid(xedges, yedges)
