@@ -633,7 +633,6 @@ class MultiQuasarSpherePlotter():
         print("Current constraints (name): "+self.currentQuasarArrayName)
         oldplots = self.plots
         if lq:
-            print lq
             labels = lq[0]
             quasarArray = lq[2]
         if not average is None:
@@ -809,8 +808,19 @@ class MultiQuasarSpherePlotter():
                         return np.concatenate(ary)
                     except:
                         return ary
+                def getsubsample(data,frac):
+                    l = int(len(data)*frac)
+                    mask = np.zeros(len(data))
+                    mask[:l] = 1
+                    np.random.shuffle(mask)
+                    return mask.astype(bool)
+
                 x = flatten_if_needed(xarys[i])
                 y = flatten_if_needed(yarys[i])
+                if isinstance(average,tuple):
+                    mask = getsubsample(x,average[1])
+                    x=x[mask]
+                    y=y[mask]
                 plt.plot(x,y,'o',label = label, markersize = 2,color = color)
             else:
                 plt.errorbar(x,y, xerr = xerr, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)

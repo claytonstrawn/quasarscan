@@ -55,7 +55,7 @@ for i in range(0, len(bins)-1):
     for sto,in_vec in yt.parallel_objects(current_info, storage = my_storage):
         vector = np.copy(in_vec)
         index = vector[0]
-        toprint = "line %s, densities "str(int(index))
+        toprint = "line %s, densities "%str(int(index))
         tprint("<line %d, starting process> "%index)
         ident = str(index)
         start = yt.YTArray(vector[5:8],convert_unit)
