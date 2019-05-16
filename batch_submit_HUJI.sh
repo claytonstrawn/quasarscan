@@ -7,5 +7,5 @@
 
 
 export HDF5_USE_FILE_LOCKING=FALSE
-source myenv/bin/activate.csh
+source myenv/bin/activate
 quasarscan/./test_on_huji.sh
