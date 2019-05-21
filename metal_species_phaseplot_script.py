@@ -71,7 +71,12 @@ def split_into_bins(low_T,high_T,low_rho,high_rho,n_Tbins,n_rhobins,myintensives
         myintensives[i] = myintensives_old[i][mask]
     return myionmasses,myintensives,t_bins,rho_bins
 
+<<<<<<< HEAD
 def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,savefigname = None,cbar = "jet",specialion = 5,colorwith = ['edge','line','dot']):
+=======
+def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,savefigname = None,cbar = "jet",specialion = 5,\
+                     colorwith = ['edge','line','dot'],dsname = None,ds=None):
+>>>>>>> metal species phaseplot script online
     import matplotlib as mpl
     import matplotlib.pyplot as plt
 
@@ -81,7 +86,10 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
     ion_mass_in_each_state = np.sum(myionmasses,axis=1)
     all_O_mass = np.sum(ion_mass_in_each_state)
     total_gas_mass = np.sum(myintensives[0])
+<<<<<<< HEAD
 
+=======
+>>>>>>> metal species phaseplot script online
     for i,t in enumerate(t_bins[:-1]):
         t_high = t
         t_low = t_bins[i+1]
@@ -133,6 +141,9 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
         plt.plot([specialion+1],[np.log10(ion_mass_in_each_state[specialion]/all_O_mass)],'ok')
     plt.xlabel("ionization state")
     plt.ylabel("log fraction in state")
+    if dsname and ds:
+        Mstar = parse_metadata.get_value('star_Rvir',dsname,redshift=ds.current_redshift)
+        plt.title("%s at z=%1.3f (Mstar = %1.2e)"%(dsname,ds.current_redshift,Mstar))
     if savefigname:
         plt.savefig("quasarscan/plots/%s"%savefigname)
     plt.show()
@@ -221,6 +232,7 @@ def script(name,path,low_T,high_T,low_rho,high_rho,n_Tbins,n_rhobins,atom = 'O',
         myionmasses_old,myintensives_old,ds,ions = make_ionmasses_and_intensives(name,path,atom,CGM)
     else:
         ions = make_full_ionlist(atom)
+<<<<<<< HEAD
     try:
         myionmasses,myintensives,t_bins,rho_bins = split_into_bins(low_T,high_T,low_rho,high_rho,n_Tbins,n_rhobins,myintensives_old,myionmasses_old,ions)
         min_val,max_minus_min,ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap = get_overall_plot(myionmasses,myintensives,t_bins,\
@@ -229,5 +241,15 @@ def script(name,path,low_T,high_T,low_rho,high_rho,n_Tbins,n_rhobins,atom = 'O',
         get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min,\
                           ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap,ions,name,ds,log,savephaseplotname,specialion=specialion,colorwith=colorwith)
     except:
+=======
+    if 1:
+        myionmasses,myintensives,t_bins,rho_bins = split_into_bins(low_T,high_T,low_rho,high_rho,n_Tbins,n_rhobins,myintensives_old,myionmasses_old,ions)
+        min_val,max_minus_min,ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap = get_overall_plot(myionmasses,myintensives,t_bins,\
+                                                                                                            rho_bins,ions,log,saveoverallname,cbar,specialion=specialion,\
+                                                                                                               colorwith=colorwith,dsname=name,ds=ds)
+        get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min,\
+                          ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap,ions,name,ds,log,savephaseplotname,specialion=specialion,colorwith=colorwith)
+    else:
+>>>>>>> metal species phaseplot script online
         pass
     return myionmasses_old,myintensives_old,ds
