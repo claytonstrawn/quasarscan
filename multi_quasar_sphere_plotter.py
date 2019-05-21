@@ -176,9 +176,6 @@ class MultiQuasarSpherePlotter():
         elif criteria == "ions":
             print("You cannot sort by 'ions'")
             return
-        if criteria in self.currentQuasarArrayName:
-            print("Already constrained by %s. Please reset instead of further constraining."%criteria)
-            return
         if isinstance(bins, float) or isinstance(bins, int) or \
             (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
             if isinstance(bins, list) or isinstance(bins,np.ndarray):
@@ -477,12 +474,8 @@ class MultiQuasarSpherePlotter():
                 x = self.get_yVar_from_str(q,xVar)
                 y = self.get_yVar_from_str(q,yVar)
                 rs = q.info[:,3]
-                convert = 1.0
-                if q.code_unit != "kpc":
-                    convert/=q.conversion_factor
-                convert/=q.Rvir
-                acceptedLines = np.logical_and(rlims[0]<=rs*convert,\
-                                               rs*convert<=rlims[1])
+                acceptedLines = np.logical_and(rlims[0]<=rs/q.Rvir,\
+                                               rs/q.Rvir<=rlims[1])
                 x = x[acceptedLines]
                 y = y[acceptedLines]
                 xs[i][j] = x
