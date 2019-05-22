@@ -52,9 +52,9 @@ def get_original_lists(ad,ions):
         print np.sum(ad[intensives[i]])
     return myionmasses_old,myintensives_old
 
-def split_into_bins(low_T,high_T,low_rho,high_rho,n_Tbins,n_rhobins,myintensives_old,myionmasses_old,ions):
-    t_bins = np.linspace(high_T,low_T,n_Tbins+1)
-    rho_bins = np.linspace(low_rho,high_rho,n_rhobins+1)+np.log10(1.6737236e-24)
+def split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses_old,ions):
+    t_bins = np.linspace(high_T,low_T,n+1)
+    rho_bins = np.linspace(low_rho,high_rho,n+1)+np.log10(1.6737236e-24)
     mask_lowbound_rho = np.log10(myintensives_old[2])>np.min(rho_bins)
     mask_highbound_rho = np.log10(myintensives_old[2])<np.max(rho_bins)
     mask_lowbound_T = np.log10(myintensives_old[1])>np.min(t_bins)
@@ -189,6 +189,11 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
             if line_number==0 or 'line' not in colorwith:
                 line_color = 'k'
                 line_width = 1
+                ax.tick_params(axis='y',          
+                                which='both',    
+                                left=False,   
+                                right=False,    
+                                labelleft=False)
             else:
                 line_color = mymap(convert_to_cbar_scale(line_number,min_val,max_minus_min,log=log))
                 line_width = 2
@@ -203,11 +208,29 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
                     dot_color = mymap(convert_to_cbar_scale(dot_number,min_val,max_minus_min,log=log))
                     dot_size = 7.
                 ax.plot([specialion+1],[np.log10(ion_mass_in_current_bin[specialion]/all_O_mass_in_current_bin)],'o',mec = 'k',mfc=dot_color,ms=dot_size)
-
+            
+            if len(t_bins)>9:
+                ax.tick_params(axis='x',          
+                                which='both',    
+                                bottom=False,   
+                                top=False,    
+                                labelbottom=False)
+            if len(t_bins)>11:
+                ax.tick_params(axis='y',          
+                                which='both',    
+                                left=False,   
+                                right=False,    
+                                labelleft=False)
             if i==0:
-                ax.set_title('[%.2f,%.2f]'%(rho_low-np.log10(1.6737236e-24),rho_high-np.log10(1.6737236e-24)))
+                if len(t_bins)>11:
+                    ax.set_title('%.1f'%((rho_low-np.log10(1.6737236e-24)+rho_high-np.log10(1.6737236e-24))/2))
+                else:
+                    ax.set_title('[%.2f,%.2f]'%(rho_low-np.log10(1.6737236e-24),rho_high-np.log10(1.6737236e-24)))
             if j==0:
-                ax.set_ylabel("[%.2f,%.2f]"%(t_low,t_high))
+                if len(t_bins)>11:
+                    ax.set_ylabel('%.1f'%((t_low+t_high)/2))
+                else:
+                    ax.set_ylabel("[%.2f,%.2f]"%(t_low,t_high))
 
     if savefigname:
         plt.savefig("quasarscan/plots/%s"%savefigname)
@@ -219,14 +242,14 @@ def make_ionmasses_and_intensives(name,path,atom = 'O',CGM=True):
     myionmasses_old,myintensives_old = get_original_lists(ad,ions)
     return myionmasses_old,myintensives_old,ds,ions
     
-def script(name,path,low_T,high_T,low_rho,high_rho,n_Tbins,n_rhobins,atom = 'O',saveoverallname=None,savephaseplotname=None,\
+def script(name,path,low_T,high_T,low_rho,high_rho,n,atom = 'O',saveoverallname=None,savephaseplotname=None,\
            CGM=True,myionmasses_old=None,myintensives_old=None,ds = None,log=True,cbar='jet',specialion=5,colorwith = ['edge','line','dot']):
     if myionmasses_old is None and myintensives_old is None and ds is None:
         myionmasses_old,myintensives_old,ds,ions = make_ionmasses_and_intensives(name,path,atom,CGM)
     else:
         ions = make_full_ionlist(atom)
     try:
-        myionmasses,myintensives,t_bins,rho_bins = split_into_bins(low_T,high_T,low_rho,high_rho,n_Tbins,n_rhobins,myintensives_old,myionmasses_old,ions)
+        myionmasses,myintensives,t_bins,rho_bins = split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses_old,ions)
         min_val,max_minus_min,ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap = get_overall_plot(myionmasses,myintensives,t_bins,\
                                                                                                             rho_bins,ions,log,saveoverallname,cbar,specialion=specialion,\
                                                                                                                colorwith=colorwith,dsname=name,ds=ds)
