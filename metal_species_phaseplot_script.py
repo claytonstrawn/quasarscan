@@ -44,9 +44,9 @@ def get_original_lists(ad,ions):
         myionmasses_old[i,:] = ad[('gas',ion_to_field_name(ion,"mass"))]
         print np.sum(myionmasses_old[i])
 
-    intensives = {0:('gas','mass'),1:('gas','temperature'),2:('gas','density'),3:('gas','cell_volume')}
-    myintensives_old = np.zeros((4,length))
-    for i in [0,1,2,3]:
+    intensives = {0:('gas','mass'),1:('gas','temperature'),2:('gas','density')}
+    myintensives_old = np.zeros((3,length))
+    for i in [0,1,2]:
         print "working on value %s..."%(intensives[i],)
         myintensives_old[i,:] = ad[intensives[i]]
         print np.sum(ad[intensives[i]])
@@ -127,7 +127,7 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
     CS3 = plt.contourf(Z, levels, cmap=mymap)
     plt.clf()
 
-    plt.colorbar(CS3) # using the colorbar info I got from contourf
+    #plt.colorbar(CS3) # using the colorbar info I got from contourf
 
     plt.plot(np.arange(1,len(ions)+1),np.log10(ion_mass_in_each_state/all_O_mass),'k')
     if specialion:
