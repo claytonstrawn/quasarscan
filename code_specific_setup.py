@@ -1,6 +1,7 @@
 import yt
 
 codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy']
+sphcodes = ['gizmo','gadget','gear','tipsy']
 yt_dstype_names = {'art':'art','ramses':'ramses','gizmo':'gadget_hdf5','gadget':'gadget_hdf5','gear':'gadget_hdf5','enzo':None,'tipsy':'tipsy'}
 
 atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
@@ -14,6 +15,12 @@ def get_aux_files_art(dspath):
     file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
     file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
     return file_particle_header,file_particle_data,file_particle_stars   
+
+def get_gasbins_arg(code):
+    if code in sphcodes:
+        return 'noresolution'
+    else:
+        return 'all'
 
 def ytload(path,code):
     if code == 'art':

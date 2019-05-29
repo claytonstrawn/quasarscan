@@ -125,7 +125,8 @@ if __name__ == "__main__":
         ionlist = sys.argv[3]
     else:
         ionlist = None
-    ds = code_specific_setup.ytload(path,name.split("_")[2])
+    code = name.split("_")[2]
+    ds = code_specific_setup.ytload(path,code)
     try:
         z = ds.current_redshift
     except:
@@ -154,7 +155,7 @@ if __name__ == "__main__":
             ions = ionlist.replace("[","").replace("]","").split(",")
     else:
         ions = defaultions
-    gasbins = gasbinning.GasBinsHolder("all")
+    gasbins = gasbinning.GasBinsHolder(code_specific_setup.get_gasbins_arg(code))
     scanparams, info = create_QSO_endpoints(defaultsphere,ions,code_unit = convert_unit,L=L,center=center,gasbins = gasbins,dsbounds=dsbounds,include_0 = include_0)
     center = center.in_units(convert_unit).value
     simparams = [name,z,center[0],center[1],center[2],Rvir,path,L[0],L[1],L[2],convert, str(convert_unit)]

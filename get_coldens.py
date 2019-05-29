@@ -55,11 +55,12 @@ for i in range(0, len(bins)-1):
     for sto,in_vec in yt.parallel_objects(current_info, storage = my_storage):
         vector = np.copy(in_vec)
         index = vector[0]
-        toprint = "line %s, densities "%str(int(index))
+        toprint = "line %s, (r = %.0f) densities "%(str(int(index)),vector[3])
         tprint("<line %d, starting process> "%index)
         ident = str(index)
-        start = yt.YTArray(vector[5:8],convert_unit)
-        end = yt.YTArray(vector[8:11],convert_unit)
+        start = yt.YTArray(np.copy(vector[5:8]),convert_unit)
+        end = yt.YTArray(np.copy(vector[8:11]),convert_unit)
+        
         try:
             ray = trident.make_simple_ray(ds,
             start_position=start,
@@ -73,13 +74,12 @@ for i in range(0, len(bins)-1):
             continue
         trident.add_ion_fields(ray,q.ions)
         field_data = ray.all_data()
+        dl = field_data['dl']
         for j in range(len(q.ions)):
             ion = q.ions[j]
-            dl = field_data['dl']
-            ionfield = field_data[("gas",quasar_sphere.ion_to_field_name(ion))]
+            ionfield = field_data["gas",quasar_sphere.ion_to_field_name(ion)]
             cdens = np.sum(ionfield * dl)
             vector[11+j*(num_bin_vars+2)] = cdens
-            atom = ion.split(" ")[0]
             total_nucleus = np.sum(ionfield[ionfield>0]/\
                                        field_data[("gas",quasar_sphere.ion_to_field_name(ion,'ion_fraction'))][ionfield>0]\
                                         * dl[ionfield>0])
@@ -87,16 +87,19 @@ for i in range(0, len(bins)-1):
             for k in range(num_bin_vars):
                 try:
                     variable_name,edges,units = q.gasbins.get_field_binedges_for_num(k)
-                    if units:
-                        data = field_data[variable_name].in_units(units)
-                    else:
-                        data = field_data[variable_name]
-                    abovelowerbound = data>edges[0]
-                    belowupperbound = data<edges[1]
-                    withinbounds = np.logical_and(abovelowerbound,belowupperbound)
-                    coldens_in_line = (ionfield[withinbounds])*(dl[withinbounds])
-                    coldens_in_bin = np.sum(coldens_in_line)
-                    vector[11+j*(num_bin_vars+2)+k+2] = coldens_in_bin/cdens
+                    if variable_name in ray.derived_field_list:
+                        if units:
+                            data = field_data[variable_name].in_units(units)
+                        else:
+                            data = field_data[variable_name]
+                        abovelowerbound = data>edges[0]
+                        belowupperbound = data<edges[1]
+                        withinbounds = np.logical_and(abovelowerbound,belowupperbound)
+                        coldens_in_line = (ionfield[withinbounds])*(dl[withinbounds])
+                        coldens_in_bin = np.sum(coldens_in_line)
+                        vector[11+j*(num_bin_vars+2)+k+2] = coldens_in_bin/cdens
+                    elif 1:
+                        print str(variable_name)+" not in ray.derived_field_list"
                 except Exception as e:
                     print "Could not bin into %s with edges %s because of error %s"%(variable_name,edges,e)
             toprint+="%s:%e "%(ion,cdens)
@@ -122,7 +125,6 @@ for i in range(0, len(bins)-1):
             pass 
         tprint(toprint)
         sto.result_id = index
-        sto.result = vector
     if yt.is_root():
         keys = my_storage.keys()
         for key in keys:
