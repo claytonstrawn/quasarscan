@@ -85,7 +85,7 @@ class GasBinsHolder(object):
             return
         if bins == "all":
             bins = possible_bin_types
-        elif bins = "noresolution":
+        elif bins == "noresolution":
             bins = list(possible_bin_types)
             bins.remove('resolution')
         elif bins is None:

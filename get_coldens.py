@@ -125,6 +125,7 @@ for i in range(0, len(bins)-1):
             pass 
         tprint(toprint)
         sto.result_id = index
+        sto.result = vector
     if yt.is_root():
         keys = my_storage.keys()
         for key in keys:
