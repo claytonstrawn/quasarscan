@@ -13,7 +13,7 @@ nerscsimnames = []
 for num in numsnersc:
     nerscsimnames.append("VELA_v2_art_%02d"%num)
 
-knownredshifts = [1.0,1.5,2.0,3.0,4.0]
+knownredshifts = [1.0,1.5,2.0,1.9,3.0,4.0]
 
 minimumlines = 250
 final = True
@@ -47,8 +47,8 @@ def check_in_allfiles(tocheck,alltextfiles,ionlist):
     else:
         return False
     
-z2a = {"1.0":"0.500","1.5":"0.400","2.0":"0.330","3.0":"0.250","4.0":"0.200"}
-a2z = {"0.500":"1.0","0.400":"1.5","0.330":"2.0","0.250":"3.0","0.200":"4.0"}
+z2a = {"1.0":"0.500","1.5":"0.400","2.0":"0.330","1.9":"0.340","3.0":"0.250","4.0":"0.200"}
+a2z = {"0.500":"1.0","0.400":"1.5","0.330":"2.0","0.340":"1.9","0.250":"3.0","0.200":"4.0"}
 
 def check_validity(tocheck):
     blacklist = open("quasarscan/blacklist.txt")
@@ -90,6 +90,10 @@ def add_to_blacklist(dirname,z):
     f.close
 
 def write_files(tocheck,cont = 0):
+    if tocheck is None:
+        f = open("quasarscan/nextfile.sh","w+")
+        f.close()
+        return
     print("I think we should work on %s where we've so far gotten to %d"%(tocheck,cont))
     simname,filename,redshift = convert_check_to_strings(tocheck)
     firstline = "#!/bin/bash"
@@ -140,5 +144,6 @@ def main_func():
         if i<len(ionlists)-1:
             print("Moving on to larger ion list")
     print("Finished, all available files satisfy strictest criteria!")
+    write_files(None)
 
 main_func()

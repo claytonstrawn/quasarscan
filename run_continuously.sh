@@ -1,10 +1,11 @@
 #!/bin/bash
-module load python
+
 source activate myenv
 export HDF5_USE_FILE_LOCKING=FALSE
-while :
+python quasarscan/decide_next_onlyVELA.py
+until ! [ -s quasarscan/nextfile.sh ]
 do
-    python quasarscan/decide_next_onlyVELA.py
     chmod u+x quasarscan/nextfile.sh
     quasarscan/./nextfile.sh
+    python quasarscan/decide_next_onlyVELA.py
 done

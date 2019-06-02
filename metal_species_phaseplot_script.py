@@ -71,8 +71,8 @@ def split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses
         myintensives[i] = myintensives_old[i][mask]
     return myionmasses,myintensives,t_bins,rho_bins
 
-def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,savefigname = None,cbar = "jet",specialion = 5,\
-                     colorwith = ['edge','line','dot'],dsname = None,ds=None):
+def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,savefigname = None,cbar = "jet",specialion = 5,
+                     colorwith = ['edge','line','dot'],dsname = None,ds=None,show=True,makeoverall=True):
     import matplotlib as mpl
     import matplotlib.pyplot as plt
 
@@ -128,23 +128,26 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
     plt.clf()
 
     #plt.colorbar(CS3) # using the colorbar info I got from contourf
-
-    plt.plot(np.arange(1,len(ions)+1),np.log10(ion_mass_in_each_state/all_O_mass),'k')
-    if specialion:
-        plt.plot([specialion+1],[np.log10(ion_mass_in_each_state[specialion]/all_O_mass)],'ok')
-    plt.xlabel("ionization state")
-    plt.ylabel("log fraction in state")
-    if dsname and ds:
-        Mstar = parse_metadata.get_value('star_Rvir',dsname,redshift=ds.current_redshift)
-        plt.title("%s at z=%1.3f (Mstar = %1.2e)"%(dsname,ds.current_redshift,Mstar))
-    if savefigname:
-        plt.savefig("quasarscan/plots/%s"%savefigname)
-    plt.show()
+    if makeoverall:
+        plt.plot(np.arange(1,len(ions)+1),np.log10(ion_mass_in_each_state/all_O_mass),'k')
+        if specialion:
+            plt.plot([specialion+1],[np.log10(ion_mass_in_each_state[specialion]/all_O_mass)],'ok')
+        plt.xlabel("ionization state")
+        plt.ylabel("log fraction in state")
+        if dsname and ds:
+            Mstar = parse_metadata.get_value('star_Rvir',dsname,redshift=ds.current_redshift)
+            plt.title("%s at z=%1.3f (Mstar = %1.2e)"%(dsname,ds.current_redshift,Mstar))
+        if savefigname:
+            plt.savefig("quasarscan/plots/%s"%savefigname)
+        if show:
+            plt.show()
+        else:
+            plt.clf()
     return min_val,max_minus_min,ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap
 
 def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min,\
                   ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap,ions,\
-                  dsname=None,ds=None,log = True,savefigname = None,specialion=5,colorwith = ['edge','line','dot']):
+                  dsname=None,ds=None,log = True,savefigname = None,specialion=5,colorwith = ['edge','line','dot'],show=True):
     import matplotlib.pylab as pl
     fig = plt.figure(1,figsize=(15,11))
     if dsname:
@@ -233,8 +236,12 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
                     ax.set_ylabel("[%.2f,%.2f]"%(t_low,t_high))
 
     if savefigname:
+        print "???"
         plt.savefig("quasarscan/plots/%s"%savefigname)
-    plt.show()
+    if show:
+        plt.show()
+    else:
+        plt.clf()
 
 def make_ionmasses_and_intensives(name,path,atom = 'O',CGM=True):
     ds = loadfile(name,path)
@@ -243,7 +250,8 @@ def make_ionmasses_and_intensives(name,path,atom = 'O',CGM=True):
     return myionmasses_old,myintensives_old,ds,ions
     
 def script(name,path,low_T,high_T,low_rho,high_rho,n,atom = 'O',saveoverallname=None,savephaseplotname=None,\
-           CGM=True,myionmasses_old=None,myintensives_old=None,ds = None,log=True,cbar='jet',specialion=5,colorwith = ['edge','line','dot']):
+           CGM=True,myionmasses_old=None,myintensives_old=None,ds = None,log=True,cbar='jet',specialion=5,colorwith = ['edge','line','dot'],\
+          show=True, makeoverall=True):
     if myionmasses_old is None and myintensives_old is None and ds is None:
         myionmasses_old,myintensives_old,ds,ions = make_ionmasses_and_intensives(name,path,atom,CGM)
     else:
@@ -252,9 +260,10 @@ def script(name,path,low_T,high_T,low_rho,high_rho,n,atom = 'O',saveoverallname=
         myionmasses,myintensives,t_bins,rho_bins = split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses_old,ions)
         min_val,max_minus_min,ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap = get_overall_plot(myionmasses,myintensives,t_bins,\
                                                                                                             rho_bins,ions,log,saveoverallname,cbar,specialion=specialion,\
-                                                                                                               colorwith=colorwith,dsname=name,ds=ds)
+                                                                                                               colorwith=colorwith,dsname=name,ds=ds,\
+                                                                                                            show=show,makeoverall=makeoverall)
         get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min,\
-                          ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap,ions,name,ds,log,savephaseplotname,specialion=specialion,colorwith=colorwith)
+                          ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap,ions,name,ds,log,savephaseplotname,specialion=specialion,colorwith=colorwith,show=show)
     except:
         pass
     return myionmasses_old,myintensives_old,ds

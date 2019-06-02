@@ -144,7 +144,7 @@ if __name__ == "__main__":
     if ds.dataset_type == 'tipsy':
         include_0 = False
     convert = ds.length_unit.in_units('kpc').value.item()
-    defaultsphere = 6*Rvir,12,12,12,2*Rvir,448
+    defaultsphere = 6*Rvir,12,12,12,1.5*Rvir,448
     testsphere = 6*Rvir,12,12,12,2*Rvir,10
     dsbounds = ds.domain_width.to('kpc').value
     defaultions = ion_lists.agoraions
