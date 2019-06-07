@@ -596,25 +596,26 @@ class MultiQuasarSpherePlotter():
             beginning = beginning[:-1]
         return retlabels,beginning
 
-    def get_ylabel_cd(self,ion,ion_name,islogy):
+    def get_ylabel_cd(self,ion,ion_name,islogy,plot_type):
         if ion in intensives:
             ylabel = intensiveslabels[ion]
             cd = ""
         elif ion in param_xVars:
             ylabel = param_unit_labels[ion]
             cd = ""
-        elif ":" in ion and ion.split(":")[1] != "cdens":
-            if ion.split(":")[1] == "fraction":
-                ylabel = "%sfraction of %s in state: %s"%(islogy,ion.split(" ")[0],ion.split(":")[0])
-            elif len(ion_name)>20:
-                ylabel = "%sfraction of %s in state"%(islogy,ion.split(":")[0])
-            else:
-                ylabel = "%sfraction of %s in state: %s"%(islogy,ion.split(":")[0],ion_name)
+        elif ":" in ion and ion.split(":")[1] != "cdens" and plot_type == 0:
+            ylabel = "%sfraction of ion in state"%(islogy)
+            cd = "Fraction "
+        elif ":" in ion and ion.split(":")[1] != "cdens" and plot_type != 0:
+            ylabel = "%sfraction of ion in state: %s"%(islogy,ion_name)
             cd = "Fraction "
         elif self.plots == 'covering_fraction':
             ylabel = ion_name + 'covering fraction'
             cd = ""
-        else:
+        elif (":" not in ion or ion.split(":")[1] == "cdens") and plot_type == 0:
+            ylabel = "%scol dens"%(islogy)
+            cd = "Column Density "
+        elif (":" not in ion or ion.split(":")[1] == "cdens") and plot_type != 0:
             ylabel = "%scol dens %s"%(islogy,ion_name)
             cd = "Column Density "
         return ylabel,cd  
@@ -622,7 +623,8 @@ class MultiQuasarSpherePlotter():
     def plot_err(self, ion, quasarArray = None, xVar = "rdivR", save_fig = False, \
                  labels = None,extra_title = "",rlims = None,tolerance = 1e-5, \
                  dots = False,logx = False,logy = True, average = None,custom_name = None, \
-                 coloration = None, visibility_threshold = None, plot_empties = False,lq = None):
+                 coloration = None, visibility_threshold = None, plot_empties = False,lq = None,
+                offsetx=False):
         print("Current constraints (name): "+self.currentQuasarArrayName)
         oldplots = self.plots
         if lq:
@@ -692,13 +694,10 @@ class MultiQuasarSpherePlotter():
             xerr = None
             xarys,yarys = self.get_xy_type3(xVar,yVar,quasarArray)
         elif xVar not in sightline_xVars + param_xVars:
-            if isinstance(xVar,tuple):
-                xVar = xVar[0]
-                xVar_name = xVar[1]   
+            yVar = ion
             if quasarArray is None:
                 quasarArray = [self.currentQuasarArray]
                 labels = ['all']
-            yVar = ion
             plot_type = 4
             xarys,yarys = self.get_xy_type4(xVar,yVar,quasarArray,rlims)
         else:
@@ -737,7 +736,7 @@ class MultiQuasarSpherePlotter():
                         empty = False
 
         islogy = "log " if logy else ""
-        ylabel, cd = self.get_ylabel_cd(ion,ion_name,islogy)
+        ylabel, cd = self.get_ylabel_cd(ion,ion_name,islogy,plot_type)
         if plot_type in [1,2,3,4]:
             ylabel = ylabel
         if plot_type in [0]:
@@ -775,7 +774,7 @@ class MultiQuasarSpherePlotter():
             y = ys[i]
             if plot_type in [4]:
                 islogx = "log " if logx else ""
-                xlabel, _ = self.get_ylabel_cd(xVar,xVar_name,islogx)
+                xlabel, _ = self.get_ylabel_cd(xVar,xVar_name,islogx,plot_type)
                 plt.xlabel(xlabel)
             yerr = np.transpose(yerrs[i])
             xerr = np.transpose(xerrs[i]) if not (xerrs is None) else None
@@ -814,8 +813,15 @@ class MultiQuasarSpherePlotter():
                     mask = getsubsample(x,average[1])
                     x=x[mask]
                     y=y[mask]
+                if offsetx:
+                    randomscatterwidth = np.min(np.diff(np.unique(x)))
+                    add = (np.random.random(len(x))-.5)*randomscatterwidth
+                    x += add
                 plt.plot(x,y,'o',label = label, markersize = 2,color = color)
             else:
+                if offsetx and plot_type in [0,1,2]:
+                    scatterwidth = np.min(np.diff(np.unique(x)))
+                    x+=(float(i)/len(xs)-.5)*scatterwidth
                 plt.errorbar(x,y, xerr = xerr, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)
         plt.legend()
         
@@ -924,7 +930,7 @@ class MultiQuasarSpherePlotter():
         X, Y = np.meshgrid(xedges, yedges)
         plt.pcolormesh(X,Y, H, cmap=hotcustom)
         plt.colorbar(label = cbarlabel)
-        ylabel,cd = self.get_ylabel_cd(ion,ion_name,islogy)
+        ylabel,cd = self.get_ylabel_cd(ion,ion_name,islogy,1)
         plt.ylabel(ylabel)
         plt.xlabel(sightline_unit_labels[xVar])
         plt.title('%s Distribution %s'%(ion_name, extra_title))
