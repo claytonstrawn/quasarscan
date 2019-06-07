@@ -164,10 +164,13 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.code_unit = self.simparams[11]
         #start looking for metadata files
         self.Mvir = parse_metadata.get_value("Mvir",self.name,redshift = self.redshift)
+        self.Mvir_cgm = self.Mvir
         self.gas_Rvir = parse_metadata.get_value("gas_Rvir",self.name,redshift = self.redshift)
         self.Mgas = self.gas_Rvir
+        self.Mgas_cgm = self.gas_Rvir - parse_metadata.get_value("gas_.1Rvir",self.name,redshift = self.redshift)
         self.star_Rvir = parse_metadata.get_value("star_Rvir",self.name,redshift = self.redshift)
         self.Mstar = self.star_Rvir
+        self.Mstar_cgm = self.star_Rvir - parse_metadata.get_value("star_.1Rvir",self.name,redshift = self.redshift)
         self.dm_Rvir = parse_metadata.get_value("dm_Rvir",self.name,redshift = self.redshift)
         self.Mdm = self.dm_Rvir
         self.sfr = parse_metadata.get_value("SFR",self.name,redshift = self.redshift)

@@ -9,8 +9,27 @@ from quasarscan.code_specific_setup import ytload
 from trident.ion_balance import atomic_number
 from quasarscan.roman import to_roman
 
+def add_mass_fields(ds):
+    atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
+            'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
+            'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn']
+    def _specific_metal_mass_function(atom):
+        def _specific_metal_mass(field, data):
+            nucleus_densityIa = data['gas','metal_ia_density']*\
+                                SNIa_abundance[atom]
+            nucleus_densityII = data['gas','metal_ii_density']*\
+                                SNII_abundance[atom]
+            return (nucleus_densityIa + nucleus_densityII)*data['gas','cell_volume']
+        return _specific_metal_mass
+    for atom in atoms:
+        ds.add_field(('gas','%s_nuclei_mass'%atom),
+                        sampling_type="cell",
+                        function=_specific_metal_mass_function(atom),
+                        units=unit_system["mass"])
+
 def loadfile(name,path):
     ds=ytload(path,name)
+    add_mass_fields(ds)
     return ds
 
 def make_full_ionlist(atom):
@@ -30,6 +49,7 @@ def addions_get_ad(atom,ds,name,CGM = True):
         ad = ds.all_data()
     return ad,ions
 
+
 def convert_to_cbar_scale(field,min_val,max_minus_min,log = True):
     if log:
         return (np.log10(field)-min_val)/max_minus_min
@@ -37,6 +57,10 @@ def convert_to_cbar_scale(field,min_val,max_minus_min,log = True):
         return (field-min_val)/max_minus_min
 
 def get_original_lists(ad,ions):
+    print ions
+    print ions[0]
+    print quasar_sphere.ion_to_field_name(ions[0])
+    print quasar_sphere.ion_to_field_name(ions[0],"mass")
     length = len(ad[('gas',quasar_sphere.ion_to_field_name(ions[0],"mass"))])
     myionmasses_old = np.zeros((len(ions),length))
     for i,ion in enumerate(ions):

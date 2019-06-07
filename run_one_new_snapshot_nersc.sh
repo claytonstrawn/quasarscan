@@ -8,7 +8,7 @@ n=$4
 if (($n == '0')); then
     python quasarscan/create_qso_endpoints.py $simname $filename
 fi
-srun -n 32 -u python -u quasarscan/get_coldens.py quasarscan/output/${simname}coldensinfo/${n}_of_448-agoraions_z${z}.txt 96 p
+srun -n 64 -u python -u quasarscan/get_coldens.py quasarscan/output/${simname}coldensinfo/${n}_of_448-agoraions_z${z}.txt 132 p
 
 #in case you want to run one line interactively:
 #srun -n 32 -u python -u quasarscan/get_coldens.py quasarscan/output/AGORA_v1_art_01coldensinfo/96_of_448-agoraions_z15.0.txt 96 p
