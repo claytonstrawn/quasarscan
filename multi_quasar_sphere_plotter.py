@@ -505,10 +505,11 @@ class MultiQuasarSpherePlotter():
             x_values.append(x_values_not_averaged[-1]) 
         return np.array(x_values)
 
-    def process_errbars_onlyvertical(self,xarys,yarys,tolerance):
+    def process_errbars_onlyvertical(self,xarys,yarys,tolerance,logy):
         xs = np.empty(len(yarys),dtype = object)
         ys = np.empty(len(yarys),dtype = object)
         yerrs = np.empty(len(yarys),dtype = object)
+        empty = True
         for i in range(len(yarys)):
             unique_xs = self.combine_xs(xarys[i],tolerance)
             xs[i] = unique_xs
@@ -523,16 +524,23 @@ class MultiQuasarSpherePlotter():
                     continue
                 ys[i][j] = self.avgfn(yvals)
                 yerrs[i][j] = self.errfn(yvals)
+                if ys[i][j] > 0:
+                    empty = False
+                if logy:
+                    yerrs[i][j][0] = np.log10(ys[i][j])-np.log10(ys[i][j]-yerrs[i][j][0])
+                    yerrs[i][j][1] = np.log10(ys[i][j]+yerrs[i][j][1])-np.log10(ys[i][j])
+                    ys[i][j] = np.log10(ys[i][j])
             xs[i] = xs[i][mask]
             ys[i] = ys[i][mask]
             yerrs[i] = yerrs[i][mask]
-        return xs,ys,yerrs
+        return xs,ys,yerrs,empty
 
-    def process_errbars_vertandhoriz(self,xarys,yarys):
+    def process_errbars_vertandhoriz(self,xarys,yarys,logx,logy):
         xs = np.empty(len(yarys),dtype = object)
         ys = np.empty(len(yarys),dtype = object)
         xerrs = np.empty(len(yarys),dtype = object)
         yerrs = np.empty(len(yarys),dtype = object)
+        empty = True
         for i in range(len(xs)):
             xs[i] = np.zeros(len(xarys[i]))
             ys[i] = np.zeros(len(xarys[i]))
@@ -541,10 +549,20 @@ class MultiQuasarSpherePlotter():
             for j,xlist in enumerate(xarys[i]):
                 xs[i][j] = self.avgfn(xlist)
                 xerrs[i][j] = self.errfn(xlist)
+                if logx:
+                    xerrs[i][j][0] = np.log10(xs[i][j])-np.log10(xs[i][j]-xerrs[i][j][0])
+                    xerrs[i][j][1] = np.log10(xs[i][j]+xerrs[i][j][1])-np.log10(xs[i][j])
+                    xs[i][j] = np.log10(xs[i][j])
             for j,ylist in enumerate(yarys[i]):
                 ys[i][j] = self.avgfn(ylist)
                 yerrs[i][j] = self.errfn(ylist)
-        return xs,ys,xerrs,yerrs
+                if xs[i][j]>0 and ys[i][j]>0:
+                    empty = False
+                if logy:
+                    yerrs[i][j][0] = np.log10(ys[i][j])-np.log10(ys[i][j]-yerrs[i][j][0])
+                    yerrs[i][j][1] = np.log10(ys[i][j]+yerrs[i][j][1])-np.log10(ys[i][j])
+                    ys[i][j] = np.log10(ys[i][j])
+        return xs,ys,xerrs,yerrs,empty
 
     def get_savefig_name(self,ion,labels,xVar,plot_type,custom_name = None):
         if plot_type in [0]:
@@ -703,20 +721,11 @@ class MultiQuasarSpherePlotter():
         else:
             print("Requirements not met (type could not be detected). Cannot plot.")
             return
-        
         labels, redundancy = self.get_redundancy_from_labels(labels)
-        empty = True
         if plot_type in [0,1,2,3]:
-            empty = True
             for i in range(len(yarys)):
                 xarys[i] = xarys[i][np.logical_and(yarys[i]>=0,yarys[i]<np.inf)]
                 yarys[i] = yarys[i][np.logical_and(yarys[i]>=0,yarys[i]<np.inf)]
-                if logy:
-                    xarys[i] = xarys[i][yarys[i]>0]
-                    yarys[i] = yarys[i][yarys[i]>0]
-                    yarys[i] = np.log10(yarys[i])
-                if len(yarys) > 0 and len(yarys[i]) > 0:
-                    empty = False
         elif plot_type in [4]:
             for i in range(len(yarys)):
                 for j in range(len(yarys[i])):
@@ -724,17 +733,6 @@ class MultiQuasarSpherePlotter():
                     yarys[i][j] = yarys[i][j][np.logical_and(yarys[i][j]>=0,yarys[i][j]<np.inf)]
                     yarys[i][j] = yarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
                     xarys[i][j] = xarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
-                    if logy:
-                        xarys[i][j] = xarys[i][j][yarys[i][j]>0]
-                        yarys[i][j] = yarys[i][j][yarys[i][j]>0]
-                        yarys[i][j] = np.log10(yarys[i][j])
-                    if logx:
-                        yarys[i][j] = yarys[i][j][xarys[i][j]>0]
-                        xarys[i][j] = xarys[i][j][xarys[i][j]>0]
-                        xarys[i][j] = np.log10(xarys[i][j])
-                    if len(yarys) > 0 and len(yarys[i]) > 0 and len(yarys[i][j]) > 0:
-                        empty = False
-
         islogy = "log " if logy else ""
         ylabel, cd = self.get_ylabel_cd(ion,ion_name,islogy,plot_type)
         if plot_type in [1,2,3,4]:
@@ -746,10 +744,6 @@ class MultiQuasarSpherePlotter():
         elif plot_type in [4]:
             ionstr = ""
         ionstr = ion_name if plot_type in [1,2,3] else redundancy
-        if empty and not plot_empties:
-            print '%s %sAverages (%s) %s was not plotted because no nonzero values were recorded'%\
-            (ionstr, cd, self.plots, extra_title)
-            return None
         plt.ylabel(ylabel)
         if xVar in sightline_xVars:
             plt.xlabel(sightline_unit_labels[xVar])
@@ -765,10 +759,14 @@ class MultiQuasarSpherePlotter():
                 oldyarys = np.power(10,yarys[i]) if logy else yarys[i]
                 yarys[i] = (oldyarys>visibility_threshold).astype(int)
         if plot_type in [0,1,2,3]:
-            xs,ys,yerrs = self.process_errbars_onlyvertical(xarys,yarys,tolerance)
+            xs,ys,yerrs,empty = self.process_errbars_onlyvertical(xarys,yarys,tolerance,logy)
             xerrs = None
         elif plot_type in [4]:
-            xs,ys,xerrs,yerrs = self.process_errbars_vertandhoriz(xarys,yarys)
+            xs,ys,xerrs,yerrs,empty = self.process_errbars_vertandhoriz(xarys,yarys,logx,logy)
+        if empty and not plot_empties:
+            print '%s %sAverages (%s) %s was not plotted because no nonzero values were recorded'%\
+            (ionstr, cd, self.plots, extra_title)
+            return None
         for i in range(len(xs)):
             x = xs[i]
             y = ys[i]
@@ -783,7 +781,7 @@ class MultiQuasarSpherePlotter():
             if not (coloration is None):
                 color = coloration[i]
             #change fmt to . or _ for a dot or a horizontal line. fmt of marker at center of 
-            fmtdict = {"mean":',',"median_std":',',"covering_fraction":',',"stddev":'.',"median":"."}
+            fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',"stddev":'.',"median":"."}
             if self.plots == "scatter" and dots:
                 print "average = scatter AND dots = True detected"
                 print "'scatter' gives all sightlines without averaging."
@@ -809,20 +807,54 @@ class MultiQuasarSpherePlotter():
 
                 x = flatten_if_needed(xarys[i])
                 y = flatten_if_needed(yarys[i])
+                if logx and plot_type in [4]:
+                    x = np.log10(x)
+                if logy: 
+                    y = np.log10(y)
                 if isinstance(average,tuple):
                     mask = getsubsample(x,average[1])
                     x=x[mask]
                     y=y[mask]
                 if offsetx:
-                    randomscatterwidth = np.min(np.diff(np.unique(x)))
-                    add = (np.random.random(len(x))-.5)*randomscatterwidth
+                    randomscatterwidth = np.min(np.diff(np.unique(np.round(x,decimals = 5))))
+                    add = (np.random.random(len(x))-.5)*randomscatterwidth*.5
                     x += add
                 plt.plot(x,y,'o',label = label, markersize = 2,color = color)
             else:
                 if offsetx and plot_type in [0,1,2]:
                     scatterwidth = np.min(np.diff(np.unique(x)))
-                    x+=(float(i)/len(xs)-.5)*scatterwidth
-                plt.errorbar(x,y, xerr = xerr, yerr=yerr, fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)
+                    if logx:
+                        x[x>0]*=10**((float(i)/len(xs)-.5)*scatterwidth*.2)
+                    else:
+                        x+=(float(i)/len(xs)-.5)*scatterwidth*.5
+
+                myynans = np.isnan(yerr[0])
+                yerr[0,myynans] = yerr[1,myynans]
+                if xerr is not None:
+                    myxnans = np.isnan(xerr[0])
+                    xerr[0,myxnans] = xerr[1,myxnans]
+                    mynans = np.logical_and(myxnans,myynans)
+                    ebar = plt.errorbar(x[~mynans],y[~mynans], xerr = xerr[:,~mynans], yerr=yerr[:,~mynans], fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)
+                    if np.any(mynans):
+                        color = ebar[0].get_color()
+                        plt.errorbar(x[myxnans],y[myxnans],xerr=xerr[0][myxnans],xuplims = True,color = color,fmt = ',')
+                        _,caplines,_ = plt.errorbar(x[myxnans],y[myxnans],xerr=xerr[1][myxnans],xlolims = True,color = color,fmt = ',')
+                        caplines[0].set_marker('_')
+                        caplines[0].set_markersize(6)
+                        plt.errorbar(x[myynans],y[myynans],yerr=yerr[0][myynans],uplims = True,color = color,fmt = fmtdict[self.plots])
+                        _,caplines,_ = plt.errorbar(x[myynans],y[myynans],yerr=yerr[1][myynans],lolims = True,color = color,fmt = ',')
+                        caplines[0].set_marker('_')
+                        caplines[0].set_markersize(6)
+                else:
+                    ebar = plt.errorbar(x[~myynans],y[~myynans], yerr=yerr[:,~myynans], fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)
+                    if np.any(myynans):
+                        color = ebar[0].get_color()
+                        plt.errorbar(x[myynans],y[myynans],yerr=yerr[0][myynans],uplims = True,color = color,fmt = fmtdict[self.plots])
+                        _,caplines,_ = plt.errorbar(x[myynans],y[myynans],yerr=yerr[1][myynans],lolims = True,color = color,fmt = ',')
+                        caplines[0].set_marker('_')
+                        caplines[0].set_markersize(6)
+
+
         plt.legend()
         
         if logx and not plot_type in [4]:
