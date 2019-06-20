@@ -25,8 +25,34 @@ def add_mass_fields(ds):
         ds.add_field(('gas','%s_nuclei_mass'%atom),
                         sampling_type="cell",
                         function=_specific_metal_mass_function(atom),
-                        units=unit_system["mass"])
+                        units=ds.unit_system["mass"])
 
+
+# based on Iwamoto et al 1999
+# number of grams atom per gram of SNIa metal
+SNIa_abundance = {
+    'H'  : 0.00E+00, 'He' : 0.00E+00, 'C'  : 3.52E-02, 
+    'N'  : 8.47E-07, 'O'  : 1.04E-01, 'F'  : 4.14E-10, 
+    'Ne' : 3.30E-03, 'Na' : 4.61E-05, 'Mg' : 6.25E-03, 
+    'Al' : 7.19E-04, 'Si' : 1.14E-01, 'P'  : 2.60E-04, 
+    'S'  : 6.35E-02, 'Cl' : 1.27E-04, 'Ar' : 1.14E-02, 
+    'K'  : 5.72E-05, 'Ca' : 8.71E-03, 'Sc' : 1.61E-07, 
+    'Ti' : 2.50E-04, 'V'  : 5.46E-05, 'Cr' : 6.19E-03, 
+    'Mn' : 6.47E-03, 'Fe' : 5.46E-01, 'Co' : 7.59E-04, 
+    'Ni' : 9.17E-02, 'Cu' : 2.19E-06, 'Zn' : 2.06E-05}
+
+# number of grams atom per gram of SNII metal
+SNII_abundance = {
+    'H'  : 0.00E+00, 'He' : 0.00E+00, 'C'  : 3.12E-02, 
+    'N'  : 6.15E-04, 'O'  : 7.11E-01, 'F'  : 4.57E-10, 
+    'Ne' : 9.12E-02, 'Na' : 2.56E-03, 'Mg' : 4.84E-02, 
+    'Al' : 5.83E-03, 'Si' : 4.81E-02, 'P'  : 4.77E-04, 
+    'S'  : 1.62E-02, 'Cl' : 4.72E-05, 'Ar' : 3.15E-03, 
+    'K'  : 2.65E-05, 'Ca' : 2.31E-03, 'Sc' : 9.02E-08, 
+    'Ti' : 5.18E-05, 'V'  : 3.94E-06, 'Cr' : 5.18E-04, 
+    'Mn' : 1.52E-04, 'Fe' : 3.58E-02, 'Co' : 2.86E-05, 
+    'Ni' : 2.35E-03, 'Cu' : 4.90E-07, 'Zn' : 7.46E-06}
+        
 def loadfile(name,path):
     ds=ytload(path,name)
     add_mass_fields(ds)
@@ -57,10 +83,6 @@ def convert_to_cbar_scale(field,min_val,max_minus_min,log = True):
         return (field-min_val)/max_minus_min
 
 def get_original_lists(ad,ions):
-    print ions
-    print ions[0]
-    print quasar_sphere.ion_to_field_name(ions[0])
-    print quasar_sphere.ion_to_field_name(ions[0],"mass")
     length = len(ad[('gas',quasar_sphere.ion_to_field_name(ions[0],"mass"))])
     myionmasses_old = np.zeros((len(ions),length))
     for i,ion in enumerate(ions):
