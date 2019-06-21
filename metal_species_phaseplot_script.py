@@ -76,8 +76,9 @@ def addions_get_ad(atom,ds,name,CGM = True):
     return ad,ions
 
 
-def convert_to_cbar_scale(field,min_val,max_minus_min,log = True):
-    if log:
+def convert_to_cbar_scale(field,min_val,max_minus_min,log = True,floor=-5):
+    if log and floor is not None:
+        min_val = floor
         return (np.log10(field)-min_val)/max_minus_min
     else:
         return (field-min_val)/max_minus_min
@@ -156,7 +157,7 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
             min_val = np.min(np.append(myarray,min_val))
     print min_val,max_val
     if log:
-        min_val = np.log10(min_val)
+        min_val = -5#np.log10(min_val)
         max_val = np.log10(max_val)
     max_minus_min = max_val-min_val
     min_cb, max_cb = (min_val, max_val)
@@ -221,10 +222,10 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
                 ax0 = fig.add_subplot(size_t,size_rho,size_t*i+(j+1))
                 ax = ax0
             else:
-                ax = fig.add_subplot(size_t,size_rho,size_t*i+(j+1),sharex=ax0)
+                ax = fig.add_subplot(size_t,size_rho,size_t*i+(j+1),sharex=ax0,sharey=ax0)
 
             edge_number = all_gas_mass_in_current_bin/total_gas_mass
-            if edge_number==0 or 'edge' not in colorwith:
+            if edge_number==0 or 'edge' not in colorwith or np.log10(edge_number)<-5:
                 edge_color = 'k'
                 edge_width = 1
             else:
@@ -235,7 +236,7 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
                 spine.set_linewidth(edge_width)
 
             line_number = all_O_mass_in_current_bin/all_O_mass
-            if line_number==0 or 'line' not in colorwith:
+            if line_number==0 or 'line' not in colorwith or np.log10(line_number)<-5:
                 line_color = 'k'
                 line_width = 1
                 ax.tick_params(axis='y',          
@@ -246,17 +247,18 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
             else:
                 line_color = mymap(convert_to_cbar_scale(line_number,min_val,max_minus_min,log=log))
                 line_width = 2
-            ax.plot(np.arange(1,len(ions)+1),np.log10(ion_mass_in_current_bin/all_O_mass_in_current_bin),color=line_color,linewidth=line_width)
+            ax.plot(np.arange(1,len(ions)+1), np.log10(ion_mass_in_current_bin/all_O_mass_in_current_bin), color=line_color, linewidth=line_width)
 
             if specialion is not None:
                 dot_number = ion_mass_in_current_bin[specialion]/ion_mass_in_each_state[specialion]
-                if dot_number==0 or 'dot' not in colorwith:
+                if dot_number==0 or 'dot' not in colorwith or np.log10(dot_number)<-5:
                     dot_color = 'k'
                     dot_size = 3.
                 else:
                     dot_color = mymap(convert_to_cbar_scale(dot_number,min_val,max_minus_min,log=log))
                     dot_size = 7.
                 ax.plot([specialion+1],[np.log10(ion_mass_in_current_bin[specialion]/all_O_mass_in_current_bin)],'o',mec = 'k',mfc=dot_color,ms=dot_size)
+                ax.set_ylim(-5,0)
             
             if len(t_bins)>9:
                 ax.tick_params(axis='x',          
@@ -280,7 +282,6 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
                     ax.set_ylabel('%.1f'%((t_low+t_high)/2))
                 else:
                     ax.set_ylabel("[%.2f,%.2f]"%(t_low,t_high))
-
     if savefigname:
         print "???"
         plt.savefig("quasarscan/plots/%s"%savefigname)
