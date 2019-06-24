@@ -53,6 +53,8 @@ def rhoz_func(z):
     rhos = np.array(rhos)
     pos = len(zs[z>=zs])-1
     return rhos[pos]
+
+
 def make_funcs(ds=None,z=None):
     if z is None:
         z = ds.current_redshift
