@@ -197,3 +197,5 @@ def make_funcs(ds=None,z=None):
     def CI_OVIII(field,data):
         tr = data['gas','OVIII_PI_dominated']
         return 1.-tr
+    
+    return PI_OIV,CI_OIV,PI_OV,CI_OV,PI_OVI,CI_OVI,PI_OVII,CI_OVII,PI_OVIII,CI_OVIII

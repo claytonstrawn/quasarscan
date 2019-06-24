@@ -789,6 +789,12 @@ class MultiQuasarSpherePlotter():
                 print "please change one and try again"
                 return
             elif dots:
+                if offsetx and plot_type in [0,1,2]:
+                    scatterwidth = np.min(np.diff(np.unique(x)))
+                    if logx:
+                        x[x>0]*=10**((float(i)/len(xs)-.5)*scatterwidth*.2)
+                    else:
+                        x+=(float(i)/len(xs)-.5)*scatterwidth*.5
                 plt.plot(x,y,"o",label = label,color = color)
             elif self.plots == "scatter":
                 def flatten_if_needed(ary):
@@ -834,23 +840,32 @@ class MultiQuasarSpherePlotter():
                     myxnans = np.isnan(xerr[0])
                     xerr[0,myxnans] = xerr[1,myxnans]
                     mynans = np.logical_and(myxnans,myynans)
-                    ebar = plt.errorbar(x[~mynans],y[~mynans], xerr = xerr[:,~mynans], yerr=yerr[:,~mynans], fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)
+                    ebar = plt.errorbar(x[~mynans],y[~mynans], xerr = xerr[:,~mynans],\
+                                        yerr=yerr[:,~mynans], fmt=fmtdict[self.plots], \
+                                        capsize = 3, label = label,color = color)
                     if np.any(mynans):
                         color = ebar[0].get_color()
-                        plt.errorbar(x[myxnans],y[myxnans],xerr=xerr[0][myxnans],xuplims = True,color = color,fmt = ',')
-                        _,caplines,_ = plt.errorbar(x[myxnans],y[myxnans],xerr=xerr[1][myxnans],xlolims = True,color = color,fmt = ',')
+                        plt.errorbar(x[myxnans],y[myxnans],xerr=xerr[0][myxnans],\
+                                     xuplims = True,color = color,fmt = ',')
+                        _,caplines,_ = plt.errorbar(x[myxnans],y[myxnans],xerr=xerr[1][myxnans],\
+                                                    xlolims = True,color = color,fmt = ',')
                         caplines[0].set_marker('_')
                         caplines[0].set_markersize(6)
-                        plt.errorbar(x[myynans],y[myynans],yerr=yerr[0][myynans],uplims = True,color = color,fmt = fmtdict[self.plots])
-                        _,caplines,_ = plt.errorbar(x[myynans],y[myynans],yerr=yerr[1][myynans],lolims = True,color = color,fmt = ',')
+                        plt.errorbar(x[myynans],y[myynans],yerr=yerr[0][myynans],uplims = True,\
+                                     color = color,fmt = fmtdict[self.plots])
+                        _,caplines,_ = plt.errorbar(x[myynans],y[myynans],yerr=yerr[1][myynans],\
+                                                    lolims = True,color = color,fmt = ',')
                         caplines[0].set_marker('_')
                         caplines[0].set_markersize(6)
                 else:
-                    ebar = plt.errorbar(x[~myynans],y[~myynans], yerr=yerr[:,~myynans], fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)
+                    ebar = plt.errorbar(x[~myynans],y[~myynans], yerr=yerr[:,~myynans], \
+                                        fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)
                     if np.any(myynans):
                         color = ebar[0].get_color()
-                        plt.errorbar(x[myynans],y[myynans],yerr=yerr[0][myynans],uplims = True,color = color,fmt = fmtdict[self.plots])
-                        _,caplines,_ = plt.errorbar(x[myynans],y[myynans],yerr=yerr[1][myynans],lolims = True,color = color,fmt = ',')
+                        plt.errorbar(x[myynans],y[myynans],yerr=yerr[0][myynans],\
+                                     uplims = True,color = color,fmt = fmtdict[self.plots])
+                        _,caplines,_ = plt.errorbar(x[myynans],y[myynans],yerr=yerr[1][myynans],\
+                                                    lolims = True,color = color,fmt = ',')
                         caplines[0].set_marker('_')
                         caplines[0].set_markersize(6)
 
@@ -866,6 +881,19 @@ class MultiQuasarSpherePlotter():
             plt.savefig("plots/"+name + ".png")
             return plt,"plots/"+name + ".png"
         return plt
+    
+    def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_x = [0,np.inf], \
+                   reset = False, exploration_mode = False, atEnd_x = False, atEnd_y = False, \
+                   onlyNonempty = False, splitEven_x = 0, splitEven_y = 0, reverse = False):
+        #sort in 2 dimensions, return 2D array of lists of Quasarspheres and labels
+        return labels_x,labels_y,bins,quasarArray
+    
+    def faberplot(xVar,yVar,labels_x,labels_y,quasarArray):#...other args from plot_err or plot_hist):
+        #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
+        #ask plot_err or plot_hist for completed plots of type given, for 
+        #quasars in that cell of quasarArray, put them in subplots of a n by m subplots object
+        #and show that plot
+        return plot
 
     def definecolorbar(self):
         from matplotlib.colors import LinearSegmentedColormap
@@ -931,7 +959,6 @@ class MultiQuasarSpherePlotter():
         acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
         xs = xs[acceptedLines]
         ys = ys[acceptedLines]
-        self.debug = [np.copy(xs)]
         islogy = ""
         if logy:
             xs = xs[ys>0]
