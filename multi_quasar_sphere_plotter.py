@@ -882,7 +882,7 @@ class MultiQuasarSpherePlotter():
             return plt,"plots/"+name + ".png"
         return plt
     
-    def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_x = [0,np.inf], \
+    def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_y = [0,np.inf], \
                    reset = False, exploration_mode = False, atEnd_x = False, atEnd_y = False, \
                    onlyNonempty = False, splitEven_x = 0, splitEven_y = 0, reverse = False):
         #sort in 2 dimensions, return 2D array of lists of Quasarspheres and labels
