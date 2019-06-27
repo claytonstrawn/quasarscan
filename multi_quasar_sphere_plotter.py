@@ -385,7 +385,7 @@ class MultiQuasarSpherePlotter():
         to_return = eval(new_str_to_eval)
         return to_return
 
-    def get_xy_type0(self,xVar,yVars,quasarArray,rlims):
+    def get_xy_type0(self,xVar,yVars,rlims):
         quasarArray = [self.currentQuasarArray]
         xs = np.empty(len(yVars),dtype = object)
         ys = np.empty(len(yVars),dtype = object)
@@ -811,7 +811,7 @@ class MultiQuasarSpherePlotter():
                 ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=2)
         else:
             for i in range(len(xs)):
-                plt.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],\
+                ax.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],\
                              color = coloration[i],fmt = fmt,capsize = 3)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -875,12 +875,30 @@ class MultiQuasarSpherePlotter():
        
                               
     
-    def faberplot(xVar,yVar,labels_x,labels_y,quasarArray):#...other args from plot_err or plot_hist):
+    def faberplot(self, yVar,labels_x,labels_y,quasarArray, **kwargs):#...other args from plot_err or plot_hist):
         #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
         #ask plot_err or plot_hist for completed plots of type given, for 
         #quasars in that cell of quasarArray, put them in subplots of a n by m subplots object
         #and show that plot
-        return plot
+        rows = len(quasarArray)
+        cols = len(quasarArray[0])
+        fig, axes = plt.subplots(rows,cols,figsize = (15,11))
+        oldQuasarArray = quasarArray
+        for r in range (0,rows):
+            for c in range (0,cols):
+                self.currentQuasarArray = quasarArray[r][c]
+                self.plot_err(yVar, ax = axes[r][c], show = False, **kwargs)
+                if r == 0:
+                    axes[r][c].set_title(labels_x[c])
+                else:
+                    axes[r][c].set_title('')
+                if c == 0:
+                    old_ylabel = axes[r][c].get_ylabel()
+                    axes[r][c].set_ylabel(labels_y[r])
+                else:
+                    axes[r][c].set_ylabel('')
+        fig.suptitle(old_ylabel)
+        self.currentQuasarArray = oldQuasarArray
 
     def definecolorbar(self):
         from matplotlib.colors import LinearSegmentedColormap
