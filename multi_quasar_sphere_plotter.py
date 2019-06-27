@@ -505,7 +505,145 @@ class MultiQuasarSpherePlotter():
             x_values.append(x_values_not_averaged[-1]) 
         return np.array(x_values)
 
-    def process_errbars_onlyvertical(self,xarys,yarys,tolerance,logy):
+    def decide_plot_type(self,ion,xVar='rdivR',labels=None,quasarArray=None,lq=None,**kwargs):
+        if lq:
+            labels = lq[0]
+        if isinstance(ion,tuple):
+            ion = ion[0]
+        if isinstance(ion,list):
+            assert labels is None and quasarArray is None
+            return 0
+        elif isinstance(ion,str) and xVar in sightline_xVars:
+            return 1
+        elif xVar in param_xVars and (not ion in param_xVars):
+            assert isinstance(ion,str)
+            return 2
+        elif ion in param_xVars and xVar in param_xVars:
+            return 3
+        elif xVar not in sightline_xVars + param_xVars:
+            return 4
+        else:
+            print("Requirements not met (type could not be detected). Cannot plot.")
+
+    def get_labels_from_ion(self,plot_type,ion,labels=None,lq=None,**kwargs):
+        if lq is not None:
+            labels=lq[0]
+        if isinstance(ion,tuple):
+            ion_name=ion[1]
+            ion = ion[0]
+        else:
+            ion_name=ion
+        if plot_type==0:
+            ions = ion
+            labels = []
+            ions_notuple = []
+            for ion in ions:
+                if isinstance(ion,tuple):
+                    ion_name = ion[1]
+                    ion = ion[0]
+                else:
+                    ion_name = ion
+                labels.append(ion_name)
+                ions_notuple.append(ion)
+                assert not ion in intensives
+            ion = ions_notuple
+            ion_name = labels
+        if labels is None:
+            labels = ['all']
+        return ion,ion_name,labels
+
+    def get_sightline_xy_vals(self,plot_type,ion,xVar = 'rdivR',lq=None,quasarArray=None,rlims=None,**kwargs):
+        if lq is not None:
+            quasarArray = lq[2]
+        if quasarArray is None:
+            quasarArray = [self.currentQuasarArray]
+        if rlims is None:
+            rlims = np.array([0.1,np.inf])
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
+        
+        if plot_type==0:
+            xarys,yarys = self.get_xy_type0(xVar,ion,rlims)
+        elif plot_type==1:
+            xarys,yarys = self.get_xy_type1(xVar,ion,quasarArray,rlims)
+        elif plot_type==2:
+            xarys,yarys = self.get_xy_type2(xVar,ion,quasarArray,rlims)
+        elif plot_type==3:
+            xarys,yarys = self.get_xy_type3(xVar,ion,quasarArray)
+        elif plot_type==4:
+            xarys,yarys = self.get_xy_type4(xVar,ion,quasarArray,rlims)
+
+        if plot_type in [0,1,2,3]:
+            for i in range(len(yarys)):
+                xarys[i] = xarys[i][np.logical_and(yarys[i]>=0,yarys[i]<np.inf)]
+                yarys[i] = yarys[i][np.logical_and(yarys[i]>=0,yarys[i]<np.inf)]
+        elif plot_type in [4]:
+            for i in range(len(yarys)):
+                for j in range(len(yarys[i])):
+                    xarys[i][j] = xarys[i][j][np.logical_and(yarys[i][j]>=0,yarys[i][j]<np.inf)]
+                    yarys[i][j] = yarys[i][j][np.logical_and(yarys[i][j]>=0,yarys[i][j]<np.inf)]
+                    yarys[i][j] = yarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
+                    xarys[i][j] = xarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
+        return xarys,yarys
+    
+    def should_take_logs_xy(self,ion,xVar,logx,logy,average='default',**kwargs):
+        probablylinear = ['redshift','rounded_redshift','a0','Rvir']
+        if isinstance(xVar,tuple):
+            xVar = xVar[0]
+        if logx=='guess':
+            if xVar in sightline_xVars:
+                logx=False
+            elif xVar in param_xVars and xVar not in probablylinear:
+                logx=True
+            else:
+                logx=True
+        if logy=='guess':
+            if ion in sightline_xVars or average=='covering_fraction':
+                logy=False
+            elif ion in param_xVars and xVar not in probablylinear:
+                logy=True
+            else:
+                logy=True
+        return logx,logy
+    
+
+    def process_scatter_points(self,xarys,yarys,logx,logy,subsample=1.0,offsetx=False,tolerance=1e-5,**kwargs):
+        def flatten_if_needed(ary):
+            try:
+                for item in ary:
+                    len(item)
+                return np.concatenate(ary)
+            except:
+                return ary
+        def getsubsample(data,frac):
+            l = int(len(data)*frac)
+            mask = np.zeros(len(data))
+            mask[:l] = 1
+            np.random.shuffle(mask)
+            return mask.astype(bool)
+        xs = np.zeros(len(xarys),dtype=object)
+        ys = np.zeros(len(xarys),dtype=object)
+        empty = True
+        for i in range(len(xarys)):
+            xs[i] = flatten_if_needed(xarys[i])
+            ys[i] = flatten_if_needed(yarys[i])
+            mask = getsubsample(xs[i],subsample)
+            xs[i]=xs[i][mask]
+            ys[i]=ys[i][mask]
+            if np.any(ys[i]>0) and np.any(xs[i]>0):
+                empty=False
+            if logx:
+                xs[i] = np.log10(xs[i])
+            if logy:
+                ys[i] = np.log10(ys[i])
+            if offsetx:
+                decimals = int(-np.log10(tolerance))
+                randomscatterwidth = np.min(np.diff(np.unique(np.round(xs[i],decimals = decimals))))
+                add = (np.random.random(len(xs[i]))-.5)*randomscatterwidth*.5
+                xs[i] += add
+        return xs,ys,empty
+
+    def process_errbars_onlyvertical(self,xarys,yarys,logx,logy,offsetx=False,tolerance=1e-5,**kwargs):
         xs = np.empty(len(yarys),dtype = object)
         ys = np.empty(len(yarys),dtype = object)
         yerrs = np.empty(len(yarys),dtype = object)
@@ -533,9 +671,17 @@ class MultiQuasarSpherePlotter():
             xs[i] = xs[i][mask]
             ys[i] = ys[i][mask]
             yerrs[i] = yerrs[i][mask]
+            if offsetx:
+                scatterwidth = np.min(np.diff(np.unique(xs[i])))
+                if logx:
+                    xs[i][xs[i]>0]*=10**((float(i)/len(xs)-.5)*scatterwidth*.2)
+                else:
+                    xs[i]+=(float(i)/len(xs)-.5)*scatterwidth*.5
+            if logx:
+                xs[i] = np.log10(xs[i])
         return xs,ys,yerrs,empty
 
-    def process_errbars_vertandhoriz(self,xarys,yarys,logx,logy):
+    def process_errbars_vertandhoriz(self,xarys,yarys,logx,logy,**kwargs):
         xs = np.empty(len(yarys),dtype = object)
         ys = np.empty(len(yarys),dtype = object)
         xerrs = np.empty(len(yarys),dtype = object)
@@ -564,329 +710,170 @@ class MultiQuasarSpherePlotter():
                     ys[i][j] = np.log10(ys[i][j])
         return xs,ys,xerrs,yerrs,empty
 
-    def get_savefig_name(self,ion,labels,xVar,plot_type,custom_name = None):
-        if plot_type in [0]:
-            ionNameNoSpaces = str(labels).strip("[]").replace("'","").replace(" ","")
-            name = "%s_ErrorBar_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, self.plots)
-        elif plot_type in [1,2,3]:
-            ionNameNoSpaces = ion.replace(" ","")
-            binVariables = labels[0].split(" ")
-            for binVariable in binVariables:
-                if binVariable in ["<",">"]:
-                    continue
-                try:
-                    number = float(binVariable)
-                    continue
-                except:
-                    break
-            name = "%s_ErrorBar_%s_%s_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar, binVariable, self.plots)
-        elif plot_type in [4]:
-            # not implemented yet, just pretend it's type 1
-            return self.get_savefig_name(ion,labels,xVar,1,custom_name)
-        elif plot_type in [5]:
-            ionNameNoSpaces = ion.replace(" ","")
-            name = "%s_HeatMap_%s_%s" % (self.currentQuasarArrayName, ionNameNoSpaces, xVar)
-        if name[0] == "_":
-            name = name[1:]
-        if custom_name:
-            name = custom_name
-        return name
-    
-    def get_redundancy_from_labels(self,labels):
-        def allstartwith(ls,st):
-            for s in ls:
-                if not s.startswith(st):
-                    return False
-            return True
-        
-        numsplits = len(labels[0].split(":"))
-        beginning = ""
-        for i in range(numsplits):
-            if not allstartwith(labels,beginning+labels[0].split(":")[i]):
-                break
-            else:
-                beginning += labels[0].split(":")[i]
-                beginning += ":"
-        retlabels = [None]*len(labels)
-        for i in range(len(retlabels)):
-            retlabels[i] = labels[i].replace(beginning,"")
-        if beginning.endswith(":"):
-            beginning = beginning[:-1]
-        return retlabels,beginning
-
-    def get_ylabel_cd(self,ion,ion_name,islogy,plot_type):
-        if ion in intensives:
-            ylabel = intensiveslabels[ion]
-            cd = ""
-        elif ion in param_xVars:
-            ylabel = param_unit_labels[ion]
-            cd = ""
-        elif ":" in ion and ion.split(":")[1] != "cdens" and plot_type == 0:
-            ylabel = "%sfraction of ion in state"%(islogy)
-            cd = "Fraction "
-        elif ":" in ion and ion.split(":")[1] != "cdens" and plot_type != 0:
-            ylabel = "%sfraction of ion in state: %s"%(islogy,ion_name)
-            cd = "Fraction "
-        elif self.plots == 'covering_fraction':
-            ylabel = ion_name + 'covering fraction'
-            cd = ""
-        elif (":" not in ion or ion.split(":")[1] == "cdens") and plot_type == 0:
-            ylabel = "%scol dens"%(islogy)
-            cd = "Column Density "
-        elif (":" not in ion or ion.split(":")[1] == "cdens") and plot_type != 0:
-            ylabel = "%scol dens %s"%(islogy,ion_name)
-            cd = "Column Density "
-        return ylabel,cd  
-
-    def plot_err(self, ion, quasarArray = None, xVar = "rdivR", save_fig = False, \
-                 labels = None,extra_title = "",rlims = None,tolerance = 1e-5, \
-                 dots = False,logx = False,logy = True, average = None,custom_name = None, \
-                 coloration = None, visibility_threshold = None, plot_empties = False,lq = None,
-                offsetx=False):
-        print("Current constraints (name): "+self.currentQuasarArrayName)
-        oldplots = self.plots
-        if lq:
-            labels = lq[0]
-            quasarArray = lq[2]
-        if not average is None:
-            self.setPlots(average)
-        if xVar == 'rdivR':
-            self.constrain_current_Quasar_Array("Rvir_is_real",['True'],changeArrayName=False)
-            if len(self.currentQuasarArray) == 0:
-                print "You don't know Rvir for any galaxies! Plot with different xVar."
-        if isinstance(ion,tuple):
-            ion_name = ion[1]   
-            ion = ion[0]
-        elif isinstance(ion,str):
-            ion_name = ion
-        if isinstance(xVar,tuple):
-            xVar_name = xVar[1] 
-            xVar = xVar[0]
-        else:
-            xVar_name = xVar
-        plt.figure()
-        if isinstance(ion,list):
-            plot_type = 0
-            assert labels is None
-            assert quasarArray is None
-            ions = ion
-            labels = []
-            ions_notuple = []
-            for ion in ions:
-                if isinstance(ion,tuple):
-                    ion_name = ion[1]
-                    ion = ion[0]
-                else:
-                    ion_name = ion
-                labels.append(ion_name)
-                ions_notuple.append(ion)
-                assert not ion in intensives
-            xerr = None
-            xarys,yarys = self.get_xy_type0(xVar,ions_notuple,quasarArray,rlims)
-        elif isinstance(ion,str) and xVar in sightline_xVars:
-            plot_type = 1
-            if (quasarArray is None):
-                quasarArray = [self.currentQuasarArray]
-                labels = ['all']
-            assert len(labels) == len(quasarArray)
-            xerr = None
-            xarys,yarys = self.get_xy_type1(xVar,ion,quasarArray,rlims)
-        elif xVar in param_xVars and (not ion in param_xVars):
-            plot_type = 2
-            assert isinstance(ion,str)
-            if (quasarArray is None):
-                quasarArray = [self.currentQuasarArray]
-                labels = ['all']
-            assert len(labels) == len(quasarArray)
-            xerr = None
-            xarys,yarys = self.get_xy_type2(xVar,ion,quasarArray,rlims)
-        elif ion in param_xVars and xVar in param_xVars:
-            yVar = ion
-            plot_type = 3
-            if (quasarArray is None):
-                quasarArray = [self.currentQuasarArray]
-                labels = ['all']
-            assert len(labels) == len(quasarArray)
-            if not dots is None: 
-                dots = True
-            xerr = None
-            xarys,yarys = self.get_xy_type3(xVar,yVar,quasarArray)
-        elif xVar not in sightline_xVars + param_xVars:
-            yVar = ion
-            if quasarArray is None:
-                quasarArray = [self.currentQuasarArray]
-                labels = ['all']
-            plot_type = 4
-            xarys,yarys = self.get_xy_type4(xVar,yVar,quasarArray,rlims)
-        else:
-            print("Requirements not met (type could not be detected). Cannot plot.")
-            return
-        labels, redundancy = self.get_redundancy_from_labels(labels)
-        if plot_type in [0,1,2,3]:
+    def process_datapoints(self,plot_type,ion,xarys,yarys,xVar='rdivR',average='default',logx='guess',logy='guess',\
+                           visibility_threshold=None,**kwargs):
+        logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
+        if average!='default':
+            oldplots = self.plots
+            self.setPlots(average,**kwargs)
+        if average == 'covering_fraction':
             for i in range(len(yarys)):
-                xarys[i] = xarys[i][np.logical_and(yarys[i]>=0,yarys[i]<np.inf)]
-                yarys[i] = yarys[i][np.logical_and(yarys[i]>=0,yarys[i]<np.inf)]
-        elif plot_type in [4]:
-            for i in range(len(yarys)):
-                for j in range(len(yarys[i])):
-                    xarys[i][j] = xarys[i][j][np.logical_and(yarys[i][j]>=0,yarys[i][j]<np.inf)]
-                    yarys[i][j] = yarys[i][j][np.logical_and(yarys[i][j]>=0,yarys[i][j]<np.inf)]
-                    yarys[i][j] = yarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
-                    xarys[i][j] = xarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
-        islogy = "log " if logy else ""
-        ylabel, cd = self.get_ylabel_cd(ion,ion_name,islogy,plot_type)
-        if plot_type in [1,2,3,4]:
-            ylabel = ylabel
-        if plot_type in [0]:
-            ionstr = redundancy
-        elif plot_type in [1,2,3]:
-            ionstr = ion_name
-        elif plot_type in [4]:
-            ionstr = ""
-        ionstr = ion_name if plot_type in [1,2,3] else redundancy
-        plt.ylabel(ylabel)
-        if xVar in sightline_xVars:
-            plt.xlabel(sightline_unit_labels[xVar])
-        elif xVar in param_xVars:
-            plt.xlabel(param_unit_labels[xVar])
-        else:
-            plt.xlabel(xVar_name)
-        plt.title('%s %sAverages (%s) %s'%(ionstr, cd, self.plots, extra_title))
-
-        if self.plots == 'covering_fraction':
-            assert visibility_threshold is not None and plot_type in [0,1,2,3]
-            for i in range(len(yarys)):
-                oldyarys = np.power(10,yarys[i]) if logy else yarys[i]
-                yarys[i] = (oldyarys>visibility_threshold).astype(int)
-        if plot_type in [0,1,2,3]:
-            xs,ys,yerrs,empty = self.process_errbars_onlyvertical(xarys,yarys,tolerance,logy)
+                assert visibility_threshold is not None and plot_type in [0,1,2,3]
+                yarys[i] = (yarys[i]>visibility_threshold).astype(int)
+        if average == 'scatter':
+            xs,ys,empty = self.process_scatter_points(xarys,yarys,logx,logy,**kwargs)
+            xerrs,yerrs = None,None
+        elif plot_type in [0,1,2,3]:
+            xs,ys,yerrs,empty = self.process_errbars_onlyvertical(xarys,yarys,logx,logy,**kwargs)
+            for i in range(len(xs)):
+                yerrs[i] = np.transpose(yerrs[i])
             xerrs = None
         elif plot_type in [4]:
-            xs,ys,xerrs,yerrs,empty = self.process_errbars_vertandhoriz(xarys,yarys,logx,logy)
-        if empty and not plot_empties:
-            print '%s %sAverages (%s) %s was not plotted because no nonzero values were recorded'%\
-            (ionstr, cd, self.plots, extra_title)
-            return None
-        for i in range(len(xs)):
-            x = xs[i]
-            y = ys[i]
-            if plot_type in [4]:
-                islogx = "log " if logx else ""
-                xlabel, _ = self.get_ylabel_cd(xVar,xVar_name,islogx,plot_type)
-                plt.xlabel(xlabel)
-            yerr = np.transpose(yerrs[i])
-            xerr = np.transpose(xerrs[i]) if not (xerrs is None) else None
-            label = labels[i]
-            color = None
-            if not (coloration is None):
-                color = coloration[i]
-            #change fmt to . or _ for a dot or a horizontal line. fmt of marker at center of 
-            fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',"stddev":'.',"median":"."}
-            if self.plots == "scatter" and dots:
-                print "average = scatter AND dots = True detected"
-                print "'scatter' gives all sightlines without averaging."
-                print "'dots' gives all averages without error bars."
-                print "please change one and try again"
-                return
-            elif dots:
-                if offsetx and plot_type in [0,1,2]:
-                    scatterwidth = np.min(np.diff(np.unique(x)))
-                    if logx:
-                        x[x>0]*=10**((float(i)/len(xs)-.5)*scatterwidth*.2)
-                    else:
-                        x+=(float(i)/len(xs)-.5)*scatterwidth*.5
-                plt.plot(x,y,"o",label = label,color = color)
-            elif self.plots == "scatter":
-                def flatten_if_needed(ary):
-                    try:
-                        for item in ary:
-                            len(item)
-                        return np.concatenate(ary)
-                    except:
-                        return ary
-                def getsubsample(data,frac):
-                    l = int(len(data)*frac)
-                    mask = np.zeros(len(data))
-                    mask[:l] = 1
-                    np.random.shuffle(mask)
-                    return mask.astype(bool)
+            xs,ys,xerrs,yerrs,empty = self.process_errbars_vertandhoriz(xarys,yarys,logx,logy,**kwargs)
+            for i in range(len(xs)):
+                yerrs[i] = np.transpose(yerrs[i])
+                xerrs[i] = np.transpose(xerrs[i])
+        if average!='default':
+            self.setPlots(oldplots,**kwargs)
+        return xs,ys,xerrs,yerrs,empty
 
-                x = flatten_if_needed(xarys[i])
-                y = flatten_if_needed(yarys[i])
-                if logx and plot_type in [4]:
-                    x = np.log10(x)
-                if logy: 
-                    y = np.log10(y)
-                if isinstance(average,tuple):
-                    mask = getsubsample(x,average[1])
-                    x=x[mask]
-                    y=y[mask]
-                if offsetx:
-                    randomscatterwidth = np.min(np.diff(np.unique(np.round(x,decimals = 5))))
-                    add = (np.random.random(len(x))-.5)*randomscatterwidth*.5
-                    x += add
-                plt.plot(x,y,'o',label = label, markersize = 2,color = color)
-            else:
-                if offsetx and plot_type in [0,1,2]:
-                    scatterwidth = np.min(np.diff(np.unique(x)))
-                    if logx:
-                        x[x>0]*=10**((float(i)/len(xs)-.5)*scatterwidth*.2)
-                    else:
-                        x+=(float(i)/len(xs)-.5)*scatterwidth*.5
+    def get_title_and_axislabels(self,plot_type,ion,ion_name,xVar='rdivR',replacement_title=None,extra_title='',\
+                                 average='default',logx='guess',logy='guess',**kwargs):
+        logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
+        if isinstance(xVar,tuple):
+            xVar = xVar[0]
+            xVar_name = xVar[1]
+        else:
+            xVar_name = xVar
+        if average == 'default':
+            average = self.plots
+        if replacement_title:
+            title = replacement_title
+        else:
+            if plot_type == 0:
+                title = "CGM Sightline Data"
+            elif plot_type == 1:
+                title = ion_name+" CGM Sightline Data"
+            elif plot_type == 2:
+                title = ion_name+" CGM Parameter Dependence"
+            elif plot_type == 3:
+                title = "Galaxy 2 Parameter Dependence"
+            elif plot_type == 4:
+                title = "Sightline 2 Variable Correlation"
+        title+=" ("+average+") "+extra_title
 
-                myynans = np.isnan(yerr[0])
-                yerr[0,myynans] = yerr[1,myynans]
-                if xerr is not None:
-                    myxnans = np.isnan(xerr[0])
-                    xerr[0,myxnans] = xerr[1,myxnans]
-                    mynans = np.logical_and(myxnans,myynans)
-                    ebar = plt.errorbar(x[~mynans],y[~mynans], xerr = xerr[:,~mynans],\
-                                        yerr=yerr[:,~mynans], fmt=fmtdict[self.plots], \
-                                        capsize = 3, label = label,color = color)
-                    if np.any(mynans):
-                        color = ebar[0].get_color()
-                        plt.errorbar(x[myxnans],y[myxnans],xerr=xerr[0][myxnans],\
-                                     xuplims = True,color = color,fmt = ',')
-                        _,caplines,_ = plt.errorbar(x[myxnans],y[myxnans],xerr=xerr[1][myxnans],\
-                                                    xlolims = True,color = color,fmt = ',')
-                        caplines[0].set_marker('_')
-                        caplines[0].set_markersize(6)
-                        plt.errorbar(x[myynans],y[myynans],yerr=yerr[0][myynans],uplims = True,\
-                                     color = color,fmt = fmtdict[self.plots])
-                        _,caplines,_ = plt.errorbar(x[myynans],y[myynans],yerr=yerr[1][myynans],\
-                                                    lolims = True,color = color,fmt = ',')
-                        caplines[0].set_marker('_')
-                        caplines[0].set_markersize(6)
-                else:
-                    ebar = plt.errorbar(x[~myynans],y[~myynans], yerr=yerr[:,~myynans], \
-                                        fmt=fmtdict[self.plots], capsize = 3, label = label,color = color)
-                    if np.any(myynans):
-                        color = ebar[0].get_color()
-                        plt.errorbar(x[myynans],y[myynans],yerr=yerr[0][myynans],\
-                                     uplims = True,color = color,fmt = fmtdict[self.plots])
-                        _,caplines,_ = plt.errorbar(x[myynans],y[myynans],yerr=yerr[1][myynans],\
-                                                    lolims = True,color = color,fmt = ',')
-                        caplines[0].set_marker('_')
-                        caplines[0].set_markersize(6)
+        if plot_type == 0 and ":" in ion[0] and ion[0].split(":")[1] != "cdens":
+            ylabel = "fraction of ion in state"
+        elif plot_type == 0 and (":" not in ion[0] or ion.split(":")[1] == "cdens"):
+            ylabel = "col dens"
+        elif ion in intensives:
+            ylabel = intensiveslabels[ion]
+        elif ion in param_xVars:
+            ylabel = param_unit_labels[ion]
+        elif ":" in ion and ion.split(":")[1] != "cdens":
+            ylabel = "fraction of ion in state: %s"%(ion_name)
+        elif ":" not in ion or ion.split(":")[1] == "cdens":
+            ylabel = "col dens %s"%(ion_name)
+        elif self.plots == 'covering_fraction':
+            ylabel = ion_name + ' covering fraction'
+        if logy and self.plots != 'covering_fraction':
+            ylabel = 'log '+ylabel
 
+        if xVar in intensives:
+            xlabel = intensiveslabels[xVar]
+        elif xVar in param_xVars:
+            xlabel = param_unit_labels[xVar]
+        elif xVar in sightline_xVars:
+            xlabel = sightline_unit_labels[xVar]
+        elif ":" in xVar and xVar.split(":")[1] != "cdens":
+            xlabel = "fraction of xVar in state: %s"%(xVar_name)
+        elif ":" not in xVar or xVar.split(":")[1] == "cdens":
+            xlabel = "col dens %s"%(xVar_name)
+        if logx:
+            xlabel = 'log '+xlabel
 
-        plt.legend()
-        
-        if logx and not plot_type in [4]:
-            plt.xscale('log')
-        
-        self.setPlots(oldplots)            
-        if save_fig:
-            name = self.get_savefig_name(ion_name,labels,xVar_name,plot_type,custom_name = custom_name)
-            plt.savefig("plots/"+name + ".png")
-            return plt,"plots/"+name + ".png"
-        return plt
+        return xlabel,ylabel,title
+
+    def plot_on_ax(self,ax,plot_type,xs,ys,labels,xerrs,yerrs,xlabel,ylabel,title,average='default',dots=False,fmt=None,coloration=None,**kwargs):
+        coloration = coloration or [None]*len(xs)
+        if xerrs is None:
+            xerrs=[None]*len(xs)
+        if yerrs is None:
+            yerrs=[None]*len(xs)
+        fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',"stddev":'.',"median":"."}
+        if not fmt:
+            fmt = fmtdict[self.plots]
+        if dots or plot_type in [3]:
+            for i in range(len(xs)):
+                ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i])
+        elif average == 'scatter':
+            for i in range(len(xs)):
+                ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=2)
+        else:
+            for i in range(len(xs)):
+                plt.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],\
+                             color = coloration[i],fmt = fmt,capsize = 3)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        ax.legend()
+
+    def plot_err(self,ion,ax=None,show=True,**kwargs):
+        print("Current constraints (name): "+self.currentQuasarArrayName)
+        ax = ax or plt.gca()
+        plot_type = self.decide_plot_type(ion,**kwargs)
+        ion,ion_name,labels = self.get_labels_from_ion(plot_type,ion,**kwargs)
+        xarys,yarys = self.get_sightline_xy_vals(plot_type,ion,**kwargs)
+        xs,ys,xerrs,yerrs,empty = self.process_datapoints(plot_type,ion,xarys,yarys,**kwargs)
+        xlabel,ylabel,title = self.get_title_and_axislabels(plot_type,ion,ion_name,**kwargs)
+        if not empty:
+            self.plot_on_ax(ax,plot_type,xs,ys,labels,xerrs,yerrs,xlabel,ylabel,title,**kwargs)
+            if show:
+                plt.show()
+        else:
+            print "No values detected!"
     
     def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_y = [0,np.inf], \
                    reset = False, exploration_mode = False, atEnd_x = False, atEnd_y = False, \
                    onlyNonempty = False, splitEven_x = 0, splitEven_y = 0, reverse = False):
-        #sort in 2 dimensions, return 2D array of lists of Quasarspheres and labels
-        return labels_x,labels_y,bins,quasarArray
+        
+        #conduct safety checks on parameters
+        bins_x, atEnd_x = self.prepare_plot(criteria_x, bins_x, atEnd_x)
+        bins_y, atEnd_y = self.prepare_plot(criteria_y, bins_y, atEnd_y)
+        
+        
+        #conduct a sort on one dimension and get the labels and bins for the other
+        labels_y, bins_y, quasarbins_y = self.sort_by(criteria_y, bins_y, reset = reset,
+                                                      exploration_mode = exploration_mode,
+                                                      atEnd = atEnd_y, onlyNonempty = 
+                                                      onlyNonempty,splitEven = splitEven_y,
+                                                      reverse = False)
+        labels_x, bins_x, _ = self.sort_by(criteria_x, bins_x, reset = reset,
+                                                      exploration_mode = exploration_mode,
+                                                      atEnd = atEnd_x, onlyNonempty = 
+                                                      onlyNonempty,splitEven = splitEven_x,
+                                                      reverse = False)
+        quasarBins = np.zeros((len(bins_y)-1,len(bins_x)-1), dtype = object)  
+                        
+
+        #sort the other dimension and store sorted quasarbins
+        for i in range(len(quasarbins_y)):
+            quasarbin = quasarbins_y[i]      
+            sorter = MultiSphereSorter(quasarbin, exploration_mode = exploration_mode)
+            _,_, quasarbins_x = sorter.sort(criteria_x,bins_x,atEnd = atEnd_x)
+           
+            for j in range(len(quasarbins_x)):
+                quasarBins[i][j] = quasarbins_x[j]
+        
+        #conduct post-sort checks
+        quasarBins,bins_x,labels_x = self.postprocess_plot(quasarBins,bins_x,labels_x,onlyNonempty,reverse)
+        quasarBins,bins_y,labels_y = self.postprocess_plot(quasarBins,bins_y,labels_y,onlyNonempty,reverse)
+        
+        return labels_x,labels_y,bins_x,bins_y,quasarBins
+    
+    
+       
+                              
     
     def faberplot(xVar,yVar,labels_x,labels_y,quasarArray):#...other args from plot_err or plot_hist):
         #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
@@ -1004,7 +991,60 @@ class MultiQuasarSpherePlotter():
         else:
             plt.xlim(get_new_axislim(plt.xlim()))
         return plt
-
+    
+    def prepare_plot(self, criteria, bins = [0,np.inf], reset = False, exploration_mode = False,\
+        atEnd = False,onlyNonempty = False,splitEven = 0,reverse = False):
+        if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
+            raise Exception("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
+    
+        elif criteria == "ions":
+            raise Exception("You cannot sort by 'ions'")
+            
+        if isinstance(bins, float) or isinstance(bins, int) or \
+            (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
+            if isinstance(bins, list) or isinstance(bins,np.ndarray):
+                bins = bins[0]
+            bins = np.array([0.0, bins, np.inf])
+        elif isinstance(bins, str) and criteria in stringcriteria:
+            bins = [bins]
+        if isinstance(atEnd,float):
+            self.constrain_current_Quasar_Array("final_a0",[atEnd,np.inf],changeArrayName=False)
+            if len(self.currentQuasarArray) == 0:
+                print "No galaxies get to that high of a0"
+            atEnd = True
+        
+        return bins, atEnd
+    
+    def postprocess_plot(self, quasarBins, bins = [0,np.inf], labels = None, reset = False, exploration_mode = False,\
+        atEnd = False,onlyNonempty = False,splitEven = 0,reverse = False):
+        if quasarBins is None:
+            raise Exception("No quasars in quasarBin!")
+        if reset == True:
+            self.reset_current_Quasar_Array()
+        empty = True
+        nonemptyArray = []
+        nonemptyLabelArray = []
+        for i in range(len(quasarBins)):
+            item = quasarBins[i]
+            if len(item)>0:
+                nonemptyArray.append(item)
+                nonemptyLabelArray.append(labels[i])
+                empty = False
+        if onlyNonempty:
+            return np.array(nonemptyLabelArray),bins, np.array(nonemptyArray)
+        
+        print "Bins are empty." if empty else ""
+        if reverse:
+            def reversearray(ary):
+                ary = list(ary)
+                ary.reverse()
+                return np.array(ary)
+            labels = reversearray(labels)
+            bins = reversearray(bins)
+            quasarBins = reversearray(quasarBins)
+            
+        return labels, bins, quasarBins
+    
 class MultiSphereSorter(object):
     def __init__(self,myArray,exploration_mode = False):
         self.array = myArray
