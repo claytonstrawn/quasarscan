@@ -882,11 +882,48 @@ class MultiQuasarSpherePlotter():
             return plt,"plots/"+name + ".png"
         return plt
     
-    def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_x = [0,np.inf], \
+    #sort in 2 dimensions, return 2D array of lists of Quasarspheres and labels
+    def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_y = [0,np.inf], \
                    reset = False, exploration_mode = False, atEnd_x = False, atEnd_y = False, \
                    onlyNonempty = False, splitEven_x = 0, splitEven_y = 0, reverse = False):
-        #sort in 2 dimensions, return 2D array of lists of Quasarspheres and labels
-        return labels_x,labels_y,bins,quasarArray
+        
+        #conduct safety checks on parameters
+        bins_x, atEnd_x = self.prepare_plot(criteria_x, bins_x, atEnd_x)
+        bins_y, atEnd_y = self.prepare_plot(criteria_y, bins_y, atEnd_y)
+        
+        
+        #conduct a sort on one dimension and get the labels and bins for the other
+        labels_y, bins_y, quasarbins_y = self.sort_by(criteria_y, bins_y, reset = reset,
+                                                      exploration_mode = exploration_mode,
+                                                      atEnd = atEnd_y, onlyNonempty = 
+                                                      onlyNonempty,splitEven = splitEven_y,
+                                                      reverse = False)
+        labels_x, bins_x, _ = self.sort_by(criteria_x, bins_x, reset = reset,
+                                                      exploration_mode = exploration_mode,
+                                                      atEnd = atEnd_x, onlyNonempty = 
+                                                      onlyNonempty,splitEven = splitEven_x,
+                                                      reverse = False)
+        quasarBins = np.zeros((len(bins_y)-1,len(bins_x)-1), dtype = object)  
+                        
+
+        #sort the other dimension and store sorted quasarbins
+        for i in range(len(quasarbins_y)):
+            quasarbin = quasarbins_y[i]      
+            sorter = MultiSphereSorter(quasarbin, exploration_mode = exploration_mode)
+            _,_, quasarbins_x = sorter.sort(criteria_x,bins_x,atEnd = atEnd_x)
+           
+            for j in range(len(quasarbins_x)):
+                quasarBins[i][j] = quasarbins_x[j]
+        
+        #conduct post-sort checks
+        quasarBins,bins_x,labels_x = self.postprocess_plot(quasarBins,bins_x,labels_x,onlyNonempty,reverse)
+        quasarBins,bins_y,labels_y = self.postprocess_plot(quasarBins,bins_y,labels_y,onlyNonempty,reverse)
+        
+        return labels_x,labels_y,bins_x,bins_y,quasarBins
+    
+    
+       
+                              
     
     def faberplot(xVar,yVar,labels_x,labels_y,quasarArray):#...other args from plot_err or plot_hist):
         #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
@@ -1004,7 +1041,60 @@ class MultiQuasarSpherePlotter():
         else:
             plt.xlim(get_new_axislim(plt.xlim()))
         return plt
-
+    
+    def prepare_plot(self, criteria, bins = [0,np.inf], reset = False, exploration_mode = False,\
+        atEnd = False,onlyNonempty = False,splitEven = 0,reverse = False):
+        if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
+            raise Exception("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
+    
+        elif criteria == "ions":
+            raise Exception("You cannot sort by 'ions'")
+            
+        if isinstance(bins, float) or isinstance(bins, int) or \
+            (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
+            if isinstance(bins, list) or isinstance(bins,np.ndarray):
+                bins = bins[0]
+            bins = np.array([0.0, bins, np.inf])
+        elif isinstance(bins, str) and criteria in stringcriteria:
+            bins = [bins]
+        if isinstance(atEnd,float):
+            self.constrain_current_Quasar_Array("final_a0",[atEnd,np.inf],changeArrayName=False)
+            if len(self.currentQuasarArray) == 0:
+                print "No galaxies get to that high of a0"
+            atEnd = True
+        
+        return bins, atEnd
+    
+    def postprocess_plot(self, quasarBins, bins = [0,np.inf], labels = None, reset = False, exploration_mode = False,\
+        atEnd = False,onlyNonempty = False,splitEven = 0,reverse = False):
+        if quasarBins is None:
+            raise Exception("No quasars in quasarBin!")
+        if reset == True:
+            self.reset_current_Quasar_Array()
+        empty = True
+        nonemptyArray = []
+        nonemptyLabelArray = []
+        for i in range(len(quasarBins)):
+            item = quasarBins[i]
+            if len(item)>0:
+                nonemptyArray.append(item)
+                nonemptyLabelArray.append(labels[i])
+                empty = False
+        if onlyNonempty:
+            return np.array(nonemptyLabelArray),bins, np.array(nonemptyArray)
+        
+        print "Bins are empty." if empty else ""
+        if reverse:
+            def reversearray(ary):
+                ary = list(ary)
+                ary.reverse()
+                return np.array(ary)
+            labels = reversearray(labels)
+            bins = reversearray(bins)
+            quasarBins = reversearray(quasarBins)
+            
+        return labels, bins, quasarBins
+    
 class MultiSphereSorter(object):
     def __init__(self,myArray,exploration_mode = False):
         self.array = myArray
