@@ -395,6 +395,8 @@ class MultiQuasarSpherePlotter():
                 x,y = self.get_xy_type1(xVar,yVar,quasarArray,rlims)
             elif xVar in param_xVars:
                 x,y = self.get_xy_type2(xVar,yVar,quasarArray,rlims)
+            else:
+                print "Not type 2!"
             xs[i] = x[0]
             ys[i] = y[0]
         return xs,ys
@@ -933,6 +935,19 @@ class MultiQuasarSpherePlotter():
     #    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
     #             reset = False, labels = None,extra_title = "",rlims = None,\
     #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
+    def plot_hist(self,ion,ax=None,show=True,**kwargs):
+        print("Current constraints (name): "+self.currentQuasarArrayName)
+        ax = ax or plt.gca()
+        xarys,yarys = self.get_sightline_xy_vals(0,ion,**kwargs)
+        xs,ys,xerrs,yerrs,empty = self.process_datapoints(plot_type,ion,xarys,yarys,**kwargs)
+        xlabel,ylabel,title = self.get_title_and_axislabels(plot_type,ion,ion_name,**kwargs)
+        if not empty:
+            self.plot_on_ax(ax,plot_type,xs,ys,labels,xerrs,yerrs,xlabel,ylabel,title,**kwargs)
+            if show:
+                plt.show()
+        else:
+            print "No values detected!"
+            
     def plot_hist(self, ion, xVar = "rdivR",extra_title = "",rlims = None,weights = True,\
                   save_fig = False, tolerance = 1e-5,ns = (42,15),logx = False, logy = True, plot_empties = False):
         hotcustom = self.definecolorbar()
