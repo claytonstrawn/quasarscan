@@ -916,8 +916,8 @@ class MultiQuasarSpherePlotter():
                 quasarBins[i][j] = quasarbins_x[j]
         
         #conduct post-sort checks
-        quasarBins,bins_x,labels_x = self.postprocess_plot(quasarBins,bins_x,labels_x,onlyNonempty,reverse)
-        quasarBins,bins_y,labels_y = self.postprocess_plot(quasarBins,bins_y,labels_y,onlyNonempty,reverse)
+        labels_x,bins_x,quasarBins = self.postprocess_plot(quasarBins,bins_x,labels_x,onlyNonempty,reverse)
+        labels_y,bins_y,quasarBins = self.postprocess_plot(quasarBins,bins_y,labels_y,onlyNonempty,reverse)
         
         return labels_x,labels_y,bins_x,bins_y,quasarBins
     
