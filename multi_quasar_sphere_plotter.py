@@ -304,7 +304,7 @@ class MultiQuasarSpherePlotter():
                     self.currentQuasarArrayName += acceptedValue.replace(" ","")
         return bins
 
-    def setPlots(self,plots,quartiles = None):
+    def setPlots(self,plots,quartiles = None,**kwargs):
         if isinstance(plots,tuple):
             if len(plots) == 3:
                 quartiles = (plots[1],plots[2])
@@ -824,7 +824,7 @@ class MultiQuasarSpherePlotter():
 
     def plot_err(self,ion,ax=None,show=True,**kwargs):
         print("Current constraints (name): "+self.currentQuasarArrayName)
-        ax = ax or plt.gca()
+        ax = ax or plt.subplots(1)[1]
         plot_type = self.decide_plot_type(ion,**kwargs)
         ion,ion_name,labels = self.get_labels_from_ion(plot_type,ion,**kwargs)
         xarys,yarys = self.get_sightline_xy_vals(plot_type,ion,**kwargs)
@@ -894,25 +894,29 @@ class MultiQuasarSpherePlotter():
         oldQuasarArray = self.currentQuasarArray
         for r in range (0,rows):
             for c in range (0,cols):
-                self.currentQuasarArray = quasarArray[r][c]
-                if criteria_legend and len(self.currentQuasarArray)>0:
-                    lq = self.sort_by(criteria_legend,bins_legend)
-                else:
-                    lq=None
-                if plot_type=='err':
-                    self.plot_err(yVar, ax = axes[r][c], show = False,lq=lq, **kwargs)
-                elif plot_type=='hist':
-                    self.plot_hist(yVar, ax = axes[r][c], show = False,fig=fig, **kwargs)
-                if r == 0:
-                    axes[r][c].set_title(labels_x[c])
-                else:
-                    axes[r][c].set_title('')
-                if c == 0:
-                    old_ylabel = axes[r][c].get_ylabel()
-                    axes[r][c].set_ylabel(labels_y[r])
-                else:
-                    axes[r][c].set_ylabel('')
-        fig.suptitle(old_ylabel)
+                try:
+                    self.currentQuasarArray = quasarArray[r][c]
+                    if criteria_legend and len(self.currentQuasarArray)>0:
+                        lq = self.sort_by(criteria_legend,bins_legend)
+                    else:
+                        lq=None
+                    if plot_type=='err':
+                        self.plot_err(yVar, ax = axes[r][c], show = False,lq=lq, **kwargs)
+                    elif plot_type=='hist':
+                        self.plot_hist(yVar, ax = axes[r][c], show = False,fig=fig, **kwargs)
+                    if r == 0:
+                        axes[r][c].set_title(labels_x[c])
+                    else:
+                        axes[r][c].set_title('')
+                    if c == 0:
+                        old_ylabel = axes[r][c].get_ylabel()
+                        axes[r][c].set_ylabel(labels_y[r])
+                    else:
+                        axes[r][c].set_ylabel('')
+                except Exception as e:
+                    print e
+                    old_ylabel = ''
+            fig.suptitle(old_ylabel)        
         self.currentQuasarArray = oldQuasarArray
 
     def definecolorbar(self, bar_type = 'HotCustom'):
