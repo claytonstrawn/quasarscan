@@ -884,7 +884,12 @@ class MultiQuasarSpherePlotter():
         rows = len(quasarArray)
         cols = len(quasarArray[0])
         if figsize=='guess':
-            figsize=(5*rows,3.5*cols)
+            figsize=(5*cols,3.5*rows)
+        xsize = figsize[0]
+        ysize = figsize[1]
+        if xsize > 15:
+            xsize = 15
+            figsize = (xsize, ysize)
         fig, axes = plt.subplots(rows,cols,figsize = figsize,sharex=sharex,sharey=sharey)
         oldQuasarArray = self.currentQuasarArray
         for r in range (0,rows):
