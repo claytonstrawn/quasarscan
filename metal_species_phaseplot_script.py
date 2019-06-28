@@ -302,12 +302,39 @@ def script(name,path,low_T,high_T,low_rho,high_rho,n,atom = 'O',saveoverallname=
         ions = make_full_ionlist(atom)
     try:
         myionmasses,myintensives,t_bins,rho_bins = split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses_old,ions)
-        min_val,max_minus_min,ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap = get_overall_plot(myionmasses,myintensives,t_bins,\
-                                                                                                            rho_bins,ions,log,saveoverallname,cbar,specialion=specialion,\
-                                                                                                               colorwith=colorwith,dsname=name,ds=ds,\
-                                                                                                            show=show,makeoverall=makeoverall)
-        get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min,\
-                          ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap,ions,name,ds,log,savephaseplotname,specialion=specialion,colorwith=colorwith,show=show)
+        min_val,max_minus_min,ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap = get_overall_plot(myionmasses,\
+                                                                                                            myintensives,\
+                                                                                                            t_bins,\
+                                                                                                            rho_bins,\
+                                                                                                            ions,\
+                                                                                                            log,\
+                                                                                                            saveoverallname,\
+                                                                                                            cbar,\
+                                                                                                            specialion=specialion,\
+                                                                                                            colorwith=colorwith,\
+                                                                                                            dsname=name,\
+                                                                                                            ds=ds,\
+                                                                                                            show=show,\
+                                                                                                            makeoverall=makeoverall)
+        get_phaseplot(myionmasses,\
+                      myintensives,\
+                      t_bins,\
+                      rho_bins,\
+                      min_val,\
+                      max_minus_min,\
+                      ion_mass_in_each_state,\
+                      all_O_mass,\
+                      total_gas_mass,\
+                      CS3,\
+                      mymap,\
+                      ions,\
+                      name,\
+                      ds,\
+                      log,\
+                      savephaseplotname,\
+                      specialion=specialion,\
+                      colorwith=colorwith,\
+                      show=show)
     except:
         pass
     return myionmasses_old,myintensives_old,ds
