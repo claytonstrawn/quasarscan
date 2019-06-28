@@ -915,32 +915,55 @@ class MultiQuasarSpherePlotter():
         fig.suptitle(old_ylabel)
         self.currentQuasarArray = oldQuasarArray
 
-    def definecolorbar(self):
+    def definecolorbar(self, bar_type = 'HotCustom'):
         from matplotlib.colors import LinearSegmentedColormap
         f= 256.0
-        cdict = {'red':   ((0.0,  255/f, 255/f),
-                           (1e-9, 255/f, 255/f),
-                           (0.1,  255/f, 255/f),
-                           (0.3,  255/f, 255/f),
-                           (0.5,  139/f, 139/f),
-                           (1.0,  0/f, 0/f)),
+        if bar_type not in ('HotCustom','RainbowCustom'):
+            raise Exception("Not a ColorMap. Please try another one.")
+        if bar_type == 'HotCustom':
+            cdict = {'red':   ((0.0,  255/f, 255/f),
+                               (1e-9, 255/f, 255/f),
+                               (0.1,  255/f, 255/f),
+                               (0.3,  255/f, 255/f),
+                               (0.5,  139/f, 139/f),
+                               (1.0,  0/f, 0/f)),
 
-                 'green': ((0.0,  255/f, 255/f),
-                           (1e-9, 255/f, 255/f),
-                           (0.1,  165/f, 165/f),
-                           (0.3,  0/f, 0/f),
-                           (0.5,  0/f, 0/f),
-                           (1.0,  0/f, 0/f)),
+                     'green': ((0.0,  255/f, 255/f),
+                               (1e-9, 255/f, 255/f),
+                               (0.1,  165/f, 165/f),
+                               (0.3,  0/f, 0/f),
+                               (0.5,  0/f, 0/f),
+                               (1.0,  0/f, 0/f)),
 
-                 'blue':  ((0.0,  255/f, 255/f),
-                           (1e-9, 255/f, 0/f),
-                           (0.1,  0/f, 0/f),
-                           (0.3,  0/f, 0/f),
-                           (0.5,  0/f, 0/f),
-                           (1.0,  0/f, 0/f))}
+                     'blue':  ((0.0,  255/f, 255/f),
+                               (1e-9, 255/f, 0/f),
+                               (0.1,  0/f, 0/f),
+                               (0.3,  0/f, 0/f),
+                               (0.5,  0/f, 0/f),
+                               (1.0,  0/f, 0/f))}
 
-        hotcustom = LinearSegmentedColormap('HotCustom', cdict)
-        return hotcustom
+            custom = LinearSegmentedColormap('HotCustom', cdict)
+        elif bar_type == 'RainbowCustom':
+            bowdict = {'red': ((0.0, 1.0, 1.0),
+                                 (1e-9, 0.0, 0.0),
+                                 (0.3, 0.5, 0.5),
+                                 (0.6, 0.7, 0.7),
+                                 (0.9, 0.8, 0.8),
+                                 (1.0, 0.0, 0.0)),
+                         'green': ((0.0, 1.0, 1.0),
+                                   (1e-9, 0.0, 0.0),
+                                   (0.3, 0.8, 0.8),
+                                   (0.6, 0.7, 0.7),
+                                   (0.9, 0.0, 0.0),
+                                   (1.0, 0.0, 0.0)),
+                         'blue': ((0.0, 1.0, 1.0),
+                                  (1e-9, 1.0, 1.0),
+                                  (0.3, 1.0, 1.0),
+                                  (0.6, 0.0, 0.0),
+                                  (0.9, 0.0, 0.0), 
+                                  (1.0, 0.0, 0.0))}
+            custom = LinearSegmentedColormap('RainbowCustom', bowdict)
+        return custom
     
     def process_xy_vals_hist(self,ion,xs,ys,xVar='rdivR',tolerance=1e-5,weights=True,logx='guess',logy='guess',**kwargs):
         logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
@@ -968,8 +991,8 @@ class MultiQuasarSpherePlotter():
             ys = np.log10(ys)
         return xs,ys,weight,cbarlabel,len(xs)<=0
     
-    def plot_on_ax_hist(self,ax,fig,xs,ys,xlabel,ylabel,title,weight,cbarlabel,ns = (42,15),**kwargs):
-        hotcustom = self.definecolorbar()
+    def plot_on_ax_hist(self,ax,fig,xs,ys,xlabel,ylabel,title,weight,cbarlabel,ns = (42,15),bartypeax = 'HotCustom',**kwargs):
+        hotcustom = self.definecolorbar(bartypeax)
         H, xedges, yedges = np.histogram2d(xs, ys, bins=ns,weights = weight)
         H = H.T
         X, Y = np.meshgrid(xedges, yedges)
@@ -993,7 +1016,7 @@ class MultiQuasarSpherePlotter():
     #    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
     #             reset = False, labels = None,extra_title = "",rlims = None,\
     #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
-    def plot_hist(self,ion,ax=None,fig=None,show=True,**kwargs):
+    def plot_hist(self,ion,ax=None,fig=None,show=True,bartype = 'HotCustom',**kwargs):
         print("Current constraints (name): "+self.currentQuasarArrayName)
         if isinstance(ion,tuple):
             ion_name = ion[1]
@@ -1009,7 +1032,7 @@ class MultiQuasarSpherePlotter():
         xs,ys,weight,cbarlabel,empty = self.process_xy_vals_hist(ion,xs,ys,**kwargs)
         xlabel,ylabel,title = self.get_title_and_axislabels(1,ion,**kwargs)
         if not empty:
-            self.plot_on_ax_hist(ax,fig,xs,ys,xlabel,ylabel,title,weight,cbarlabel,**kwargs)
+            self.plot_on_ax_hist(ax,fig,xs,ys,xlabel,ylabel,title,weight,cbarlabel,bartypeax = bartype,**kwargs)
             if show:
                 plt.show()
         else:
