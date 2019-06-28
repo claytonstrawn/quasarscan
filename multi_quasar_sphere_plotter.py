@@ -563,7 +563,8 @@ class MultiQuasarSpherePlotter():
             rlims = np.array([0.1,np.inf])
         elif rlims == "all":
             rlims = [0.0,np.inf]
-        
+        if xVar == 'rdivR':
+            self.constrain_current_Quasar_Array("Rvir_is_real",['True'],changeArrayName=False)
         if plot_type==0:
             xarys,yarys = self.get_xy_type0(xVar,ion,rlims)
         elif plot_type==1:
@@ -739,9 +740,10 @@ class MultiQuasarSpherePlotter():
             self.setPlots(oldplots,**kwargs)
         return xs,ys,xerrs,yerrs,empty
 
-    def get_title_and_axislabels(self,plot_type,ion,ion_name,xVar='rdivR',replacement_title=None,extra_title='',\
+    def get_title_and_axislabels(self,plot_type,ion,ion_name=None,xVar='rdivR',replacement_title=None,extra_title='',\
                                  average='default',logx='guess',logy='guess',**kwargs):
         logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
+        ion_name = ion_name or ion
         if isinstance(xVar,tuple):
             xVar = xVar[0]
             xVar_name = xVar[1]
@@ -827,7 +829,7 @@ class MultiQuasarSpherePlotter():
         ion,ion_name,labels = self.get_labels_from_ion(plot_type,ion,**kwargs)
         xarys,yarys = self.get_sightline_xy_vals(plot_type,ion,**kwargs)
         xs,ys,xerrs,yerrs,empty = self.process_datapoints(plot_type,ion,xarys,yarys,**kwargs)
-        xlabel,ylabel,title = self.get_title_and_axislabels(plot_type,ion,ion_name,**kwargs)
+        xlabel,ylabel,title = self.get_title_and_axislabels(plot_type,ion,ion_name=ion_name,**kwargs)
         if not empty:
             self.plot_on_ax(ax,plot_type,xs,ys,labels,xerrs,yerrs,xlabel,ylabel,title,**kwargs)
             if show:
@@ -837,7 +839,7 @@ class MultiQuasarSpherePlotter():
     
     def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_y = [0,np.inf], \
                    reset = False, exploration_mode = False, atEnd_x = False, atEnd_y = False, \
-                   onlyNonempty = False, splitEven_x = 0, splitEven_y = 0, reverse = False):
+                   onlyNonempty = False, splitEven_x = 0, splitEven_y = 0, reverse_x = False,reverse_y = False):
         
         #conduct safety checks on parameters
         bins_x, atEnd_x = self.prepare_plot(criteria_x, bins_x, atEnd_x)
@@ -849,27 +851,23 @@ class MultiQuasarSpherePlotter():
                                                       exploration_mode = exploration_mode,
                                                       atEnd = atEnd_y, onlyNonempty = 
                                                       onlyNonempty,splitEven = splitEven_y,
-                                                      reverse = False)
+                                                      reverse = ~reverse_y)
         labels_x, bins_x, _ = self.sort_by(criteria_x, bins_x, reset = reset,
                                                       exploration_mode = exploration_mode,
                                                       atEnd = atEnd_x, onlyNonempty = 
                                                       onlyNonempty,splitEven = splitEven_x,
-                                                      reverse = False)
-        quasarBins = np.zeros((len(bins_y)-1,len(bins_x)-1), dtype = object)  
-                        
+                                                      reverse = reverse_x)
+        quasarBins = np.zeros((len(labels_y),len(labels_x)), dtype = object)
 
         #sort the other dimension and store sorted quasarbins
-        for i in range(len(quasarbins_y)):
-            quasarbin = quasarbins_y[i]      
-            sorter = MultiSphereSorter(quasarbin, exploration_mode = exploration_mode)
+        for i,qlist_y in enumerate(quasarbins_y):
+            sorter = MultiSphereSorter(qlist_y, exploration_mode = exploration_mode)
             _,_, quasarbins_x = sorter.sort(criteria_x,bins_x,atEnd = atEnd_x)
-           
-            for j in range(len(quasarbins_x)):
-                quasarBins[i][j] = quasarbins_x[j]
+            for j,qlist_x in enumerate(quasarbins_x):
+                quasarBins[i][j] = qlist_x
         
         #conduct post-sort checks
-        labels_x,bins_x,quasarBins = self.postprocess_plot(quasarBins,bins_x,labels_x,onlyNonempty,reverse)
-        labels_y,bins_y,quasarBins = self.postprocess_plot(quasarBins,bins_y,labels_y,onlyNonempty,reverse)
+        labels_y,bins_y,quasarBins = self.postprocess_plot(quasarBins,bins_y,labels_y,onlyNonempty,reverse_y)
         
         return labels_x,labels_y,bins_x,bins_y,quasarBins
     
@@ -877,19 +875,33 @@ class MultiQuasarSpherePlotter():
        
                               
     
-    def faberplot(self, yVar,labels_x,labels_y,quasarArray, **kwargs):#...other args from plot_err or plot_hist):
+    def faberplot(self,plot_type,yVar,labels_x=None,labels_y=None,quasarArray=None,lq2=None,criteria_legend=None,\
+                  bins_legend=None,sharex=True,sharey=True,figsize='guess', **kwargs):
         #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
         #ask plot_err or plot_hist for completed plots of type given, for 
         #quasars in that cell of quasarArray, put them in subplots of a n by m subplots object
         #and show that plot
+        if lq2:
+            labels_x,labels_y,_,_,quasarArray = lq2
+        else:
+            assert labels_x is not None and labels_y is not None and quasarArray is not None
         rows = len(quasarArray)
         cols = len(quasarArray[0])
-        fig, axes = plt.subplots(rows,cols,figsize = (15,11))
-        oldQuasarArray = quasarArray
+        if figsize=='guess':
+            figsize=(5*rows,3.5*cols)
+        fig, axes = plt.subplots(rows,cols,figsize = figsize,sharex=sharex,sharey=sharey)
+        oldQuasarArray = self.currentQuasarArray
         for r in range (0,rows):
             for c in range (0,cols):
                 self.currentQuasarArray = quasarArray[r][c]
-                self.plot_err(yVar, ax = axes[r][c], show = False, **kwargs)
+                if criteria_legend and len(self.currentQuasarArray)>0:
+                    lq = self.sort_by(criteria_legend,bins_legend)
+                else:
+                    lq=None
+                if plot_type=='err':
+                    self.plot_err(yVar, ax = axes[r][c], show = False,lq=lq, **kwargs)
+                elif plot_type=='hist':
+                    self.plot_hist(yVar, ax = axes[r][c], show = False,fig=fig, **kwargs)
                 if r == 0:
                     axes[r][c].set_title(labels_x[c])
                 else:
@@ -928,63 +940,9 @@ class MultiQuasarSpherePlotter():
 
         hotcustom = LinearSegmentedColormap('HotCustom', cdict)
         return hotcustom
-
-    #summary: plots histogram(s) of ion column density vs incrementing xvariable, 
-    #         uses a color bar to show the percentage of sightlines for a certain column density at a specific x value
-    #
-    #    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
-    #             reset = False, labels = None,extra_title = "",rlims = None,\
-    #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
-    def plot_hist(self,ion,ax=None,show=True,**kwargs):
-        print("Current constraints (name): "+self.currentQuasarArrayName)
-        ax = ax or plt.gca()
-        xarys,yarys = self.get_sightline_xy_vals(0,ion,**kwargs)
-        xs,ys,xerrs,yerrs,empty = self.process_datapoints(plot_type,ion,xarys,yarys,**kwargs)
-        xlabel,ylabel,title = self.get_title_and_axislabels(plot_type,ion,ion_name,**kwargs)
-        if not empty:
-            self.plot_on_ax(ax,plot_type,xs,ys,labels,xerrs,yerrs,xlabel,ylabel,title,**kwargs)
-            if show:
-                plt.show()
-        else:
-            print "No values detected!"
-            
-    def plot_hist(self, ion, xVar = "rdivR",extra_title = "",rlims = None,weights = True,\
-                  save_fig = False, tolerance = 1e-5,ns = (42,15),logx = False, logy = True, plot_empties = False):
-        hotcustom = self.definecolorbar()
-        plt.figure()
-        if isinstance(ion,tuple):
-            ion_name = ion[1]
-            ion = ion[0]
-        else:
-            ion_name = ion
-        plt.register_cmap(cmap=hotcustom)
-        if len(self.currentQuasarArray) == 0:
-            print "no quasarspheres"
-            return None
-        if rlims is None:
-            rlims = [0.1,np.inf]
-        elif rlims == "all":
-            rlims = [0.0,np.inf]
-        vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
-        if xVar == 'rdivR':
-            self.constrain_current_Quasar_Array("Rvir_is_real",['True'],changeArrayName=False)
-            if len(self.currentQuasarArray) == 0:
-                print "You don't know Rvir for any galaxies! Plot with different xVar from 'rdivR'."
-                return
-        distances = "kpc" if xVar == "r" else "Rvir"
-        gq = quasar_sphere.GeneralizedQuasarSphere(self.currentQuasarArray,distance = distances)
-        xs = gq.info[:, vardict[xVar]]
-        ys = self.get_yVar_from_str(gq,ion)
-        rs = gq.info[:,3]
-        acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
-        xs = xs[acceptedLines]
-        ys = ys[acceptedLines]
-        islogy = ""
-        if logy:
-            xs = xs[ys>0]
-            ys = ys[ys>0]
-            ys = np.log10(ys)
-            islogy = "log "
+    
+    def process_xy_vals_hist(self,ion,xs,ys,xVar='rdivR',tolerance=1e-5,weights=True,logx='guess',logy='guess',**kwargs):
+        logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
         unique_xs = self.combine_xs(xs,tolerance)
         retxs = xs*0.0
         for x_value in unique_xs:
@@ -998,32 +956,63 @@ class MultiQuasarSpherePlotter():
         else:
             weight = xs*0.0+1.0
             cbarlabel = "Total number of lines"
-        xs = retxs
-        self.debug.append(xs)
-        
-        if len(ys) == 0 and not plot_empties:
-            print "No values found"
-            return None
+        xs=retxs
+        if logx:
+            ys = ys[xs>0]
+            xs = xs[xs>0]
+            xs = np.log10(xs)
+        if logy:
+            xs = xs[ys>0]
+            ys = ys[ys>0]
+            ys = np.log10(ys)
+        return xs,ys,weight,cbarlabel,len(xs)<=0
+    
+    def plot_on_ax_hist(self,ax,fig,xs,ys,xlabel,ylabel,title,weight,cbarlabel,ns = (42,15),**kwargs):
+        hotcustom = self.definecolorbar()
         H, xedges, yedges = np.histogram2d(xs, ys, bins=ns,weights = weight)
         H = H.T
         X, Y = np.meshgrid(xedges, yedges)
-        plt.pcolormesh(X,Y, H, cmap=hotcustom)
-        plt.colorbar(label = cbarlabel)
-        ylabel,cd = self.get_ylabel_cd(ion,ion_name,islogy,1)
-        plt.ylabel(ylabel)
-        plt.xlabel(sightline_unit_labels[xVar])
-        plt.title('%s Distribution %s'%(ion_name, extra_title))
-        def get_new_axislim(current,divideBy = 20):
+        cms=ax.pcolormesh(X,Y, H, cmap=hotcustom)
+        fig.colorbar(cms,label = cbarlabel,ax=ax)
+        def get_new_axislim(current,divideBy = 200):
             x1 = current[0]
             x2 = current[1]
             return x1-(x2-x1)/divideBy,x2+(x2-x1)/divideBy
-        plt.ylim(get_new_axislim(plt.ylim()))
-        if logx:
-            plt.xscale('log')
-            plt.xlabel('log ' + sightline_unit_labels[xVar])
+        ax.set_ylim(get_new_axislim(ax.get_ylim()))
+        ax.set_xlim(get_new_axislim(ax.get_xlim()))
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+
+
+    #summary: plots histogram(s) of ion column density vs incrementing xvariable, 
+    #         uses a color bar to show the percentage of sightlines for a certain column density at a specific x value
+    #
+    #    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
+    #             reset = False, labels = None,extra_title = "",rlims = None,\
+    #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
+    def plot_hist(self,ion,ax=None,fig=None,show=True,**kwargs):
+        print("Current constraints (name): "+self.currentQuasarArrayName)
+        if isinstance(ion,tuple):
+            ion_name = ion[1]
+            ion = ion[0]
         else:
-            plt.xlim(get_new_axislim(plt.xlim()))
-        return plt
+            ion_name=ion
+        if not ax:
+            assert fig is None
+            fig,ax = plt.subplots(1)
+        xs,ys = self.get_sightline_xy_vals(0,[ion],**kwargs)
+        xs=xs[0]
+        ys=ys[0]
+        xs,ys,weight,cbarlabel,empty = self.process_xy_vals_hist(ion,xs,ys,**kwargs)
+        xlabel,ylabel,title = self.get_title_and_axislabels(1,ion,**kwargs)
+        if not empty:
+            self.plot_on_ax_hist(ax,fig,xs,ys,xlabel,ylabel,title,weight,cbarlabel,**kwargs)
+            if show:
+                plt.show()
+        else:
+            print "No values detected!"
     
     def prepare_plot(self, criteria, bins = [0,np.inf], reset = False, exploration_mode = False,\
         atEnd = False,onlyNonempty = False,splitEven = 0,reverse = False):
@@ -1057,8 +1046,7 @@ class MultiQuasarSpherePlotter():
         empty = True
         nonemptyArray = []
         nonemptyLabelArray = []
-        for i in range(len(quasarBins)):
-            item = quasarBins[i]
+        for i,item in enumerate(quasarBins):
             if len(item)>0:
                 nonemptyArray.append(item)
                 nonemptyLabelArray.append(labels[i])
