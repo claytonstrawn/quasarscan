@@ -869,11 +869,7 @@ class MultiQuasarSpherePlotter():
         #conduct post-sort checks
         labels_y,bins_y,quasarBins = self.postprocess_plot(quasarBins,bins_y,labels_y,onlyNonempty,reverse_y)
         
-        return labels_x,labels_y,bins_x,bins_y,quasarBins
-    
-    
-       
-                              
+        return labels_x,labels_y,bins_x,bins_y,quasarBins                        
     
     def faberplot(self,plot_type,yVar,labels_x=None,labels_y=None,quasarArray=None,lq2=None,criteria_legend=None,\
                   bins_legend=None,sharex=True,sharey=True,figsize='guess', **kwargs):

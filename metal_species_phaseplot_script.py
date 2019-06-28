@@ -120,8 +120,6 @@ def split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses
 
 def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,savefigname = None,cbar = "jet",specialion = 5,
                      colorwith = ['edge','line','dot'],dsname = None,ds=None,show=True,makeoverall=True):
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
 
     max_val = 1e-10
     min_val = 1e10
@@ -283,7 +281,6 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
                 else:
                     ax.set_ylabel("[%.2f,%.2f]"%(t_low,t_high))
     if savefigname:
-        print "???"
         plt.savefig("quasarscan/plots/%s"%savefigname)
     if show:
         plt.show()
