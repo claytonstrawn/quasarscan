@@ -2,6 +2,7 @@ import numpy as np
 import os
 import sys
 import matplotlib.pyplot as plt
+import datetime
 try:
     from quasarscan import quasar_sphere
     from quasarscan import ion_lists
@@ -1022,7 +1023,7 @@ class MultiQuasarSpherePlotter():
         return labels_x,labels_y,bins_x,bins_y,quasarBins                        
     
     def faberplot(self,plot_type,yVar,labels_x=None,labels_y=None,quasarArray=None,lq2=None,criteria_legend=None,\
-                  bins_legend=None,sharex=True,sharey=True,figsize='guess', **kwargs):
+                  bins_legend=None,sharex=True,sharey=True,figsize='guess', save_fig = False, **kwargs):
         #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
         #ask plot_err or plot_hist for completed plots of type given, for 
         #quasars in that cell of quasarArray, put them in subplots of a n by m subplots object
@@ -1064,8 +1065,22 @@ class MultiQuasarSpherePlotter():
                 else:
                     print e
                     old_ylabel = ''
-            fig.suptitle(old_ylabel)        
+            fig.suptitle(old_ylabel)
+            #if not save_fig == False:
+             #   fname = self.save_fig_filename(save_fig, yVar, **kwargs)
+              #  plt.savefig(fname)
+        print(self.save_fig_filename(save_fig, yVar, **kwargs))
         self.currentQuasarArray = oldQuasarArray
+        
+    def save_fig_filename(self, save_fig, yVar, xVar = 'rdivR', **kwargs):
+        if isinstance(save_fig, str):
+            return 'plots/' + str + '.png'
+        elif save_fig == True:
+            filename = 'plots/' + yVar + '_vs_' + xVar + '_' + str(datetime.datetime.now())[:19] + '.png'
+            filename = filename.replace(' ','')
+            return filename
+        else:
+            print('Please use a valid file name or pass True.')
     
 class MultiSphereSorter(object):
     def __init__(self,myArray,exploration_mode = False):
