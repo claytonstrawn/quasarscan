@@ -1,8 +1,8 @@
 #!/bin/bash -l
 
-#SBATCH -N 2         #Use 1 node
-#SBATCH -t 5:00:00  #Set 3 hr time limit
-#SBATCH -q regular   #Submit to the regular QOS
+#SBATCH -N 4       #Use 1 node
+#SBATCH -t 00:30:00  #Set 3 hr time limit
+#SBATCH -q debug   #Submit to the regular QOS
 #SBATCH -C haswell   #Use Haswell nodes
 #SBATCH -A mp363     #Charge job to mp363 project
 #SBATCH -L SCRATCH   #Job requires $SCRATCH file system
