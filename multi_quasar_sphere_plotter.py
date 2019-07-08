@@ -1003,7 +1003,7 @@ class MultiQuasarSpherePlotter():
                                                       atEnd = atEnd_y,
                                                       splitEven = splitEven_y,
                                                       reverse = ~reverse_y)
-        labels_x, bins_x, self.debug            = self.sort_by(criteria_x, 
+        labels_x, bins_x, _            = self.sort_by(criteria_x, 
                                                       bins_x, 
                                                       exploration_mode = False,
                                                       atEnd = atEnd_x, 
