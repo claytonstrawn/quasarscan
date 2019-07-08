@@ -165,50 +165,49 @@ class MultiQuasarSpherePlotter():
             self.currentQuasarArray.append(q)
         self.currentQuasarArray = np.array(self.currentQuasarArray)
         self.currentQuasarArrayName = ''
-    
-    #param bins either serves as an array with each element being as a cutpoint, or a single value
-    #follows array indexing exclusivity and inclusivity rules
-    def sort_by(self, criteria, bins = [0,np.inf], reset = False, exploration_mode = False,\
-        atEnd = False,onlyNonempty = False,splitEven = 0,reverse = False):
-        if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
-            print ("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
+        
+    def check_criteria_works(self,constrainCriteria,atEnd = False,**kwargs):
+        if len(self.currentQuasarArray)==0:
+            #"Cannot constrain further"
             return
-        elif criteria == "ions":
-            print("You cannot sort by 'ions'")
-            return
-        if isinstance(bins, float) or isinstance(bins, int) or \
-            (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
-            if isinstance(bins, list) or isinstance(bins,np.ndarray):
-                bins = bins[0]
-            bins = np.array([0.0, bins, np.inf])
-        elif isinstance(bins, str) and criteria in stringcriteria:
-             bins = [bins]
-        if isinstance(atEnd,float):
-            self.constrain_current_Quasar_Array("final_a0",[atEnd,np.inf],changeArrayName=False)
+        elif constrainCriteria not in self.currentQuasarArray[0].__dict__.keys():
+            print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
+            raise Exception
+        elif isinstance(atEnd,float):
+            oldQuasarArray=np.copy(self.currentQuasarArray)
+            self.constrain_current_Quasar_Array("final_a0",bins=[atEnd-.1,np.inf],changeArrayName=False)
             if len(self.currentQuasarArray) == 0:
                 print "No galaxies get to that high of a0"
-            atEnd = True
-        sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
-        if splitEven:
-            labels, bins, quasarBins = sorter.splitEven(criteria,splitEven,atEnd = atEnd)
-        else:
-            labels, bins, quasarBins = sorter.sort(criteria,bins,atEnd = atEnd)
+            return oldQuasarArray
+        
+    def prepare_to_sort(self, criteria, bins,atEnd,**kwargs):
+        
+        oldQuasarArray = self.check_criteria_works(criteria,atEnd=atEnd,**kwargs)
+        if criteria == "ions":
+            raise Exception("You cannot sort by 'ions'")
+            
+        # can sort by giving one value, it will assume you mean "less than value" and "greater than value"
+        if isinstance(bins, float) or isinstance(bins, int):
+            bins = np.array([0.0, bins, np.inf])
+        elif isinstance(bins, str) and criteria in stringcriteria:
+            bins = [bins]
+        
+        return bins,oldQuasarArray
+    
+    def postprocess_sorted(self, labels, bins, quasarBins, onlyNonempty = False,reverse = False,**kwargs):
         if quasarBins is None:
-            return
-        if reset == True:
-            self.reset_current_Quasar_Array()
+            raise Exception("No quasars in quasarBin!")
         empty = True
         nonemptyArray = []
         nonemptyLabelArray = []
-        for i in range(len(quasarBins)):
-            item = quasarBins[i]
+        for i,item in enumerate(quasarBins):
             if len(item)>0:
                 nonemptyArray.append(item)
                 nonemptyLabelArray.append(labels[i])
                 empty = False
         if onlyNonempty:
-            return np.array(nonemptyLabelArray),bins, np.array(nonemptyArray)
-        print "Bins are empty." if empty else ""
+            labels, bins, quasarBins = np.array(nonemptyLabelArray),bins, np.array(nonemptyArray)
+            print "All bins are empty." if empty else ""
         if reverse:
             def reversearray(ary):
                 ary = list(ary)
@@ -217,6 +216,21 @@ class MultiQuasarSpherePlotter():
             labels = reversearray(labels)
             bins = reversearray(bins)
             quasarBins = reversearray(quasarBins)
+            
+        return labels, bins, quasarBins
+    
+    
+    #param bins either serves as an array with each element being as a cutpoint, or a single value
+    #follows array indexing exclusivity and inclusivity rules
+    def sort_by(self, criteria, bins = [0,np.inf], exploration_mode = False,\
+        atEnd = False,splitEven = 0,**kwargs):
+        bins,oldQuasarArray = self.prepare_to_sort(criteria,bins,atEnd,**kwargs)
+        sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
+        if splitEven:
+            labels, bins, quasarBins = sorter.splitEven(criteria,splitEven,atEnd = atEnd)
+        else:
+            labels, bins, quasarBins = sorter.sort(criteria,bins,atEnd = atEnd)
+        labels,bins,quasarBins = self.postprocess_sorted(labels,bins,quasarBins,**kwargs)
         return labels,bins, quasarBins
     
     def constrain_via_gasbins(self,gasbintype=None):
@@ -228,19 +242,12 @@ class MultiQuasarSpherePlotter():
             if g.get_bin_str() in q.gasbins.get_bin_str():
                 toReturn.append(q)
         self.currentQuasarArray = toReturn
-    
-    def constrain_current_Quasar_Array(self, constrainCriteria, bins=None, exploration_mode = False,atEnd = False,\
-        splitEven = None,changeArrayName = True, set_main_array = False, exclude = False):
-        if len(self.currentQuasarArray)>0 and not (constrainCriteria in self.currentQuasarArray[0].__dict__.keys()):
-            print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
-            return
-        if constrainCriteria in self.currentQuasarArrayName:
-            print("Already constrained by %s. Please reset instead of further constraining."%constrainCriteria)
-            return
+        
+    def get_bin_values(self,constrainCriteria,bins,exclude=False,**kwargs):
         if isinstance(bins, list):                
             if len(bins) != 2 and constrainCriteria not in stringcriteria:
                 print ("Length of bins must be 2: [lower,upper]")
-                return
+                raise Exception
         elif isinstance(bins,str) and constrainCriteria in stringcriteria:
             bins = [bins]
         if exclude:
@@ -250,16 +257,13 @@ class MultiQuasarSpherePlotter():
             possible_bins = set(possible_bins)
             excluded_bins = bins
             bins = list(possible_bins.difference(set(bins)))
-        if isinstance(atEnd,float):
-            self.constrain_current_Quasar_Array("final_a0",[atEnd,np.inf],changeArrayName=False)
-            if len(self.currentQuasarArray) == 0:
-                print "No galaxies get to that high of a0"
-            atEnd = True
-        sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
-        if splitEven is None:
-            labels, bins, temp = sorter.sort(constrainCriteria,bins,atEnd = atEnd)
+        return bins
+    
+    def constrain_array_helper(self,sorter,constrainCriteria,bins,splitEven=False,atEnd=False,set_main_array=False,**kwargs):
+        if not splitEven:
+            labels, bins, temp = sorter.sort(constrainCriteria,bins,atEnd=atEnd)
         else:
-            labels,bins,temp = sorter.splitEven(constrainCriteria,2,atEnd = atEnd)
+            labels,bins,temp = sorter.splitEven(constrainCriteria,2,atEnd=atEnd)
             if splitEven == "high":
                 take = 1
             elif splitEven == "low":
@@ -270,14 +274,12 @@ class MultiQuasarSpherePlotter():
             labels = np.array([labels[take]])
             bins = np.array([bins[take],bins[take+1]])
             temp = np.array([temp[take]])
-        if temp is None:
-            return
-        
         self.currentQuasarArray = np.unique(np.concatenate(temp))
         if set_main_array:
             self.quasarArray = np.copy(self.currentQuasarArray)
-        
-        if changeArrayName:
+    
+    def change_array_name(self,constrainCriteria,bins,changeArrayName=False,exclude=False,**kwargs):
+         if changeArrayName:
             self.currentQuasarArrayName += constrainCriteria 
             if not constrainCriteria in stringcriteria:
                 if bins[0] == 0.0:
@@ -302,6 +304,13 @@ class MultiQuasarSpherePlotter():
                     bins = excluded_bins
                 for acceptedValue in bins:
                     self.currentQuasarArrayName += acceptedValue.replace(" ","")
+
+    def constrain_current_Quasar_Array(self, constrainCriteria,bins=None,exploration_mode=False,**kwargs):
+        self.check_criteria_works(constrainCriteria,**kwargs)
+        bins = self.get_bin_values(constrainCriteria,bins,**kwargs)
+        sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
+        self.constrain_array_helper(sorter,constrainCriteria,bins,**kwargs)
+        self.change_array_name(constrainCriteria,bins,**kwargs)
         return bins
 
     def setPlots(self,plots,quartiles = None,**kwargs):
@@ -564,7 +573,7 @@ class MultiQuasarSpherePlotter():
         elif rlims == "all":
             rlims = [0.0,np.inf]
         if xVar == 'rdivR':
-            self.constrain_current_Quasar_Array("Rvir_is_real",['True'],changeArrayName=False)
+            self.constrain_current_Quasar_Array("Rvir_is_real",bins=['True'],changeArrayName=False)
         if plot_type==0:
             xarys,yarys = self.get_xy_type0(xVar,ion,rlims)
         elif plot_type==1:
@@ -798,7 +807,8 @@ class MultiQuasarSpherePlotter():
 
         return xlabel,ylabel,title
 
-    def plot_on_ax(self,ax,plot_type,xs,ys,labels,xerrs,yerrs,xlabel,ylabel,title,average='default',dots=False,fmt=None,coloration=None,**kwargs):
+    def plot_on_ax(self,ax,plot_type,xs,ys,labels,xerrs,yerrs,xlabel,ylabel,title,average='default',dots=False,\
+                   fmt=None,coloration=None,**kwargs):
         coloration = coloration or [None]*len(xs)
         if xerrs is None:
             xerrs=[None]*len(xs)
@@ -836,88 +846,6 @@ class MultiQuasarSpherePlotter():
                 plt.show()
         else:
             print "No values detected!"
-    
-    def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_y = [0,np.inf], \
-                   reset = False, exploration_mode = False, atEnd_x = False, atEnd_y = False, \
-                   onlyNonempty = False, splitEven_x = 0, splitEven_y = 0, reverse_x = False,reverse_y = False):
-        
-        #conduct safety checks on parameters
-        bins_x, atEnd_x = self.prepare_plot(criteria_x, bins_x, atEnd_x)
-        bins_y, atEnd_y = self.prepare_plot(criteria_y, bins_y, atEnd_y)
-        
-        
-        #conduct a sort on one dimension and get the labels and bins for the other
-        labels_y, bins_y, quasarbins_y = self.sort_by(criteria_y, bins_y, reset = reset,
-                                                      exploration_mode = exploration_mode,
-                                                      atEnd = atEnd_y, onlyNonempty = 
-                                                      onlyNonempty,splitEven = splitEven_y,
-                                                      reverse = ~reverse_y)
-        labels_x, bins_x, _ = self.sort_by(criteria_x, bins_x, reset = reset,
-                                                      exploration_mode = exploration_mode,
-                                                      atEnd = atEnd_x, onlyNonempty = 
-                                                      onlyNonempty,splitEven = splitEven_x,
-                                                      reverse = reverse_x)
-        quasarBins = np.zeros((len(labels_y),len(labels_x)), dtype = object)
-
-        #sort the other dimension and store sorted quasarbins
-        for i,qlist_y in enumerate(quasarbins_y):
-            sorter = MultiSphereSorter(qlist_y, exploration_mode = exploration_mode)
-            _,_, quasarbins_x = sorter.sort(criteria_x,bins_x,atEnd = atEnd_x)
-            for j,qlist_x in enumerate(quasarbins_x):
-                quasarBins[i][j] = qlist_x
-        
-        #conduct post-sort checks
-        labels_y,bins_y,quasarBins = self.postprocess_plot(quasarBins,bins_y,labels_y,onlyNonempty,reverse_y)
-        
-        return labels_x,labels_y,bins_x,bins_y,quasarBins                        
-    
-    def faberplot(self,plot_type,yVar,labels_x=None,labels_y=None,quasarArray=None,lq2=None,criteria_legend=None,\
-                  bins_legend=None,sharex=True,sharey=True,figsize='guess', **kwargs):
-        #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
-        #ask plot_err or plot_hist for completed plots of type given, for 
-        #quasars in that cell of quasarArray, put them in subplots of a n by m subplots object
-        #and show that plot
-        if lq2:
-            labels_x,labels_y,_,_,quasarArray = lq2
-        else:
-            assert labels_x is not None and labels_y is not None and quasarArray is not None
-        rows = len(quasarArray)
-        cols = len(quasarArray[0])
-        if figsize=='guess':
-            figsize=(5*cols,3.5*rows)
-        xsize = figsize[0]
-        ysize = figsize[1]
-        if xsize > 15:
-            xsize = 15
-            figsize = (xsize, ysize)
-        fig, axes = plt.subplots(rows,cols,figsize = figsize,sharex=sharex,sharey=sharey)
-        oldQuasarArray = self.currentQuasarArray
-        for r in range (0,rows):
-            for c in range (0,cols):
-                try:
-                    self.currentQuasarArray = quasarArray[r][c]
-                    if criteria_legend and len(self.currentQuasarArray)>0:
-                        lq = self.sort_by(criteria_legend,bins_legend)
-                    else:
-                        lq=None
-                    if plot_type=='err':
-                        self.plot_err(yVar, ax = axes[r][c], show = False,lq=lq, **kwargs)
-                    elif plot_type=='hist':
-                        self.plot_hist(yVar, ax = axes[r][c], show = False,fig=fig, **kwargs)
-                    if r == 0:
-                        axes[r][c].set_title(labels_x[c])
-                    else:
-                        axes[r][c].set_title('')
-                    if c == 0:
-                        old_ylabel = axes[r][c].get_ylabel()
-                        axes[r][c].set_ylabel(labels_y[r])
-                    else:
-                        axes[r][c].set_ylabel('')
-                except Exception as e:
-                    print e
-                    old_ylabel = ''
-            fig.suptitle(old_ylabel)        
-        self.currentQuasarArray = oldQuasarArray
 
     def definecolorbar(self, bar_type = 'HotCustom'):
         from matplotlib.colors import LinearSegmentedColormap
@@ -1025,8 +953,10 @@ class MultiQuasarSpherePlotter():
         if isinstance(ion,tuple):
             ion_name = ion[1]
             ion = ion[0]
-        else:
+        elif isinstance(ion,str):
             ion_name=ion
+        else:
+            print "ion must be tuple or string. You gave: %s"%ion
         if not ax:
             assert fig is None
             fig,ax = plt.subplots(1)
@@ -1041,58 +971,81 @@ class MultiQuasarSpherePlotter():
                 plt.show()
         else:
             print "No values detected!"
-    
-    def prepare_plot(self, criteria, bins = [0,np.inf], reset = False, exploration_mode = False,\
-        atEnd = False,onlyNonempty = False,splitEven = 0,reverse = False):
-        if not (criteria in self.currentQuasarArray[0].__dict__.keys()):
-            raise Exception("Criteria " + criteria + " does not exist. Please re-enter a valid criteria.")
-    
-        elif criteria == "ions":
-            raise Exception("You cannot sort by 'ions'")
             
-        if isinstance(bins, float) or isinstance(bins, int) or \
-            (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
-            if isinstance(bins, list) or isinstance(bins,np.ndarray):
-                bins = bins[0]
-            bins = np.array([0.0, bins, np.inf])
-        elif isinstance(bins, str) and criteria in stringcriteria:
-            bins = [bins]
-        if isinstance(atEnd,float):
-            self.constrain_current_Quasar_Array("final_a0",[atEnd,np.inf],changeArrayName=False)
-            if len(self.currentQuasarArray) == 0:
-                print "No galaxies get to that high of a0"
-            atEnd = True
+    def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_y = [0,np.inf], \
+                   atEnd_x = False, atEnd_y = False, splitEven_x = 0, splitEven_y = 0, \
+                   reverse_x = False,reverse_y = False):
         
-        return bins, atEnd
+        #conduct a sort on one dimension and get the labels and bins for the other
+        labels_y, bins_y, quasarbins_y = self.sort_by(criteria_y, 
+                                                      bins_y,
+                                                      exploration_mode = False,
+                                                      atEnd = atEnd_y,
+                                                      splitEven = splitEven_y,
+                                                      reverse = ~reverse_y)
+        labels_x, bins_x, self.debug            = self.sort_by(criteria_x, 
+                                                      bins_x, 
+                                                      exploration_mode = False,
+                                                      atEnd = atEnd_x, 
+                                                      splitEven = splitEven_x,
+                                                      reverse = reverse_x)
+        
+        quasarBins = np.zeros((len(labels_y),len(labels_x)), dtype = object)
+
+        #sort the other dimension and store sorted quasarbins
+        for i,qlist_y in enumerate(quasarbins_y):
+            sorter = MultiSphereSorter(qlist_y, exploration_mode = False)
+            _,_, quasarbins_x = sorter.sort(criteria_x,bins_x,atEnd = atEnd_x)
+            for j,qlist_x in enumerate(quasarbins_x):
+                quasarBins[i][j] = qlist_x
+        
+        return labels_x,labels_y,bins_x,bins_y,quasarBins                        
     
-    def postprocess_plot(self, quasarBins, bins = [0,np.inf], labels = None, reset = False, exploration_mode = False,\
-        atEnd = False,onlyNonempty = False,splitEven = 0,reverse = False):
-        if quasarBins is None:
-            raise Exception("No quasars in quasarBin!")
-        if reset == True:
-            self.reset_current_Quasar_Array()
-        empty = True
-        nonemptyArray = []
-        nonemptyLabelArray = []
-        for i,item in enumerate(quasarBins):
-            if len(item)>0:
-                nonemptyArray.append(item)
-                nonemptyLabelArray.append(labels[i])
-                empty = False
-        if onlyNonempty:
-            return np.array(nonemptyLabelArray),bins, np.array(nonemptyArray)
-        
-        print "Bins are empty." if empty else ""
-        if reverse:
-            def reversearray(ary):
-                ary = list(ary)
-                ary.reverse()
-                return np.array(ary)
-            labels = reversearray(labels)
-            bins = reversearray(bins)
-            quasarBins = reversearray(quasarBins)
-            
-        return labels, bins, quasarBins
+    def faberplot(self,plot_type,yVar,labels_x=None,labels_y=None,quasarArray=None,lq2=None,criteria_legend=None,\
+                  bins_legend=None,sharex=True,sharey=True,figsize='guess', **kwargs):
+        #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
+        #ask plot_err or plot_hist for completed plots of type given, for 
+        #quasars in that cell of quasarArray, put them in subplots of a n by m subplots object
+        #and show that plot
+        if lq2:
+            labels_x,labels_y,_,_,quasarArray = lq2
+        else:
+            assert labels_x is not None and labels_y is not None and quasarArray is not None
+        rows = len(quasarArray)
+        cols = len(quasarArray[0])
+        if figsize=='guess':
+            figsize=(min(15,5*cols),3.5*rows)
+        xsize = figsize[0]
+        ysize = figsize[1]
+        fig, axes = plt.subplots(rows,cols,figsize = figsize,sharex=sharex,sharey=sharey)
+        oldQuasarArray = self.currentQuasarArray
+        for r in range (0,rows):
+            for c in range (0,cols):
+                if 1:
+                    self.currentQuasarArray = quasarArray[r][c]
+                    if criteria_legend and len(self.currentQuasarArray)>0:
+                        lq = self.sort_by(criteria_legend,bins_legend)
+                    else:
+                        lq=None
+                    if plot_type=='err':
+                        self.plot_err(yVar, ax = axes[r][c], show = False,lq=lq, **kwargs)
+                    elif plot_type=='hist':
+                        self.plot_hist(yVar, ax = axes[r][c], show = False,fig=fig, **kwargs)
+                    if r == 0:
+                        axes[r][c].set_title(labels_x[c])
+                    else:
+                        axes[r][c].set_title('')
+                    if c == 0:
+                        old_ylabel = axes[r][c].get_ylabel()
+                        axes[r][c].set_ylabel(labels_y[r])
+                    else:
+                        axes[r][c].set_ylabel('')
+                #except Exception as e:
+                else:
+                    print e
+                    old_ylabel = ''
+            fig.suptitle(old_ylabel)        
+        self.currentQuasarArray = oldQuasarArray
     
 class MultiSphereSorter(object):
     def __init__(self,myArray,exploration_mode = False):

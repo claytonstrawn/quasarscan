@@ -185,16 +185,16 @@ class QuasarSphere(GeneralizedQuasarSphere):
         except:
             self.final_a0 = None
 
-    def get_criteria_at_a(self, a, criteria):
-        if self.final_a0 < a:
+    def get_criteria_at_a(self, a0, criteria):
+        if self.final_a0 < a0:
             print "Inputted a value that exceeds the greatest 'a' value in %s" %(self.simname)
         if criteria == "ssfr":
-            sfr = parse_metadata.get_value("SFR",self.name,redshift = self.redshift)
-            star_Rvir = parse_metadata.get_value("star_Rvir",self.name,redshift = self.redshift)
+            sfr = parse_metadata.get_value("SFR",self.name,a0=a0)
+            star_Rvir = parse_metadata.get_value("star_Rvir",self.name,a0=a0)
             return sfr/star_Rvir
         if criteria == "sfr":
             criteria = "SFR"
-        return parse_metadata.get_value(criteria,self.name, redshift = self.redshift)
+        return parse_metadata.get_value(criteria,self.name, a0=a0)
     #renames basic scanparams data into new instance variables
     def add_extra_scanparam_fields(self):
         self.R = self.scanparams[0]
