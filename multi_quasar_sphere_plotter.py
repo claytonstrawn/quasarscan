@@ -850,7 +850,7 @@ class MultiQuasarSpherePlotter():
     def definecolorbar(self, bar_type = 'HotCustom'):
         from matplotlib.colors import LinearSegmentedColormap
         f= 256.0
-        if bar_type not in ('HotCustom','RainbowCustom'):
+        if bar_type not in ('HotCustom','RainbowCustom','BlackandWhite'):
             raise Exception("Not a ColorMap. Please try another one.")
         if bar_type == 'HotCustom':
             cdict = {'red':   ((0.0,  255/f, 255/f),
@@ -895,6 +895,26 @@ class MultiQuasarSpherePlotter():
                                   (0.9, 0.0, 0.0), 
                                   (1.0, 0.0, 0.0))}
             custom = LinearSegmentedColormap('RainbowCustom', bowdict)
+        elif bar_type == 'BlackandWhite':
+            bwdict = {'red': ((0.0, 1.0, 1.0),
+                                 (1e-9, 0.8, 0.8),
+                                 (0.3, 0.6, 0.6),
+                                 (0.6, 0.4, 0.4),
+                                 (0.9, 0.2, 0.2),
+                                 (1.0, 0.0, 0.0)),
+                         'green': ((0.0, 1.0, 1.0),
+                                 (1e-9, 0.8, 0.8),
+                                 (0.3, 0.6, 0.6),
+                                 (0.6, 0.4, 0.4),
+                                 (0.9, 0.2, 0.2),
+                                 (1.0, 0.0, 0.0)),
+                         'blue': ((0.0, 1.0, 1.0),
+                                 (1e-9, 0.8, 0.8),
+                                 (0.3, 0.6, 0.6),
+                                 (0.6, 0.4, 0.4),
+                                 (0.9, 0.2, 0.2),
+                                 (1.0, 0.0, 0.0))}
+            custom = LinearSegmentedColormap('BlackandWhite', bwdict)
         return custom
     
     def process_xy_vals_hist(self,ion,xs,ys,xVar='rdivR',tolerance=1e-5,weights=True,logx='guess',logy='guess',**kwargs):
