@@ -1149,8 +1149,10 @@ class MultiSphereSorter(object):
         if criteria in stringcriteria:
             print("cannot splitEven over string criteria")
         criteriaArray = self.get_criteria_array(criteria, atEnd = atEnd)
-        criteriaArray = criteriaArray[criteriaArray>-1]
+        # criteriaArray = criteriaArray[criteriaArray>-1]
         sortedcriteriaArray = np.sort(criteriaArray)
+        if atEnd:
+            sortedcriteriaArray = np.unique(sortedcriteriaArray)
         quotient = len(sortedcriteriaArray) // num
         if quotient == 0:
             print("Warning: Number of bins exceeds length of criteria array. Not all bins will be filled.")
