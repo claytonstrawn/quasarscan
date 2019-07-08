@@ -714,7 +714,7 @@ class MultiQuasarSpherePlotter():
             for j,ylist in enumerate(yarys[i]):
                 ys[i][j] = self.avgfn(ylist)
                 yerrs[i][j] = self.errfn(ylist)
-                if xs[i][j]>0 and ys[i][j]>0:
+                if (xs[i][j]>0 and ys[i][j]>0) or (logx and ys[i][j]>0):
                     empty = False
                 if logy:
                     yerrs[i][j][0] = np.log10(ys[i][j])-np.log10(ys[i][j]-yerrs[i][j][0])
