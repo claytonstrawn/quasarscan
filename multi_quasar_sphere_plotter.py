@@ -1066,17 +1066,17 @@ class MultiQuasarSpherePlotter():
                     print e
                     old_ylabel = ''
             fig.suptitle(old_ylabel)
-            #if not save_fig == False:
-             #   fname = self.save_fig_filename(save_fig, yVar, **kwargs)
-              #  plt.savefig(fname)
+        if not save_fig == False:
+            fname = self.save_fig_filename(save_fig, yVar, **kwargs)
+            plt.savefig(fname)
         print(self.save_fig_filename(save_fig, yVar, **kwargs))
         self.currentQuasarArray = oldQuasarArray
         
     def save_fig_filename(self, save_fig, yVar, xVar = 'rdivR', **kwargs):
         if isinstance(save_fig, str):
-            return 'plots/' + str + '.png'
+            return 'quasarscan/plots/' + str + '.png'
         elif save_fig == True:
-            filename = 'plots/' + yVar + '_vs_' + xVar + '_' + str(datetime.datetime.now())[:19] + '.png'
+            filename = 'quasarscan/plots/' + yVar.replace('/','div') + '_vs_' + xVar.replace('/','div') + '_' + str(datetime.datetime.now())[:19] + '.png'
             filename = filename.replace(' ','')
             return filename
         else:
