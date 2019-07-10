@@ -982,23 +982,26 @@ class MultiQuasarSpherePlotter():
     #    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
     #             reset = False, labels = None,extra_title = "",rlims = None,\
     #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
-    def plot_hist(self,ion,ax=None,fig=None,show=False,**kwargs):
+    def plot_hist(self,ion,xVar,ax=None,fig=None,show=False,**kwargs):
         if isinstance(ion,tuple):
             ion_name = ion[1]
             ion = ion[0]
         elif isinstance(ion,str):
             ion_name=ion
-        else:
-            print "ion must be tuple or string. You gave: %s"%ion
+        if isinstance(xVar,tuple):
+            xVar_name = xVar[1]
+            xVar = xVar[0]
+        elif isinstance(ion,str):
+            xVar_name=xVar
         if not ax:
             assert fig is None
             print("Current constraints (name): "+self.currentQuasarArrayName)
             fig,ax = plt.subplots(1)
-        xs,ys = self.get_sightline_xy_vals(0,[ion],**kwargs)
+        xs,ys = self.get_sightline_xy_vals(0,[ion],xVar,**kwargs)
         xs=xs[0]
         ys=ys[0]
         xs,ys,weight,cbarlabel,empty = self.process_xy_vals_hist(ion,xs,ys,**kwargs)
-        xlabel,ylabel,title = self.get_title_and_axislabels(1,ion,**kwargs)
+        xlabel,ylabel,title = self.get_title_and_axislabels(1,ion,ion_name,xVar,xVar_name,**kwargs)
         if not empty:
             self.plot_on_ax_hist(ax,fig,xs,ys,xlabel,ylabel,title,weight,cbarlabel,**kwargs)
             if show:

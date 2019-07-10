@@ -30,18 +30,22 @@ def dict_of_vela_info(quantity,loud = 0):
   
     #Setting up the dictionary of the desired property, where the dictionary key is the name of the galaxy folder : the redshift, and the dictionary value is the respective desired property quantity
     ret_dict = {}
+    versionnames = {1:'1',2:'2',3:'3.1'}
     if os.path.isdir("galaxy_catalogs"):
         basepath = "galaxy_catalogs/galaxy_catalogs_vela/"
     else: 
         basepath = "quasarscan/galaxy_catalogs/galaxy_catalogs_vela/"
-    for version in range(1,3):
+    for version in range(1,4):
         if version == 1:
             folderstart = "VELA"
         elif version == 2:
             folderstart = "VELA_v2_"
+        elif version == 3:
+            print "using gen6"
+            folderstart = "VELA_v3.1_"
         for i in range(35):
             folder = folderstart+"%02i"%i
-            ret_dict["VELA_v%d_art_%02d"%(version,i)] = {}
+            ret_dict["VELA_v%s_art_%02d"%(versionnames[version],i)] = {}
             if quantity in quantity_dict_Mstar.keys():
                 pathname = basepath + folder + "/galaxy_catalogue/Mstar.txt"
             elif quantity in quantity_dict_Nir_disc_cat.keys():
@@ -63,9 +67,9 @@ def dict_of_vela_info(quantity,loud = 0):
             a = float(line.split()[0])
             while 1:
                 if numvals == 1:
-                    ret_dict["VELA_v%d_art_%02d"%(version,i)][a] = float(line.split()[index])
+                    ret_dict["VELA_v%s_art_%02d"%(versionnames[version],i)][a] = float(line.split()[index])
                 else:
-                    ret_dict["VELA_v%d_art_%02d"%(version,i)][a] = [float(line.split()[index[0]]),float(line.split()[index[1]]),float(line.split()[index[2]])]
+                    ret_dict["VELA_v%s_art_%02d"%(versionnames[version],i)][a] = [float(line.split()[index[0]]),float(line.split()[index[1]]),float(line.split()[index[2]])]
                 line = f.readline()[:]
                 try:
                     a = float(line.split()[0])
