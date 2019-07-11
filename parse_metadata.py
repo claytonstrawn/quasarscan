@@ -2,6 +2,7 @@ import parse_vela_metadata
 import parse_nihao_metadata
 import parse_agora_metadata
 import numpy as np
+import os
 
 functions = {'VELA':parse_vela_metadata.dict_of_vela_info,'NIHAO':parse_nihao_metadata.dict_of_nihao_info,'AGORA':parse_agora_metadata.dict_of_agora_info}
 available_quantities = {'VELA':list(parse_vela_metadata.quantity_dict.keys()),'NIHAO':list(parse_nihao_metadata.quantity_dict.keys()),'AGORA':list(parse_agora_metadata.quantity_dict.keys())}
@@ -34,24 +35,43 @@ def get_closest_value_for_a(simname,name,redshift=None,a0=None,loud = False):
     return best
 
 def get_compaction_times(quantity, name):
+    try:
+        if os.path.isdir('galaxy_catalogs'):
+            f = open('galaxy_catalogs/vela_compaction_times.txt')
+        else:
+            f = open('quasarscan/galaxy_catalogs/vela_compaction_times.txt')
+    except:
+        print('Couldn\'t open file.')
+        return
+    line = f.readline().split(' ')
+    simname = name.split('_')[0] + name.split('_')[3]
+    if not name.split('_')[1] == 'v2':
+        print('Has to be version 2.')
+        return
+    if not name.split('_')[2] == 'art':
+        print('Has to be art.')
+        return
+    while line[0] != simname:
+        line = f.readline()
+        if line == '':
+            print('Reached end of file. Couldn\'t find desired simulation.')
+            f.close()
+            return
+        line = line.split(' ')
+    f.close()
     if quantity == 'compaction_start':
-        f = open('galaxy_catalogs/vela_compaction_times.txt')
-        line = f.readline().split(' ')
-        simname = name.split('_')[0] + name.split('_')[3]
-        while line[0] != simname:
-            line = f.readline().split(' ')
-        return line[1]
+        return float(line[1])
     elif quantity == 'compaction_end':
-        asdf
+        return float(line[2])
     else:
-        #asdf
-    #check end of file
+        print('Needs to be either compaction_start or compaction_end')
+    return
 
 def get_value(quantity, name, redshift = None,a0 = None, check_exists = False):
     if check_exists:
         return not np.isnan(get_value(quantity, name, redshift = redshift,a0 = a0))
     if quantity == 'compaction_start' or 'compaction_end':
-        return self.get_compaction_times(quantity, name)
+        return get_compaction_times(quantity, name)
     simname = name.split("_")[0]
     a0 = get_closest_value_for_a(simname,name,redshift=redshift,a0=a0)
     if a0 == -1.0:
