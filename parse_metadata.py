@@ -54,7 +54,7 @@ def get_compaction_times(quantity, name):
     while line[0] != simname:
         line = f.readline()
         if line == '':
-            print('Reached end of file. Couldn\'t find desired simulation.')
+            #print('Reached end of file. Couldn\'t find desired simulation.')
             f.close()
             return
         line = line.split(' ')
@@ -70,7 +70,7 @@ def get_compaction_times(quantity, name):
 def get_value(quantity, name, redshift = None,a0 = None, check_exists = False):
     if check_exists:
         return not np.isnan(get_value(quantity, name, redshift = redshift,a0 = a0))
-    if quantity == 'compaction_start' or 'compaction_end':
+    if quantity == 'compaction_start' or quantity == 'compaction_end':
         return get_compaction_times(quantity, name)
     simname = name.split("_")[0]
     a0 = get_closest_value_for_a(simname,name,redshift=redshift,a0=a0)
