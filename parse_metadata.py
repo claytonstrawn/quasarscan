@@ -33,9 +33,25 @@ def get_closest_value_for_a(simname,name,redshift=None,a0=None,loud = False):
         return -1.0
     return best
 
+def get_compaction_times(quantity, name):
+    if quantity == 'compaction_start':
+        f = open('galaxy_catalogs/vela_compaction_times.txt')
+        line = f.readline().split(' ')
+        simname = name.split('_')[0] + name.split('_')[3]
+        while line[0] != simname:
+            line = f.readline().split(' ')
+        return line[1]
+    elif quantity == 'compaction_end':
+        asdf
+    else:
+        #asdf
+    #check end of file
+
 def get_value(quantity, name, redshift = None,a0 = None, check_exists = False):
     if check_exists:
         return not np.isnan(get_value(quantity, name, redshift = redshift,a0 = a0))
+    if quantity == 'compaction_start' or 'compaction_end':
+        return self.get_compaction_times(quantity, name)
     simname = name.split("_")[0]
     a0 = get_closest_value_for_a(simname,name,redshift=redshift,a0=a0)
     if a0 == -1.0:
