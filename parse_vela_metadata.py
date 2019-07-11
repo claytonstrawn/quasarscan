@@ -41,7 +41,6 @@ def dict_of_vela_info(quantity,loud = 0):
         elif version == 2:
             folderstart = "VELA_v2_"
         elif version == 3:
-            print "using gen6"
             folderstart = "VELA_v3.1_"
         for i in range(35):
             folder = folderstart+"%02i"%i

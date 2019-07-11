@@ -178,6 +178,17 @@ class QuasarSphere(GeneralizedQuasarSphere):
             self.ssfr = self.sfr / self.star_Rvir
         else:
             self.ssfr = None
+        compaction_start = parse_metadata.get_value("compaction_start",self.name)
+        compaction_end = parse_metadata.get_value("compaction_end",self.name)
+        if ~np.isnan(compaction_start):
+            if self.redshift > compaction_start:
+                self.compaction_stage = "pre"
+            elif self.redshift < compaction_end:
+                self.compaction_stage = "post"
+            else:
+                self.compaction_stage = "during"
+        else:
+            self.compaction_stage = "unknown"
         try:
             aDict = parse_metadata.avalsdict[self.simname][self.name]
             aDict_list = sorted(aDict.keys())

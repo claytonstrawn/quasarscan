@@ -79,7 +79,7 @@ def reversearray(ary):
     ary.reverse()
     return np.array(ary)
 
-stringcriteria = ["ions","simname","version","code","simnum","Rvir_is_real"]
+stringcriteria = ["ions","simname","version","code","simnum","Rvir_is_real","compaction_stage"]
 intensives = ["Z","T","rho"]
 intensiveslabels = {"Z":"avg metallicity","T":"avg temperature","rho":"avg density"}
 intensivespositions = {"Z":-1,"T":-2,"rho":-3}
