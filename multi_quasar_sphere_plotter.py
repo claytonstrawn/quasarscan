@@ -611,7 +611,9 @@ class MultiQuasarSpherePlotter():
         if logx=='guess':
             if xVar in sightline_xVars:
                 logx=False
-            elif xVar in param_xVars and xVar not in probablylinear:
+            elif xVar not in probablylinear:
+                logx=False
+            elif xVar in param_xVars:
                 logx=True
             else:
                 logx=True
@@ -805,7 +807,7 @@ class MultiQuasarSpherePlotter():
 
     def plot_on_ax(self,ax,plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,title,labels=None,
                    average='default',dots=False,grid=False,linestyle='',
-                   fmt=None,coloration=None,xlims='default',ylims='default',**kwargs):
+                   fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',**kwargs):
         coloration = coloration or [None]*len(xs)
         if xerrs is None:
             xerrs=[None]*len(xs)
@@ -814,8 +816,12 @@ class MultiQuasarSpherePlotter():
         if dots or plot_type in [3]:
             for i in range(len(xs)):
                 fmt=fmt or 'o'
-                ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],color=coloration[i],markersize=6)
+                if markersize=='default':
+                    markersize=6
+                ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],color=coloration[i],markersize=markersize)
         elif average == 'scatter':
+            if markersize=='default':
+                markersize=6
             for i in range(len(xs)):
                 ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=2)
         else:
@@ -823,7 +829,7 @@ class MultiQuasarSpherePlotter():
             if not fmt:
                 fmt = fmtdict[self.plots]
             for i in range(len(xs)):
-                ax.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],\
+                ax.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],ls=linestyle,\
                              color = coloration[i],fmt = fmt,capsize = 3)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -1059,6 +1065,13 @@ class MultiQuasarSpherePlotter():
         xsize = figsize[0]
         ysize = figsize[1]
         fig, axes = plt.subplots(rows,cols,figsize = figsize,sharex=sharex,sharey=sharey)
+        if rows == 1:
+            axes = [axes]
+        if cols == 1:
+            newaxes = []
+            for ax in axes:
+                newaxes.append([ax])
+            axes=newaxes
         oldQuasarArray = self.currentQuasarArray
         for r in range (0,rows):
             for c in range (0,cols):

@@ -42,30 +42,23 @@ def get_compaction_times(quantity, name):
             f = open('quasarscan/galaxy_catalogs/vela_compaction_times.txt')
     except:
         print('Couldn\'t open file.')
-        return
+        return np.nan
     line = f.readline().split(' ')
     simname = name.split('_')[0] + name.split('_')[3]
-    if not name.split('_')[1] == 'v2':
-        print('Has to be version 2.')
-        return
-    if not name.split('_')[2] == 'art':
-        print('Has to be art.')
-        return
+    if name.split('_')[1] != 'v2' or name.split('_')[2] != 'art':
+        return np.nan
     while line[0] != simname:
         line = f.readline()
         if line == '':
             #print('Reached end of file. Couldn\'t find desired simulation.')
             f.close()
-            return
+            return np.nan
         line = line.split(' ')
     f.close()
     if quantity == 'compaction_start':
         return float(line[1])
     elif quantity == 'compaction_end':
         return float(line[2])
-    else:
-        print('Needs to be either compaction_start or compaction_end')
-    return
 
 def get_value(quantity, name, redshift = None,a0 = None, check_exists = False):
     if check_exists:
