@@ -130,7 +130,6 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
     ion_mass_in_each_state = np.sum(myionmasses,axis=1)
     all_O_mass = np.sum(ion_mass_in_each_state)
     total_gas_mass = np.sum(myintensives[0])
-    print ions
     for i,t in enumerate(t_bins[:-1]):
         t_high = t
         t_low = t_bins[i+1]
@@ -184,7 +183,6 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
             xValues = np.array([0.,11.2603,35.64362,83.53142,148.02532,540.11232,1030.10566])
         else: 
             xValues = np.arange(1,len(ions)+1)
-        print ion_mass_in_each_state
         plt.plot(xValues,np.log10(ion_mass_in_each_state/all_O_mass),'k')
         if specialion:
             plt.plot(xValues[specialion],[np.log10(ion_mass_in_each_state[specialion]/all_O_mass)],'ok')

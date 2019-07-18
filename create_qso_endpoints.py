@@ -83,7 +83,7 @@ def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,include_0 = Tr
         assert ratio < .57
         R = np.min(dsbounds-center.in_units('kpc').value)
         rmax = R*ratio
-        print "R > dsbounds: adjusting to R=%2.2f kpc, rmax = %2.2f kpc"%(R,rmax)
+        print("R > dsbounds: adjusting to R=%2.2f kpc, rmax = %2.2f kpc"%(R,rmax))
     r_arr = np.linspace(0,rmax,n_r)
     if not include_0:
         r_arr = r_arr[1:]

@@ -17,8 +17,9 @@ import datetime
 use_tprint = True
 def tprint(*args,**kwargs):
     if use_tprint:
-        print(datetime.datetime.now())
-    print(args)
+        print(args,end=datetime.datetime.now())
+    else:
+        print(args)
 
 
 yt.funcs.mylog.setLevel(50)
@@ -36,7 +37,7 @@ if parallel:
 try:
     readvalsoutput = quasar_sphere.read_values(filename)
 except IOError:
-    print "unable to read from %s, checking after 'quasarscan'"%filename
+    print("unable to read from %s, checking after 'quasarscan'"%filename)
     readvalsoutput = quasar_sphere.read_values(filename.split('quasarscan/')[1])
 
 test = False
@@ -69,8 +70,8 @@ for i in range(0, len(bins)-1):
             fields = fields_to_keep,
             ftype='gas')
         except RuntimeError as e:
-            print "there was a problem in making the ray!"
-            print e
+            print("there was a problem in making the ray!")
+            print(e)
             continue
         trident.add_ion_fields(ray,q.ions)
         field_data = ray.all_data()
@@ -98,27 +99,27 @@ for i in range(0, len(bins)-1):
                         coldens_in_line = (ionfield[withinbounds])*(dl[withinbounds])
                         coldens_in_bin = np.sum(coldens_in_line)
                         vector[11+j*(num_bin_vars+2)+k+2] = coldens_in_bin/cdens
-                    elif 1:
-                        print str(variable_name)+" not in ray.derived_field_list"
+                    else:
+                        print(str(variable_name)+" not in ray.derived_field_list")
                 except Exception as e:
-                    print "Could not bin into %s with edges %s because of error %s"%(variable_name,edges,e)
+                    print("Could not bin into %s with edges %s because of error %s"%(variable_name,edges,e))
             toprint+="%s:%e "%(ion,cdens)
         try:
             Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
                 np.sum(field_data[('gas',"H_nuclei_density")]*mh*dl)
             vector[-1] = Z
         except Exception as e:
-            print "Could not get average metallicity because of error %s"%(e)
+            print("Could not get average metallicity because of error %s"%(e))
         try:
             n = np.average(field_data['density'],weights=field_data['density']*dl)
             vector[-2] = n
         except Exception as e:
-            print "Could not get average density because of error %s"%(e)
+            print("Could not get average density because of error %s"%(e))
         try:
             T = np.average(field_data['temperature'],weights=field_data['density']*dl)
             vector[-3] = T
         except Exception as e:
-            print "Could not get average temperature because of error %s"%(e)
+            print("Could not get average temperature because of error %s"%(e))
         try:
             os.remove("ray"+ident+".h5")
         except:

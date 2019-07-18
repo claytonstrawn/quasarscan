@@ -100,9 +100,9 @@ def write_files(tocheck,cont = 0):
     f = open("quasarscan/nextfile.sh")
     currentfirstline = f.readline()
     currentsecondline = f.readline()
-    print secondline
-    print currentsecondline.strip()
-    print secondline == currentsecondline.strip()
+    print(secondline)
+    print(currentsecondline.strip())
+    print(secondline == currentsecondline.strip())
     if (secondline == currentsecondline.strip()) and final and cont == 0 and not test:
         print("I already tried that, I guess it didn't work :(")
         add_to_blacklist(tocheck[0],tocheck[1])
@@ -110,8 +110,8 @@ def write_files(tocheck,cont = 0):
         return main_func()
     f.close()
     if test:
-        print firstline
-        print secondline
+        print(firstline)
+        print(secondline)
         return
     f = open("quasarscan/nextfile.sh","w+")
     f.write(firstline+'\n')
@@ -127,18 +127,18 @@ def main_func():
         for file in nerscsimnames:
             for redshift in knownredshifts:
                 tocheck = (file,redshift)
-                print tocheck
+                print(tocheck)
                 isValid = check_in_allfiles(tocheck,alltextfiles,ionlist)
                 if type(isValid) is int and check_validity(tocheck):
                     write_files(tocheck, cont = isValid)
                     return
                 elif type(isValid) is bool and isValid:
-                    print "already done"
+                    print("already done")
                     continue
                 if check_validity(tocheck):
                     write_files(tocheck)
                     return
-                print "can't do it"
+                print("can't do it")
         if i<len(ionlists)-1:
             print("Moving on to larger ion list")
     print("Finished, all available files satisfy strictest criteria!")
