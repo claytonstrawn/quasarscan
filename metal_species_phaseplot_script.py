@@ -90,16 +90,16 @@ def get_original_lists(ad,ions):
     length = len(ad[('gas',quasar_sphere.ion_to_field_name(ions[0],"mass"))])
     myionmasses_old = np.zeros((len(ions),length))
     for i,ion in enumerate(ions):
-        print "working on ion %s..."%(ion,)
+        print("working on ion %s..."%(ion,))
         myionmasses_old[i,:] = ad[('gas',ion_to_field_name(ion,"mass"))]
-        print np.sum(myionmasses_old[i])
+        print(np.sum(myionmasses_old[i]))
 
     intensives = {0:('gas','mass'),1:('gas','temperature'),2:('gas','density')}
     myintensives_old = np.zeros((3,length))
     for i in [0,1,2]:
-        print "working on value %s..."%(intensives[i],)
+        print("working on value %s..."%(intensives[i],))
         myintensives_old[i,:] = ad[intensives[i]]
-        print np.sum(ad[intensives[i]])
+        print(np.sum(ad[intensives[i]]))
     return myionmasses_old,myintensives_old
 
 def split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses_old,ions):

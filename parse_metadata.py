@@ -1,6 +1,12 @@
-import parse_vela_metadata
-import parse_nihao_metadata
-import parse_agora_metadata
+if 1:
+    from quasarscan import parse_vela_metadata
+    from quasarscan import parse_nihao_metadata
+    from quasarscan import parse_agora_metadata
+    level = 0
+else: 
+    import parse_vela_metadata
+    import parse_nihao_metadata
+    import parse_agora_metadata
 import numpy as np
 import os
 
@@ -16,14 +22,14 @@ avalsdict = {'VELA':parse_vela_metadata.adict,'NIHAO':parse_nihao_metadata.adict
 def get_closest_value_for_a(simname,name,redshift=None,a0=None,loud = False):
     if simname not in functions.keys():
         if loud:
-            print "that simulation %s does not have metadata in parse_metadata yet"%simname
+            print("that simulation %s does not have metadata in parse_metadata yet"%simname)
         return None
     if not redshift is None:
         a0 = 1./(redshift+1)
     elif a0:
         a0 = a0
     else:
-        print "called without specifying a time"
+        print("called without specifying a time")
         return None
     avals = avalsdict[simname]
     best = -1.0
@@ -68,7 +74,7 @@ def get_value(quantity, name, redshift = None,a0 = None, check_exists = False):
     simname = name.split("_")[0]
     a0 = get_closest_value_for_a(simname,name,redshift=redshift,a0=a0)
     if a0 == -1.0:
-        print "simulation %s does not reach redshift %s"%(name,redshift)
+        print("simulation %s does not reach redshift %s"%(name,redshift))
         return np.nan
     if simname in functions.keys() and quantity in available_quantities[simname]:
         return functions[simname](quantity)[name][a0]
