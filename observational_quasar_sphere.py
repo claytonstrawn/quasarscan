@@ -9,8 +9,7 @@ try:
 except:
     import quasar_sphere
     from quasar_sphere import GeneralizedQuasarSphere
-    import gasbinning
-    
+    import gasbinning    
     level = 1
 
 #input: level (0 meaning working directory is '~', 1 meaning, working directory is '~/quasarscan')
