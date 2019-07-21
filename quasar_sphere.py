@@ -5,14 +5,14 @@ import os
 import datetime
 from functools import reduce
 
-if 1:
+try:
     from quasarscan import parse_metadata
     from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
     #from quasarscan.observational_quasar_sphere import Observation
     level = 0
-else:
+except:
     import parse_metadata
     import ion_lists
     import gasbinning
