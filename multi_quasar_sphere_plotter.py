@@ -3,13 +3,14 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import datetime
-try:
+from functools import reduce
+if 1:
     from quasarscan import quasar_sphere
     from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
     level = 0
-except:
+else:
     import quasar_sphere
     import ion_lists
     import gasbinning
@@ -130,7 +131,7 @@ class MultiQuasarSpherePlotter():
     def list_all_QuasarSpheres(self, *criteria):
         s = ""
         if len(self.currentQuasarArray)==0:
-            print "no QuasarSpheres"
+            print("no QuasarSpheres")
         for q in sorted(self.currentQuasarArray, key=lambda x: (x.name,x.rounded_redshift)):
             s += q.name +" at z=%s ("%q.rounded_redshift
             for c in criteria:
@@ -147,21 +148,21 @@ class MultiQuasarSpherePlotter():
             if len(criteria)>0:
                 s+=")"
             s+='\n'
-        print s[:-1]
+        print(s[:-1])
             
     #tests each condition, each condition is a safety check
     def pass_safety_check(self, q,require_metadata = False):
         minlength = 10
         minions = []
         if q.length_reached < minlength:
-            print "Length for %s at redshift %s is not valid." %(q.name, str(q.rounded_redshift))
+            print("Length for %s at redshift %s is not valid." %(q.name, str(q.rounded_redshift)))
             return False
         elif not all(x in q.ions for x in minions):
-            print "Not all necessary ions present in %s at redshift %s."%(q.name, str(q.rounded_redshift))
+            print("Not all necessary ions present in %s at redshift %s."%(q.name, str(q.rounded_redshift)))
             return False
         if require_metadata:
             if q.final_a0 is None:
-                print "metadata for %s at redshift %s is not valid." %(q.name,str(q.rounded_redshift))
+                print("metadata for %s at redshift %s is not valid." %(q.name,str(q.rounded_redshift)))
                 return False
         return True
         
@@ -177,13 +178,13 @@ class MultiQuasarSpherePlotter():
             #"Cannot constrain further"
             return
         elif constrainCriteria not in self.currentQuasarArray[0].__dict__.keys():
-            print ("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
+            print("Constrain criteria " + constrainCriteria + " does not exist. Please re-enter a valid criteria.")
             raise Exception
         elif isinstance(atEnd,float):
             oldQuasarArray=np.copy(self.currentQuasarArray)
             self.constrain_current_Quasar_Array("final_a0",bins=[atEnd-.1,np.inf],changeArrayName=False)
             if len(self.currentQuasarArray) == 0:
-                print "No galaxies get to that high of a0"
+                print("No galaxies get to that high of a0")
             return oldQuasarArray
         
     def prepare_to_sort(self, criteria, bins,atEnd,**kwargs):
@@ -213,7 +214,7 @@ class MultiQuasarSpherePlotter():
                 empty = False
         if onlyNonempty:
             labels, bins, quasarBins = np.array(nonemptyLabelArray),bins, np.array(nonemptyArray)
-            print "All bins are empty." if empty else ""
+            print("All bins are empty." if empty else "")
         if reverse:
             labels = reversearray(labels)
             bins = reversearray(bins)
@@ -248,7 +249,7 @@ class MultiQuasarSpherePlotter():
     def get_bin_values(self,constrainCriteria,bins,exclude=False,**kwargs):
         if isinstance(bins, list):                
             if len(bins) != 2 and constrainCriteria not in stringcriteria:
-                print ("Length of bins must be 2: [lower,upper]")
+                print("Length of bins must be 2: [lower,upper]")
                 raise Exception
         elif isinstance(bins,str) and constrainCriteria in stringcriteria:
             bins = [bins]
@@ -277,7 +278,7 @@ class MultiQuasarSpherePlotter():
             labels = np.array([labels[take]])
             bins = np.array([bins[take],bins[take+1]])
             temp = np.array([temp[take]])
-        self.currentQuasarArray = np.unique(np.concatenate(temp))
+        self.currentQuasarArray = np.concatenate(temp)
         if set_main_array:
             self.quasarArray = np.copy(self.currentQuasarArray)
     
@@ -376,11 +377,6 @@ class MultiQuasarSpherePlotter():
             s = s.replace("_temp_minus_char_","e-")
             s = s.replace("_temp_plus_char_","e+")
             return filter(None,s.split("_splitchar_"))
-        def bylength(word1,word2):
-            return len(word2)-len(word1)
-        def sortlist(a):
-            a.sort(cmp=bylength)
-            return a
         strings_to_find = split_by_ops(stringVar)
         new_str_to_eval = stringVar
         strings_to_replace_with = {}
@@ -392,7 +388,7 @@ class MultiQuasarSpherePlotter():
                 except:
                     string_to_replace_with = "gq.info[:,%d]"%gq.get_ion_column_num(s)
                 strings_to_replace_with[s] = string_to_replace_with
-        for s in sortlist(strings_to_replace_with.keys()):
+        for s in sorted(strings_to_replace_with.keys(),key=len):
             new_str_to_eval = new_str_to_eval.replace(s,strings_to_replace_with[s])
         to_return = eval(new_str_to_eval)
         return to_return
@@ -408,7 +404,7 @@ class MultiQuasarSpherePlotter():
             elif xVar in param_xVars:
                 x,y = self.get_xy_type2(xVar,yVar,quasarArray,rlims)
             else:
-                print "Not type 2!"
+                print("Not type 2!")
             xs[i] = x[0]
             ys[i] = y[0]
         return xs,ys
@@ -857,7 +853,7 @@ class MultiQuasarSpherePlotter():
             if show:
                 plt.show()
         else:
-            print "No values detected!"
+            print("No values detected!")
 
     def definecolorbar(self, bar_type = 'HotCustom',**kwargs):
         from matplotlib.colors import LinearSegmentedColormap
@@ -988,7 +984,7 @@ class MultiQuasarSpherePlotter():
     #    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
     #             reset = False, labels = None,extra_title = "",rlims = None,\
     #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
-    def plot_hist(self,ion,xVar,ax=None,fig=None,show=False,**kwargs):
+    def plot_hist(self,ion,xVar='rdivR',ax=None,fig=None,show=False,**kwargs):
         if isinstance(ion,tuple):
             ion_name = ion[1]
             ion = ion[0]
@@ -1013,7 +1009,7 @@ class MultiQuasarSpherePlotter():
             if show:
                 plt.show()
         else:
-            print "No values detected!"
+            print("No values detected!")
             
     def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_y = [0,np.inf], \
                    atEnd_x = False, atEnd_y = False, splitEven_x = 0, splitEven_y = 0, \
@@ -1106,7 +1102,7 @@ class MultiQuasarSpherePlotter():
 
                 #except Exception as e:
                 else:
-                    print e
+                    print(e)
         if not save_fig == False:
             fname = self.save_fig_filename(save_fig, yVar, **kwargs)
             plt.savefig(fname,dpi=dpi)
@@ -1135,10 +1131,10 @@ class MultiSphereSorter(object):
             sortfn = self.sort_by_default
         while self.exploration_mode:
             fakeBins = sortfn(criteria, bins, atEnd = atEnd)
-            print "Bins will be categorized in the following structure: \n"
+            print("Bins will be categorized in the following structure: \n")
             for index in range(len(fakeBins)):
                 oneBin = fakeBins[index]
-                print (labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(self.array)) + "\n")
+                print(labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(self.array)) + "\n")
             response = raw_input("Continue? ([Y]/N) or enter new 'bin' parameter.\n")
             if response.lower() == "n":
                 return None, None, None
@@ -1157,7 +1153,7 @@ class MultiSphereSorter(object):
                             bins = [bins]
                         break
                     except Exception as e:
-                        print e
+                        print(e)
                         response = raw_input("Could not evaluate %s. Please re-enter.\n"%response)       
             labels = self.make_labels(criteria, bins, atEnd = atEnd)
         return labels, bins, sortfn(criteria, bins, atEnd = atEnd)

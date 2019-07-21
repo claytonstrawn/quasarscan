@@ -3,14 +3,16 @@
 import numpy as np
 import os
 import datetime
-try:
+from functools import reduce
+
+if 1:
     from quasarscan import parse_metadata
     from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
     #from quasarscan.observational_quasar_sphere import Observation
     level = 0
-except:
+else:
     import parse_metadata
     import ion_lists
     import gasbinning
@@ -212,7 +214,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
 
     def get_criteria_at_a(self, a0, criteria):
         if self.final_a0 < a0:
-            print "Inputted a value that exceeds the greatest 'a' value in %s" %(self.simname)
+            print("Inputted a value that exceeds the greatest 'a' value in %s" %(self.simname))
         if criteria == "ssfr":
             sfr = parse_metadata.get_value("SFR",self.name,a0=a0)
             star_Rvir = parse_metadata.get_value("star_Rvir",self.name,a0=a0)
@@ -232,7 +234,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
 
     def save_values(self,dest = None,at_level = 1,test = False):
         if len(self.info[0]) <= 11:
-            print "No ions!"
+            print("No ions!")
         linesfinished = self.length_reached
         numlines = self.length
         redshift = self.rounded_redshift
@@ -253,7 +255,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
             specificfilename = "%s_of_%s-"%(str(linesfinished),str(numlines)) +ionsstr+"_z"+str(redshift)[:4]+".txt"
             filename = foldername+"/"+specificfilename
             if test:
-                print filename
+                print(filename)
                 return
             prev = os.listdir(foldername)
             for item in prev:
@@ -283,7 +285,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
             f.write(str(vector).replace("\n",""))
             f.write("\n")
         f.close()
-        print "saved file %s"%filename
+        print("saved file %s"%filename)
         return filename
     
 def read_values(filename):

@@ -65,14 +65,14 @@ def check_validity(tocheck):
     my_saved_directories = os.listdir("/global/cscratch1/sd/cstrawn")
     foldername = tocheck[0].replace("_art","")
     if not foldername in my_saved_directories:
-        print "didn't see folder"
+        print("didn't see folder")
         return False
     my_saved_data = os.listdir("/global/cscratch1/sd/cstrawn/%s"%foldername)
     if not "10MpcBox_csf512_a%s.d"%z2a[str(tocheck[1])] in my_saved_data:
-        print "didn't see file"
+        print("didn't see file")
         return False
     if not get_value('Rvir',tocheck[0],tocheck[1],check_exists = True):
-        print "didn't see metadata"
+        print("didn't see metadata")
         return False
     return True
     
@@ -101,7 +101,7 @@ def write_files(tocheck,cont = 0):
     f = open("quasarscan/nextfile.sh")
     currentfirstline = f.readline()
     currentsecondline = f.readline()
-    print (secondline == currentsecondline.strip()),secondline,currentsecondline
+    print(secondline == currentsecondline.strip()),secondline,currentsecondline
     if (secondline == currentsecondline.strip()) and final and cont == 0 and not test:
         print("I already tried that, I guess it didn't work :(")
         add_to_blacklist(tocheck[0],tocheck[1])
@@ -109,8 +109,8 @@ def write_files(tocheck,cont = 0):
         return main_func()
     f.close()
     if test:
-        print firstline
-        print secondline
+        print(firstline)
+        print(secondline)
         return
     f = open("quasarscan/nextfile.sh","w+")
     f.write(firstline+'\n')
@@ -126,18 +126,18 @@ def main_func():
         for file in nerscsimnames:
             for redshift in knownredshifts:
                 tocheck = (file,redshift)
-                print tocheck
+                print(tocheck)
                 isValid = check_in_allfiles(tocheck,alltextfiles,ionlist)
                 if type(isValid) is int and check_validity(tocheck):
                     write_files(tocheck, cont = isValid)
                     return
                 elif type(isValid) is bool and isValid:
-                    print "already done"
+                    print("already done")
                     continue
                 if check_validity(tocheck):
                     write_files(tocheck)
                     return
-                print "can't do it"
+                print("can't do it")
         if i<len(ionlists)-1:
             print("Moving on to larger ion list")
     print("Finished, all available files satisfy strictest criteria!")

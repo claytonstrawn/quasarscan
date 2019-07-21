@@ -24,7 +24,7 @@ class GasBin(object):
             if self.field == other.field and self.binvalstr == other.binvalstr\
              and self.binnames == other.binnames and self.units == other.units:
                 return True
-            print "using two different definitions of %s!"%self.name
+            print("using two different definitions of %s!"%self.name)
             return False
         return False
 
@@ -124,7 +124,7 @@ class GasBinsHolder(object):
             if gb.name == var_name:
                 i = gb.binnames.index(bin_name)
                 return gb.field,(gb.binvals[i],gb.binvals[i+1]),gb.units
-        print "that field does not exist!"
+        print("that field does not exist!")
         assert 0 == 1
 
     def get_field_binedges_for_num(self,num):

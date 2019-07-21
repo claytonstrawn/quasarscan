@@ -2,6 +2,7 @@ import yt
 import trident
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from quasarscan import quasar_sphere
 from quasarscan import parse_metadata
 from quasarscan.quasar_sphere import ion_to_field_name
@@ -65,12 +66,14 @@ def make_full_ionlist(atom):
         mylist.append(atom + ' ' + to_roman(i))
     return mylist
 
-def addions_get_ad(atom,ds,name,CGM = True):
+def addions_get_ad(atom,ds,name,region = 'CGM'):
     ions = make_full_ionlist(atom)
     trident.add_ion_fields(ds,ions)
     Rvir = parse_metadata.get_value('Rvir',name,redshift=ds.current_redshift)
-    if CGM:
+    if region == 'CGM':
         ad = ds.sphere("c", (Rvir, "kpc"))-ds.sphere("c", (.1*Rvir, "kpc"))
+    elif region == 'galaxy':
+        ad = ds.sphere("c", (.1*Rvir, "kpc"))
     else:
         ad = ds.all_data()
     return ad,ions
@@ -87,16 +90,16 @@ def get_original_lists(ad,ions):
     length = len(ad[('gas',quasar_sphere.ion_to_field_name(ions[0],"mass"))])
     myionmasses_old = np.zeros((len(ions),length))
     for i,ion in enumerate(ions):
-        print "working on ion %s..."%(ion,)
+        print("working on ion %s..."%(ion,))
         myionmasses_old[i,:] = ad[('gas',ion_to_field_name(ion,"mass"))]
-        print np.sum(myionmasses_old[i])
+        print(np.sum(myionmasses_old[i]))
 
     intensives = {0:('gas','mass'),1:('gas','temperature'),2:('gas','density')}
     myintensives_old = np.zeros((3,length))
     for i in [0,1,2]:
-        print "working on value %s..."%(intensives[i],)
+        print("working on value %s..."%(intensives[i],))
         myintensives_old[i,:] = ad[intensives[i]]
-        print np.sum(ad[intensives[i]])
+        print(np.sum(ad[intensives[i]]))
     return myionmasses_old,myintensives_old
 
 def split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses_old,ions):
@@ -112,14 +115,14 @@ def split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses
     newlen =len(myionmasses_old[0][mask])
     myionmasses = np.zeros((len(ions),newlen))
     myintensives = np.zeros((len(ions),newlen))
-    for i in range(9):
+    for i in range(len(ions)):
         myionmasses[i] = myionmasses_old[i][mask]
     for i in range(3):
         myintensives[i] = myintensives_old[i][mask]
     return myionmasses,myintensives,t_bins,rho_bins
 
 def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,savefigname = None,cbar = "jet",specialion = 5,
-                     colorwith = ['edge','line','dot'],dsname = None,ds=None,show=True,makeoverall=True):
+                     colorwith = ['edge','line','dot'],dsname = None,ds=None,show=True,makeoverall=True,useEnergies = False):
 
     max_val = 1e-10
     min_val = 1e10
@@ -127,7 +130,6 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
     ion_mass_in_each_state = np.sum(myionmasses,axis=1)
     all_O_mass = np.sum(ion_mass_in_each_state)
     total_gas_mass = np.sum(myintensives[0])
-
     for i,t in enumerate(t_bins[:-1]):
         t_high = t
         t_low = t_bins[i+1]
@@ -153,7 +155,6 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
                 myarray = myarray[myarray>1e-8]
             max_val = np.max(np.append(myarray,max_val))
             min_val = np.min(np.append(myarray,min_val))
-    print min_val,max_val
     if log:
         min_val = -5#np.log10(min_val)
         max_val = np.log10(max_val)
@@ -174,10 +175,21 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
 
     #plt.colorbar(CS3) # using the colorbar info I got from contourf
     if makeoverall:
-        plt.plot(np.arange(1,len(ions)+1),np.log10(ion_mass_in_each_state/all_O_mass),'k')
+        if useEnergies and ions[0] == "O I":
+            xValues = np.array([0.,13.61806,48.73536,103.67086,181.08439,294.98339,433.10309,1172.39309,2043.80319])
+        elif useEnergies and ions[0] == "Ne I":
+            xValues = np.array([0.,21.5646,62.52788,125.97788,223.09788,349.30788,507.23788,714.51378,953.6126,2149.44128,3511.64078])
+        elif useEnergies and ions[0] == 'C I':
+            xValues = np.array([0.,11.2603,35.64362,83.53142,148.02532,540.11232,1030.10566])
+        else: 
+            xValues = np.arange(1,len(ions)+1)
+        plt.plot(xValues,np.log10(ion_mass_in_each_state/all_O_mass),'k')
         if specialion:
-            plt.plot([specialion+1],[np.log10(ion_mass_in_each_state[specialion]/all_O_mass)],'ok')
-        plt.xlabel("ionization state")
+            plt.plot(xValues[specialion],[np.log10(ion_mass_in_each_state[specialion]/all_O_mass)],'ok')
+        if useEnergies and ions[0] == "O I":
+            plt.xlabel("ionization energy")
+        else: 
+            plt.xlabel("ionization state")
         plt.ylabel("log fraction in state")
         if dsname and ds:
             Mstar = parse_metadata.get_value('star_Rvir',dsname,redshift=ds.current_redshift)
@@ -192,7 +204,7 @@ def get_overall_plot(myionmasses,myintensives,t_bins,rho_bins,ions,log = True,sa
 
 def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min,\
                   ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap,ions,\
-                  dsname=None,ds=None,log = True,savefigname = None,specialion=5,colorwith = ['edge','line','dot'],show=True):
+                  dsname=None,ds=None,log = True,savefigname = None,specialion=5,colorwith = ['edge','line','dot'],show=True,useEnergies = False):
     import matplotlib.pylab as pl
     fig = plt.figure(1,figsize=(15,11))
     if dsname:
@@ -203,6 +215,14 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
     fig.colorbar(CS3, cax=cbar_ax)
     size_t = len(t_bins)-1
     size_rho = len(rho_bins)-1
+    if useEnergies and ions[0] == "O I":
+        xValues = np.array([0.,13.61806,48.73536,103.67086,181.08439,294.98339,433.10309,1172.39309,2043.80319])
+    elif useEnergies and ions[0] == "Ne I":
+        xValues = np.array([0.,21.5646,62.52788,125.97788,223.09788,349.30788,507.23788,714.51378,953.6126,2149.44128,3511.64078])
+    elif useEnergies and ions[0] == 'C I':
+        xValues = np.array([0.,11.2603,35.64362,83.53142,148.02532,540.11232,1030.10566])
+    else: 
+        xValues = np.arange(1,len(ions)+1)
     for i,t in enumerate(t_bins[:-1]):
         t_high = t
         t_low = t_bins[i+1]
@@ -245,7 +265,8 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
             else:
                 line_color = mymap(convert_to_cbar_scale(line_number,min_val,max_minus_min,log=log))
                 line_width = 2
-            ax.plot(np.arange(1,len(ions)+1), np.log10(ion_mass_in_current_bin/all_O_mass_in_current_bin), color=line_color, linewidth=line_width)
+            ax.plot(xValues, np.log10(ion_mass_in_current_bin/all_O_mass_in_current_bin), color=line_color, linewidth=line_width)
+            ax.plot(xValues, np.log10(ion_mass_in_current_bin/all_O_mass_in_current_bin), 'o',mec = 'k',mfc='k',ms=3.)
 
             if specialion is not None:
                 dot_number = ion_mass_in_current_bin[specialion]/ion_mass_in_each_state[specialion]
@@ -255,8 +276,8 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
                 else:
                     dot_color = mymap(convert_to_cbar_scale(dot_number,min_val,max_minus_min,log=log))
                     dot_size = 7.
-                ax.plot([specialion+1],[np.log10(ion_mass_in_current_bin[specialion]/all_O_mass_in_current_bin)],'o',mec = 'k',mfc=dot_color,ms=dot_size)
-                ax.set_ylim(-5,0)
+                ax.plot(xValues[specialion],[np.log10(ion_mass_in_current_bin[specialion]/all_O_mass_in_current_bin)],'o',mec = 'k',mfc=dot_color,ms=dot_size)
+                #ax.set_ylim(-5,0)
             
             if len(t_bins)>9:
                 ax.tick_params(axis='x',          
@@ -287,20 +308,20 @@ def get_phaseplot(myionmasses,myintensives,t_bins,rho_bins,min_val,max_minus_min
     else:
         plt.clf()
 
-def make_ionmasses_and_intensives(name,path,atom = 'O',CGM=True):
+def make_ionmasses_and_intensives(name,path,atom = 'O',region = 'CGM'):
     ds = loadfile(name,path)
-    ad,ions = addions_get_ad(atom,ds,name,CGM)
+    ad,ions = addions_get_ad(atom,ds,name,region)
     myionmasses_old,myintensives_old = get_original_lists(ad,ions)
     return myionmasses_old,myintensives_old,ds,ions
     
 def script(name,path,low_T,high_T,low_rho,high_rho,n,atom = 'O',saveoverallname=None,savephaseplotname=None,\
-           CGM=True,myionmasses_old=None,myintensives_old=None,ds = None,log=True,cbar='jet',specialion=5,colorwith = ['edge','line','dot'],\
-          show=True, makeoverall=True):
+           region = 'CGM',myionmasses_old=None,myintensives_old=None,ds = None,log=True,cbar='jet',specialion=5,colorwith = ['edge','line','dot'],\
+          show=True, makeoverall=True,useEnergies=False):
     if myionmasses_old is None and myintensives_old is None and ds is None:
-        myionmasses_old,myintensives_old,ds,ions = make_ionmasses_and_intensives(name,path,atom,CGM)
+        myionmasses_old,myintensives_old,ds,ions = make_ionmasses_and_intensives(name,path,atom=atom,region = region)
     else:
         ions = make_full_ionlist(atom)
-    try:
+    if 1:
         myionmasses,myintensives,t_bins,rho_bins = split_into_bins(low_T,high_T,low_rho,high_rho,n,myintensives_old,myionmasses_old,ions)
         min_val,max_minus_min,ion_mass_in_each_state,all_O_mass,total_gas_mass,CS3,mymap = get_overall_plot(myionmasses,\
                                                                                                             myintensives,\
@@ -315,7 +336,8 @@ def script(name,path,low_T,high_T,low_rho,high_rho,n,atom = 'O',saveoverallname=
                                                                                                             dsname=name,\
                                                                                                             ds=ds,\
                                                                                                             show=show,\
-                                                                                                            makeoverall=makeoverall)
+                                                                                                            makeoverall=makeoverall,\
+                                                                                                            useEnergies = useEnergies)
         get_phaseplot(myionmasses,\
                       myintensives,\
                       t_bins,\
@@ -334,7 +356,8 @@ def script(name,path,low_T,high_T,low_rho,high_rho,n,atom = 'O',saveoverallname=
                       savephaseplotname,\
                       specialion=specialion,\
                       colorwith=colorwith,\
-                      show=show)
-    except:
+                      show=show,\
+                      useEnergies = useEnergies)
+    else:
         pass
     return myionmasses_old,myintensives_old,ds

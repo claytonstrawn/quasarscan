@@ -100,7 +100,7 @@ import numpy as np
 
 myrange = range(16,1025,16)
 mytable = np.zeros((3,len(myrange)))
-print "will open %d files"%len(myrange)
+print("will open %d files"%len(myrange))
 for i in myrange:
     mytable[0,i//16] = i
     str_num = str(i).zfill(5)
