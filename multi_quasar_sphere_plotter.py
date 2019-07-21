@@ -4,13 +4,13 @@ import sys
 import matplotlib.pyplot as plt
 import datetime
 from functools import reduce
-if 1:
+try:
     from quasarscan import quasar_sphere
     from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
     level = 0
-else:
+except:
     import quasar_sphere
     import ion_lists
     import gasbinning
