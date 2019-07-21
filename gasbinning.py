@@ -46,7 +46,7 @@ density_bin = GasBin("density",["low","between6_4","between4_2","between2_0","se
 temperature_bin = GasBin("temperature",["cold","cool","warm_hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"],units = "K")
 radial_velocity_bin = GasBin("radial_velocity",["inflow",'inflow_slow',"tangential",'outflow_slow',"outflow"],['-np.inf','-500','-10','10','500','np.inf'],units = "km/s")
 resolution_bin = GasBin("resolution",["high","between1_5","between5_15","low"],['0.00e+00', '1e9', '1.250e+11','3.375e+12', 'np.inf'],field = ('gas','cell_volume'),units = "pc**3")# (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
-OVIpi_bin = GasBin('ionization_mechanism',['PI'],('gas','OVI_PI_dominated'),['0.9','1.1'])
+#OVIpi_bin = GasBin('ionization_mechanism',['PI'],('gas','OVI_PI_dominated'),['0.9','1.1'])
 #todo: I have to think about this one a little more
 possible_bin_types = ["density","temperature","radial_velocity","resolution"]
 
