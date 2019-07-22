@@ -111,7 +111,7 @@ class MultiQuasarSpherePlotter():
                 if safetycheck and self.pass_safety_check(q):
                     self.quasarArray.append(q)
                 elif cleanup:
-                    todo = raw_input("file %s did not pass safety check. Remove it? (y/n)"%textfile).lower()
+                    todo = input("file %s did not pass safety check. Remove it? (y/n)"%textfile).lower()
                     os.remove(textfile) if todo == 'y' else None
             except Exception as e:
                 print(textfile + " could not load because:")
@@ -238,7 +238,7 @@ class MultiQuasarSpherePlotter():
     
     def constrain_via_gasbins(self,gasbintype=None):
         if gasbintype == None:
-            gasbintype = raw_input("Available bins are: %s"%gasbinning.possible_bin_types)
+            gasbintype = input("Available bins are: %s"%gasbinning.possible_bin_types)
         g = gasbinning.GasBinsHolder(bins=[gasbintype])
         toReturn = []
         for q in self.currentQuasarArray:
@@ -1135,7 +1135,7 @@ class MultiSphereSorter(object):
             for index in range(len(fakeBins)):
                 oneBin = fakeBins[index]
                 print(labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(self.array)) + "\n")
-            response = raw_input("Continue? ([Y]/N) or enter new 'bin' parameter.\n")
+            response = input("Continue? ([Y]/N) or enter new 'bin' parameter.\n")
             if response.lower() == "n":
                 return None, None, None
             elif response.lower() == "y" or response == "":
@@ -1154,7 +1154,7 @@ class MultiSphereSorter(object):
                         break
                     except Exception as e:
                         print(e)
-                        response = raw_input("Could not evaluate %s. Please re-enter.\n"%response)       
+                        response = input("Could not evaluate %s. Please re-enter.\n"%response)       
             labels = self.make_labels(criteria, bins, atEnd = atEnd)
         return labels, bins, sortfn(criteria, bins, atEnd = atEnd)
 
