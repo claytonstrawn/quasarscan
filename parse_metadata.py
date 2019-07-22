@@ -1,9 +1,9 @@
-if 1:
+try:
     from quasarscan import parse_vela_metadata
     from quasarscan import parse_nihao_metadata
     from quasarscan import parse_agora_metadata
     level = 0
-else: 
+except: 
     import parse_vela_metadata
     import parse_nihao_metadata
     import parse_agora_metadata

@@ -5,17 +5,19 @@ import os
 import datetime
 from functools import reduce
 
-if 1:
+try:
     from quasarscan import parse_metadata
     from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
+    #from quasarscan.observational_quasar_sphere import Observation
     level = 0
-else:
+except:
     import parse_metadata
     import ion_lists
     import gasbinning
     import roman
+    #from observational_quasar_sphere import Observation
     level = 1
  
 
@@ -44,6 +46,10 @@ class GeneralizedQuasarSphere(object):
         
         for i in range(self.number):
             q = list_of_quasar_spheres[i]
+            if i == 0:
+                self.type = q.type
+            else:
+                assert self.type == q.type, "quasar_sphere types must be the same."
             ions_lists.append(q.ions) 
             sum_of_lengths += q.length
             self.gasbins.combine_holders(q.gasbins)
@@ -63,6 +69,7 @@ class GeneralizedQuasarSphere(object):
             for ion in self.get_ion_list_w_bins():
                 pos_in_q = q.get_ion_column_num(ion)
                 pos_in_self = self.get_ion_column_num(ion)
+                self.debug = q.info
                 self.info[currentpos:currentpos+size,pos_in_self] = q.info[:size,pos_in_q]
                 convert = 1.0
                 if distance == "Rvir":
@@ -86,6 +93,8 @@ class GeneralizedQuasarSphere(object):
             plus = 0
         elif bintype == "fraction":
             plus = 1
+        elif bintype == "eb":
+            plus = 1
         else:
             plus = self.gasbins.get_all_keys().index(bintype)+2
         if ion in intensivesdict.keys():
@@ -96,10 +105,14 @@ class GeneralizedQuasarSphere(object):
             print("Ion %s not found in this Sphere. Please try restricting to ions = ['%s']."%(ion,ion))
 
     def get_ion_list_w_bins(self):
+        
         toreturn = []
         for ion in self.ions:
             toreturn.append("%s:cdens"%ion)
-            toreturn.append("%s:fraction"%ion)
+            if self.type == "Simulation":
+                toreturn.append("%s:fraction"%ion)
+            if self.type == "Observation":
+                toreturn.append("%s:eb"%ion)
             for key in self.gasbins.get_all_keys():
                 toreturn.append("%s:%s"%(ion,key))
         return toreturn
@@ -108,6 +121,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
     def __init__(self,ions=None,data = None,\
                  simparams = None,scanparams = None,gasbins = None,readvalsoutput = None):
         self.number = 1
+        self.type = "Simulation"
         if readvalsoutput:
             simparams  = readvalsoutput[0]
             scanparams = readvalsoutput[1]
