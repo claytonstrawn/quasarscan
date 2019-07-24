@@ -32,6 +32,23 @@ def ion_to_field_name(ion,field_type = "number_density"):
     ionization = roman.from_roman(ion.split(" ")[1])-1
     return "%s_p%s_%s"%(atom,ionization,field_type)
 
+def round_redshift(redshift):
+    if abs(redshift - 0.0) <= .05: return 0.00
+    elif abs(redshift - 0.25) <= .05: return 0.25
+    elif abs(redshift - 0.5) <= .05: return 0.50
+    elif abs(redshift - 1) <= .05: return 1.00
+    elif abs(redshift - 1.5) <= .1: return 1.50
+    elif abs(redshift - 2) <= .1: return 2.00
+    elif abs(redshift - 2.5) <= .1: return 2.50
+    elif abs(redshift - 3) <= .1: return 3.00
+    elif abs(redshift - 4) <= .1: return 4.00
+    elif abs(redshift - 5) <= .5: return 5.00
+    elif abs(redshift - 6) <= .5: return 6.00
+    elif abs(redshift - 8) <= 1: return 8.00
+    elif abs(redshift - 10) <= 2: return 10.00
+    elif abs(redshift - 15) <= 2: return 15.00
+    elif abs(redshift - 20) <= 4: return 20.00
+    else: return float(str(redshift)[:3])
 
 class GeneralizedQuasarSphere(object):
     def __init__(self, list_of_quasar_spheres, distance = "kpc"):
@@ -79,8 +96,7 @@ class GeneralizedQuasarSphere(object):
             self.info[currentpos:currentpos+size,-3] = q.info[:size,-3] 
             self.info[currentpos:currentpos+size,3]*=convert
             currentpos += size
-            
-        
+                   
     def get_ion_column_num(self,ion):
         intensivesdict = {'Z':-1,'rho':-2,'T':-3}
         if not ":" in ion:
@@ -152,23 +168,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.code     = name_fields[2]
         self.simnum   = name_fields[3]
         self.redshift = self.simparams[1]
-        self.rounded_redshift = self.redshift
-        if abs(self.redshift - 0.0) <= .05: self.rounded_redshift = 0.00
-        elif abs(self.redshift - 0.25) <= .05: self.rounded_redshift = 0.25
-        elif abs(self.redshift - 0.5) <= .05: self.rounded_redshift = 0.50
-        elif abs(self.redshift - 1) <= .05: self.rounded_redshift = 1.00
-        elif abs(self.redshift - 1.5) <= .1: self.rounded_redshift = 1.50
-        elif abs(self.redshift - 2) <= .1: self.rounded_redshift = 2.00
-        elif abs(self.redshift - 2.5) <= .1: self.rounded_redshift = 2.50
-        elif abs(self.redshift - 3) <= .1: self.rounded_redshift = 3.00
-        elif abs(self.redshift - 4) <= .1: self.rounded_redshift = 4.00
-        elif abs(self.redshift - 5) <= .5: self.rounded_redshift = 5.00
-        elif abs(self.redshift - 6) <= .5: self.rounded_redshift = 6.00
-        elif abs(self.redshift - 8) <= 1: self.rounded_redshift = 8.00
-        elif abs(self.redshift - 10) <= 2: self.rounded_redshift = 10.00
-        elif abs(self.redshift - 15) <= 2: self.rounded_redshift = 15.00
-        elif abs(self.redshift - 20) <= 4: self.rounded_redshift = 20.00
-        else: self.rounded_redshift = float(str(self.redshift)[:3])
+        self.rounded_redshift = round_redshift(self.redshift)
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
         self.Rvir = self.simparams[5]
         self.Rvir_is_real = str(parse_metadata.get_value("Rvir",self.name,redshift = self.redshift)==self.Rvir)

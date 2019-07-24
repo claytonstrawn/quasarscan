@@ -6,12 +6,14 @@ import datetime
 from functools import reduce
 try:
     from quasarscan import quasar_sphere
+    from quasarscan import observational_quasar_sphere
     from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
     level = 0
 except:
     import quasar_sphere
+    import observational_quasar_sphere
     import ion_lists
     import gasbinning
     import roman
@@ -43,6 +45,27 @@ def get_all_textfiles(inquasarscan = 1,loadonly = 'all'):
             for fileName in folderDirs:
                 if not fileName.startswith("."):
                     textfiles.append(os.path.join(folderPath,fileName))
+    return textfiles
+
+def get_all_observations(inquasarscan = 1,loadonly = 'all'):
+    path = "observations"
+    if not inquasarscan:
+        path = "quasarscan/observations"
+    textfiles = []
+    def one_is_in_name(name,loadonly):
+        if loadonly == 'all':
+            return True
+        if isinstance(loadonly,str):
+            loadonly = [loadonly]
+        for sim in loadonly:
+            if sim in name:
+                return True
+        return False
+    #gets all folders in output
+    dirs = os.listdir(path)
+    for fileName in dirs:
+        if not fileName.startswith(".") and one_is_in_name(fileName,loadonly):
+            textfiles.append(os.path.join(path,fileName))
     return textfiles
     
 def sort_ions(ions,flat = True):
@@ -97,13 +120,14 @@ param_unit_labels = {"redshift":"z","a0":"a","Mvir":"Virial Mass (Msun)",\
 class MultiQuasarSpherePlotter():
     #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
     #                     all textfiles in output are loaded
-    def __init__(self, loadonly = "all",textfiles = None, cleanup = False,plots = "mean",throwErrors = False,safetycheck = True):
+    def __init__(self, loadonly = "all",loadobs = 'all',textfiles = None, cleanup = False,plots = "mean",throwErrors = False,safetycheck = True):
         self.plots = "mean"
         self.avgfn = np.mean
         self.setPlots(plots)
         self.quasarArray = []
         if textfiles is None:
             textfiles = get_all_textfiles(level,loadonly = loadonly)
+            observations = get_all_observations(level,loadonly = loadobs)
         for textfile in textfiles:
             try:
                 readvalsoutput = quasar_sphere.read_values(textfile)
@@ -118,8 +142,14 @@ class MultiQuasarSpherePlotter():
                 print(e)
                 if throwErrors:
                     raise e
+        self.observationArray = np.array([])
+        for textfile in observations:
+            papername,headers,lines = observational_quasar_sphere.read_textfile(textfile)
+            self.observationArray = np.append(self.observationArray,\
+                      observational_quasar_sphere.create_observational_quasarArray(papername,headers,lines))
+                                
         self.quasarArray = np.array(self.quasarArray)
-        self.observedQuasarArray = np.array(self.quasarArray)
+        self.currentObservationArray = np.copy(self.observationArray)
         self.currentQuasarArray = np.copy(self.quasarArray)
         self.currentQuasarArrayName = ''
         
@@ -167,10 +197,8 @@ class MultiQuasarSpherePlotter():
         return True
         
     def reset_current_Quasar_Array(self):
-        self.currentQuasarArray = []
-        for q in self.quasarArray:
-            self.currentQuasarArray.append(q)
-        self.currentQuasarArray = np.array(self.currentQuasarArray)
+        self.currentQuasarArray = np.copy(self.quasarArray)
+        self.currentObservationArray = np.copy(self.observationArray)
         self.currentQuasarArrayName = ''
         
     def check_criteria_works(self,constrainCriteria,atEnd = False,**kwargs):
@@ -229,12 +257,16 @@ class MultiQuasarSpherePlotter():
         atEnd = False,splitEven = 0,**kwargs):
         bins,oldQuasarArray = self.prepare_to_sort(criteria,bins,atEnd,**kwargs)
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
+        obs_sorter = MultiSphereSorter(self.currentObservationArray,exploration_mode = False)
         if splitEven:
             labels, bins, quasarBins = sorter.splitEven(criteria,splitEven,atEnd = atEnd)
         else:
             labels, bins, quasarBins = sorter.sort(criteria,bins,atEnd = atEnd)
+
+        _, _, obsBins = obs_sorter.sort(criteria,bins,atEnd = atEnd)
         labels,bins,quasarBins = self.postprocess_sorted(labels,bins,quasarBins,**kwargs)
-        return labels,bins, quasarBins
+        _,_,obsBins = self.postprocess_sorted(labels,bins,obsBins,**kwargs)
+        return labels,bins, quasarBins, obsBins
     
     def constrain_via_gasbins(self,gasbintype=None):
         if gasbintype == None:
@@ -262,12 +294,14 @@ class MultiQuasarSpherePlotter():
             bins = list(possible_bins.difference(set(bins)))
         return bins
     
-    def constrain_array_helper(self,sorter,constrainCriteria,bins,splitEven=False,atEnd=False,\
-                               set_main_array=False,**kwargs):
+    def constrain_array_helper(self,sorter,obs_sorter,constrainCriteria,bins,splitEven=False,atEnd=False,\
+                               set_main_array=False,sortobs='default',**kwargs):
         if not splitEven:
             labels, bins, temp = sorter.sort(constrainCriteria,bins,atEnd=atEnd)
+            _,_,obs_temp = obs_sorter.sort(constrainCriteria,bins)
         else:
             labels,bins,temp = sorter.splitEven(constrainCriteria,2,atEnd=atEnd)
+            _,_,obs_temp = obs_sorter.sort(constrainCriteria,bins)
             if splitEven == "high":
                 take = 1
             elif splitEven == "low":
@@ -278,9 +312,13 @@ class MultiQuasarSpherePlotter():
             labels = np.array([labels[take]])
             bins = np.array([bins[take],bins[take+1]])
             temp = np.array([temp[take]])
+            obs_temp = np.array([obs_temp[take]])
         self.currentQuasarArray = np.concatenate(temp)
+        if sortobs == True or (sortobs == 'default' and (constrainCriteria not in stringcriteria or constrainCriteria == 'ions')):
+            self.currentObservationArray = np.concatenate(obs_temp)
         if set_main_array:
             self.quasarArray = np.copy(self.currentQuasarArray)
+        return bins
     
     def change_array_name(self,constrainCriteria,bins,changeArrayName=True,exclude=False,**kwargs):
          if changeArrayName:
@@ -313,7 +351,8 @@ class MultiQuasarSpherePlotter():
         self.check_criteria_works(constrainCriteria,**kwargs)
         bins = self.get_bin_values(constrainCriteria,bins,**kwargs)
         sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
-        self.constrain_array_helper(sorter,constrainCriteria,bins,**kwargs)
+        obs_sorter = MultiSphereSorter(self.currentObservationArray,exploration_mode = False)
+        bins = self.constrain_array_helper(sorter,obs_sorter,constrainCriteria,bins,**kwargs)
         self.change_array_name(constrainCriteria,bins,**kwargs)
         return bins
 
@@ -803,8 +842,10 @@ class MultiQuasarSpherePlotter():
 
     def plot_on_ax(self,ax,plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,title,labels=None,
                    average='default',dots=False,grid=False,linestyle='',
-                   fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',**kwargs):
+                   fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
+                   **kwargs):
         coloration = coloration or [None]*len(xs)
+        future_colors = []
         if xerrs is None:
             xerrs=[None]*len(xs)
         if yerrs is None:
@@ -814,19 +855,23 @@ class MultiQuasarSpherePlotter():
                 fmt=fmt or 'o'
                 if markersize=='default':
                     markersize=6
-                ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],color=coloration[i],markersize=markersize)
+                color_store = ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],
+                                      color=coloration[i],markersize=markersize)
+                future_colors.append(color_store[0].get_color())
         elif average == 'scatter':
             if markersize=='default':
                 markersize=6
             for i in range(len(xs)):
-                ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=2)
+                color_store = ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=2)
+                future_colors.append(color_store[0].get_color())
         else:
             fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',"stddev":'.',"median":"."}
             if not fmt:
                 fmt = fmtdict[self.plots]
             for i in range(len(xs)):
-                ax.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],ls=linestyle,\
+                color_store = ax.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],ls=linestyle,\
                              color = coloration[i],fmt = fmt,capsize = 3)
+                future_colors.append(color_store[0].get_color())
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
@@ -837,8 +882,90 @@ class MultiQuasarSpherePlotter():
         if grid:
             ax.grid()
         ax.legend()
+        return future_colors
 
-    def plot_err(self,ion,xVar='rdivR',ax=None,show=False,**kwargs):
+    def get_observational_data(self,include_observations,plot_type,ion,xVar,logy=True,logx=False,
+                               rlims = None,lq=None,observationArray=None,**kwargs):
+        if include_observations is None:
+            return None
+        if lq is not None:
+            labels = lq[0]
+            observationArray = lq[3]
+        if observationArray is None:
+            observationArray = [self.currentObservationArray]
+        if rlims is None:
+            rlims = np.array([0.1,np.inf])
+        elif rlims == "all":
+            rlims = [0.0,np.inf]
+        if xVar == 'rdivR':
+            pass
+            #self.constrain_current_Quasar_Array("Rvir_is_real",bins=['True'],changeArrayName=False)
+        xerr_arys = None
+        if plot_type==0:
+            xarys,yarys = self.get_xy_type0(xVar,ion,rlims)
+            _,yerr_arys = self.get_xy_type0(xVar,ion+':eb',rlims)
+        elif plot_type==1:
+            xarys,yarys = self.get_xy_type1(xVar,ion,observationArray,rlims)
+            _,yerr_arys = self.get_xy_type1(xVar,ion+':eb',observationArray,rlims)
+        elif plot_type==2:
+            xarys,yarys = self.get_xy_type2(xVar,ion,observationArray,rlims)
+            _,yerr_arys = self.get_xy_type2(xVar,ion+':eb',observationArray,rlims)
+        elif plot_type==3:
+            xarys,yarys = self.get_xy_type3(xVar,ion,observationArray)
+            _,yerr_arys = self.get_xy_type3(xVar,ion+':eb',observationArray,rlims)
+        elif plot_type==4:
+            #disabled for now
+            assert 0
+            xarys,yarys = self.get_xy_type4(xVar,ion,observationArray,rlims)
+            xerr_arys,yerr_arys = self.get_xy_type4(xVar+':eb',ion+':eb',observationArray,rlims)
+        xarys_detections = np.copy(xarys)
+        yarys_detections = np.copy(xarys)
+        yerr_arys_detections = np.copy(xarys)
+        xarys_nondetections = np.copy(xarys)
+        yarys_nondetections = np.copy(xarys)
+        for i in range(len(xarys)):
+            if logy:
+                yarys[i] = np.log10(yarys[i])
+                yerr_arys[i] = np.log10(yerr_arys[i])
+            if logx:
+                xarys[i] = np.log10(xarys[i])
+            xarys_detections[i] = xarys[i][~np.isnan(yerr_arys[i])]
+            yarys_detections[i] = yarys[i][~np.isnan(yerr_arys[i])]
+            yerr_arys_detections[i] = yerr_arys[i][~np.isnan(yerr_arys[i])]
+            xarys_nondetections[i] = xarys[i][np.isnan(yerr_arys[i])]
+            yarys_nondetections[i] = yarys[i][np.isnan(yerr_arys[i])]
+        return xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections,yarys_nondetections
+    
+    def plot_observational_data(self,ax,plot_type,include_observations,obs_data,xlabel,ylabel,title,labels=None,
+               grid=False,linestyle='',obs_coloration=None,
+               fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
+               **kwargs):
+        xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections,yarys_nondetections = obs_data
+        coloration = coloration or obs_coloration
+        if include_observations == 'only':
+            ax.cla()
+        detections = ax.errorbar([],[],
+                                     xerr=None,yerr=None,label='observations',ls=linestyle,
+                                     color = 'k',fmt = 's',capsize = 3)
+        for i in range(len(xarys_detections)):
+            color_store = ax.errorbar(xarys_detections[i],yarys_detections[i],
+                                     xerr=None,yerr=yerr_arys_detections[i],ls=linestyle,
+                                     color = coloration[i],fmt = 's',capsize = 3)
+            nondetectioncolor = color_store[0].get_color()
+            ax.errorbar(xarys_nondetections[i],yarys_nondetections[i],xerr=None,yerr=.15,uplims=True,ls=linestyle,\
+                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        if xlims != 'default':
+            ax.set_xlim(xlims)        
+        if ylims != 'default':
+            ax.set_ylim(ylims)
+        if grid:
+            ax.grid()
+        ax.legend()
+        
+    def plot_err(self,ion,xVar='rdivR',ax=None,show=False,include_observations = None,**kwargs):
         if not ax:
             print("Current constraints (name): "+self.currentQuasarArrayName)
             ax = plt.subplots(1)[1]
@@ -849,7 +976,10 @@ class MultiQuasarSpherePlotter():
         xs,ys,xerrs,yerrs,empty = self.process_datapoints(plot_type,ion,xVar,xarys,yarys,**kwargs)
         xlabel,ylabel,title = self.get_title_and_axislabels(plot_type,ion,ion_name,xVar,xVar_name,**kwargs)
         if not empty:
-            self.plot_on_ax(ax,plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,title,**kwargs)
+            obs_colors = self.plot_on_ax(ax,plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,title,**kwargs)
+            if include_observations:
+                obs_data = self.get_observational_data(include_observations,plot_type,ion,xVar,**kwargs)
+                self.plot_observational_data(ax,plot_type,include_observations,obs_data,xlabel,ylabel,title,obs_coloration = obs_colors,**kwargs)
             if show:
                 plt.show()
         else:
@@ -1016,13 +1146,13 @@ class MultiQuasarSpherePlotter():
                    reverse_x = False,reverse_y = False):
         
         #conduct a sort on one dimension and get the labels and bins for the other
-        labels_y, bins_y, quasarbins_y = self.sort_by(criteria_y, 
+        labels_y, bins_y, quasarbins_y, obs_bins_y = self.sort_by(criteria_y, 
                                                       bins_y,
                                                       exploration_mode = False,
                                                       atEnd = atEnd_y,
                                                       splitEven = splitEven_y,
                                                       reverse = ~reverse_y)
-        labels_x, bins_x, _            = self.sort_by(criteria_x, 
+        labels_x, bins_x, _  ,_          = self.sort_by(criteria_x, 
                                                       bins_x, 
                                                       exploration_mode = False,
                                                       atEnd = atEnd_x, 
@@ -1031,17 +1161,21 @@ class MultiQuasarSpherePlotter():
         if reverse_x:
             labels_x = reversearray(labels_x)
         quasarBins = np.zeros((len(labels_y),len(labels_x)), dtype = object)
+        obsBins = np.zeros((len(labels_y),len(labels_x)), dtype = object)
 
         #sort the other dimension and store sorted quasarbins
         for i,qlist_y in enumerate(quasarbins_y):
             sorter = MultiSphereSorter(qlist_y, exploration_mode = False)
+            obs_sorter = MultiSphereSorter(obs_bins_y[i], exploration_mode = False)
             _,_, quasarbins_x = sorter.sort(criteria_x,bins_x,atEnd = atEnd_x)
+            _,_, obs_bins_x = obs_sorter.sort(criteria_x,bins_x,atEnd = False)
             if reverse_x:
                 quasarbins_x = reversearray(quasarbins_x)
+                obs_bins_x = reversearray(obs_bins_x)
             for j,qlist_x in enumerate(quasarbins_x):
                 quasarBins[i][j] = qlist_x
-        
-        return labels_x,labels_y,bins_x,bins_y,quasarBins                        
+                obsBins[i][j] = obs_bins_x[j]
+        return labels_x,labels_y,bins_x,bins_y,quasarBins,obsBins                      
     
     def faberplot(self,plot_type,yVar,labels_x=None,labels_y=None,quasarArray=None,lq2=None,criteria_legend=None,\
                   bins_legend=None,sharex=True,sharey=True,figsize='guess', save_fig = False,dpi=300, **kwargs):
@@ -1051,7 +1185,7 @@ class MultiQuasarSpherePlotter():
         #and show that plot
         print("Current constraints (name): "+self.currentQuasarArrayName)
         if lq2:
-            labels_x,labels_y,_,_,quasarArray = lq2
+            labels_x,labels_y,_,_,quasarArray,obsArray = lq2
         else:
             assert labels_x is not None and labels_y is not None and quasarArray is not None
         rows = len(quasarArray)
@@ -1069,10 +1203,12 @@ class MultiQuasarSpherePlotter():
                 newaxes.append([ax])
             axes=newaxes
         oldQuasarArray = self.currentQuasarArray
+        oldObsArray = self.currentObservationArray
         for r in range (0,rows):
             for c in range (0,cols):
                 if 1:
                     self.currentQuasarArray = quasarArray[r][c]
+                    self.currentObservationArray = obsArray[r][c]
                     if criteria_legend and len(self.currentQuasarArray)>0:
                         lq = self.sort_by(criteria_legend,bins_legend,**kwargs)
                     else:
@@ -1084,20 +1220,18 @@ class MultiQuasarSpherePlotter():
                     if r == 0:
                         axes[r][c].set_xlabel('')
                         axes[r][c].set_title(labels_x[c])
-                    elif r == rows-1:
+                    if r == rows-1:
                         axes[r][c].set_title('')
-                    else:
+                    if r!=0 and r!= rows-1:
                         axes[r][c].set_xlabel('')
                         axes[r][c].set_title('')
-                    if c == 0:
-                        pass
-                    elif c == cols-1:
+                    if c == cols-1:
                         axes[r][c].set_ylabel('')
                         right_ax = axes[r][c].twinx()
                         right_ax.set_ylabel(labels_y[r])
                         right_ax.yaxis.set_ticks_position('none') 
                         right_ax.yaxis.set_ticklabels('') 
-                    else:
+                    if c!=0 and c!=cols-1:
                         axes[r][c].set_ylabel('')
 
                 #except Exception as e:

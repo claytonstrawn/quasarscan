@@ -1,4 +1,7 @@
-"cgm","sl","ra","dec","z","r","mstar","mstar eb","rvir","sfr","sfr eb","log Ne VIII:cdens", "log Ne VIII:eb"
+Burchett et al. 2019
+https://arxiv.org/pdf/1810.06560.pdf
+
+cgm,sl,ra,dec,z,r,log Mstar,log Mstar:eb,Rvir,sfr,sfr:eb,log Ne VIII:cdens,log Ne VIII:eb
 
 J0235-0402_121_47,PHL1377,2:35:10.1,-4:02:29.7,0.51186,301,10.9,0.1,242,5.7,0.1,13.63,NaN
 J0235-0402_55_37,PHL1377,2:35:09.4,-4:01:44.5,1.02686,303,10.9,0.1,196,0.3,NaN,13.44,nan
