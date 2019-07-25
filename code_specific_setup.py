@@ -1,8 +1,8 @@
-import yt
 try:
     from quasarscan import PI_field_defs
 except:
     import PI_field_defs
+from yt.utilities.physical_constants import mh
 
 codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy']
 sphcodes = ['gizmo','gadget','gear','tipsy']
@@ -51,7 +51,7 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
         pass
     elif code == 'ramses':
         def _metal_density(field, data):
-            tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
+            tr = data['gas','H_nuclei_density']*mh
             tr /= data['gas','metallicity'].in_units('dimensionless')
             return tr
         ds.add_field(('gas','metal_density'),
@@ -60,7 +60,7 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
                        units='g/cm**3')
     elif code == 'gizmo':
         def _metal_density(field, data):
-            tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
+            tr = data['gas','H_nuclei_density']*mh
             tr /= data['gas','metallicity'].in_units('dimensionless')
             return tr
         ds.add_field(('gas','metal_density'),
@@ -69,7 +69,7 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
                        units='g/cm**3')
     elif code == 'gadget':
         def _metal_density(field, data):
-            tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
+            tr = data['gas','H_nuclei_density']*mh
             tr /= data['gas','metallicity'].in_units('dimensionless')
             return tr
         ds.add_field(('gas','metal_density'),
@@ -77,7 +77,16 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
                        function=_metal_density,
                        units='g/cm**3')
     elif code == 'gear':
-        print("code %s not implemented yet!"%code)
+        pass
+        """
+        def _metal_density(field, data):
+            tr = data['gas','H_nuclei_density']*mh
+            tr /= data['gas','metallicity'].in_units('dimensionless')
+            return tr
+        ds.add_field(('gas','metal_density'),
+                       sampling_type="cell",
+                       function=_metal_density,
+                       units='g/cm**3')"""
     elif code == 'enzo':
         # no new fields needed for ENZO
         pass
@@ -85,7 +94,7 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
         def _gas_mass(field, data):
             return data['deposit','Gas_mass']
         def _metal_density(field, data):
-            tr = data['gas','H_nuclei_density']*yt.utilities.physical_constants.mh
+            tr = data['gas','H_nuclei_density']*mh
             tr /= data['gas','metallicity'].in_units('dimensionless')
             return tr
         try:
@@ -130,7 +139,7 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=False):
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas','metallicity'))
     elif code == 'gear':
-        print("code %s not implemented yet!"%code)
+        fields_to_keep.append(('gas','metallicity'))
     elif code == 'enzo':
         fields_to_keep.append(('gas','metal_density'))
         fields_to_keep.append(('gas','metallicity'))
