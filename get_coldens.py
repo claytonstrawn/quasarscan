@@ -17,7 +17,7 @@ import datetime
 use_tprint = True
 def tprint(*args,**kwargs):
     if use_tprint:
-        print(args,end=datetime.datetime.now())
+        print(args,end=str(datetime.datetime.now()))
     else:
         print(args)
 
