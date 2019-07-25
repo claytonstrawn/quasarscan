@@ -263,7 +263,7 @@ class MultiQuasarSpherePlotter():
         else:
             labels, bins, quasarBins = sorter.sort(criteria,bins,atEnd = atEnd)
 
-        _, _, obsBins = obs_sorter.sort(criteria,bins,atEnd = atEnd)
+        _, _, obsBins = obs_sorter.sort(criteria,bins,atEnd = False)
         labels,bins,quasarBins = self.postprocess_sorted(labels,bins,quasarBins,**kwargs)
         _,_,obsBins = self.postprocess_sorted(labels,bins,obsBins,**kwargs)
         return labels,bins, quasarBins, obsBins
@@ -859,6 +859,8 @@ class MultiQuasarSpherePlotter():
                                       color=coloration[i],markersize=markersize)
                 future_colors.append(color_store[0].get_color())
         elif average == 'scatter':
+            if coloration[0] = 'continuous':
+                colors = zs[i]
             if markersize=='default':
                 markersize=6
             for i in range(len(xs)):
@@ -1100,9 +1102,7 @@ class MultiQuasarSpherePlotter():
         if ylims=='default':
             ax.set_ylim(get_new_axislim(ax.get_ylim()))
         else:
-            ax.set_ylim(xlims)
-
-
+            ax.set_ylim(ylims)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
@@ -1177,7 +1177,7 @@ class MultiQuasarSpherePlotter():
                 obsBins[i][j] = obs_bins_x[j]
         return labels_x,labels_y,bins_x,bins_y,quasarBins,obsBins                      
     
-    def faberplot(self,plot_type,yVar,labels_x=None,labels_y=None,quasarArray=None,lq2=None,criteria_legend=None,\
+    def faberplot(self,plot_type,yVar,labels_x=None,labels_y=None,quasarArray=None,obsArray=None,lq2=None,criteria_legend=None,\
                   bins_legend=None,sharex=True,sharey=True,figsize='guess', save_fig = False,dpi=300, **kwargs):
         #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
         #ask plot_err or plot_hist for completed plots of type given, for 
@@ -1204,6 +1204,8 @@ class MultiQuasarSpherePlotter():
             axes=newaxes
         oldQuasarArray = self.currentQuasarArray
         oldObsArray = self.currentObservationArray
+        axlolims = np.array([np.inf,np.inf])
+        axuplims = np.array([-np.inf,-np.inf])
         for r in range (0,rows):
             for c in range (0,cols):
                 if 1:
@@ -1217,6 +1219,14 @@ class MultiQuasarSpherePlotter():
                         self.plot_err(yVar, ax = axes[r][c], show = False,lq=lq, **kwargs)
                     elif plot_type=='hist':
                         self.plot_hist(yVar, ax = axes[r][c], show = False,fig=fig, **kwargs)
+                        
+                        current_axlolims = np.array([axes[r][c].get_xlim()[0],axes[r][c].get_ylim()[0]])
+                        current_axuplims = np.array([axes[r][c].get_xlim()[1],axes[r][c].get_ylim()[1]])
+                        print (axlolims,current_axlolims,labels_x[c],labels_y[r])
+                        axlolims = np.amin((axlolims,current_axlolims),axis=0)
+                        axuplims = np.amax((axuplims,current_axuplims),axis=0)
+                        axes[r][c].set_xlim((axlolims[0],axuplims[0]))
+                        axes[r][c].set_ylim((axlolims[1],axuplims[1]))
                     if r == 0:
                         axes[r][c].set_xlabel('')
                         axes[r][c].set_title(labels_x[c])
@@ -1241,7 +1251,8 @@ class MultiQuasarSpherePlotter():
             fname = self.save_fig_filename(save_fig, yVar, **kwargs)
             plt.savefig(fname,dpi=dpi)
         self.currentQuasarArray = oldQuasarArray
-        
+        self.currentObservationArray = oldObsArray
+
     def save_fig_filename(self, save_fig, yVar, xVar = 'rdivR', **kwargs):
         if isinstance(save_fig, str):
             return 'quasarscan/plots/' + str + '.png'

@@ -90,6 +90,7 @@ class Observation(GeneralizedQuasarSphere):
         self.Rvir_is_real = 'True'
         self.cgm_name = self.name
         self.sightline = self.access_data_values('sl',header_columns_dict,parsed_line)
+        self.compaction_stage = "unknown"
 
         #stringparams - unknowable (should all be None)
         self.version  = None
