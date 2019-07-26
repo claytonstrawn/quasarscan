@@ -29,6 +29,7 @@ else
 fi
 
 mkdir files_to_process/$n
+cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.param files_to_process/$n
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00112.* files_to_process/$n
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00112 files_to_process/$n
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00160.* files_to_process/$n
