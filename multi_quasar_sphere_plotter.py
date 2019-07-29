@@ -859,8 +859,6 @@ class MultiQuasarSpherePlotter():
                                       color=coloration[i],markersize=markersize)
                 future_colors.append(color_store[0].get_color())
         elif average == 'scatter':
-            if coloration[0] = 'continuous':
-                colors = zs[i]
             if markersize=='default':
                 markersize=6
             for i in range(len(xs)):

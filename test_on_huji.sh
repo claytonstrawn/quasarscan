@@ -42,6 +42,8 @@ cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00432.* files_to_process/$n
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00432 files_to_process/$n
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00640.* files_to_process/$n
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00640 files_to_process/$n
+cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.01024.* files_to_process/$n
+cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.01024 files_to_process/$n
 python quasarscan/create_qso_endpoints.py $n files_to_process/$n/$d.00112
 python quasarscan/get_coldens.py quasarscan/output/${n}coldensinfo/0_of_448-agoraions_z4.0.txt 96 n
 python quasarscan/create_qso_endpoints.py $n files_to_process/$n/$d.00160
@@ -51,6 +53,8 @@ python quasarscan/get_coldens.py quasarscan/output/${n}coldensinfo/0_of_448-agor
 python quasarscan/create_qso_endpoints.py $n files_to_process/$n/$d.00320
 python quasarscan/get_coldens.py quasarscan/output/${n}coldensinfo/0_of_448-agoraions_z1.5.txt 96 n
 python quasarscan/create_qso_endpoints.py $n files_to_process/$n/$d.00432
-python quasarscan/get_coldens.py quasarscan/output/${n}coldensinfo/0_of_448-agoraions_z0.5.txt 96 n
+python quasarscan/get_coldens.py quasarscan/output/${n}coldensinfo/0_of_448-agoraions_z1.0.txt 96 n
 python quasarscan/create_qso_endpoints.py $n files_to_process/$n/$d.00640
+python quasarscan/get_coldens.py quasarscan/output/${n}coldensinfo/0_of_448-agoraions_z0.5.txt 96 n
+python quasarscan/create_qso_endpoints.py $n files_to_process/$n/$d.01024
 python quasarscan/get_coldens.py quasarscan/output/${n}coldensinfo/0_of_448-agoraions_z0.0.txt 96 n

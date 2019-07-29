@@ -19,6 +19,7 @@ namedict = {'g2.63e10': 'NIHAO_v1_tipsy_01',
  'g1.77e12': 'NIHAO_v1_tipsy_16',
  'g1.92e12': 'NIHAO_v1_tipsy_17',
  'g2.79e12': 'NIHAO_v1_tipsy_18'}
+inverted_namedict = dict([[v,k] for k,v in namedict.items()])
 
 quantity_dict_Mvir_fbar = {"a":0,"Rvir":1,"gas_Rvir":2,"star_Rvir":3,"dm_Rvir":4,"Mvir":5}
 quantity_dict = quantity_dict_Mvir_fbar.copy()
