@@ -55,8 +55,11 @@ def rhoz_func(z):
     return rhos[pos]
 
 
-def make_funcs(ds=None,z=None):
-    if z is None:
+def make_funcs(ds=None,z=None,add_fields=False):
+    if not z and not ds:
+        print('assuming z=1')
+        z=1.0
+    elif z is None:
         z = ds.current_redshift
     def PI_OIV(field, data):
         #0 if CI, 1 if PI
@@ -197,5 +200,46 @@ def make_funcs(ds=None,z=None):
     def CI_OVIII(field,data):
         tr = data['gas','OVIII_PI_dominated']
         return 1.-tr
+    if ds and add_fields:
+        ds.add_field(('gas','PI_OIV'),
+               sampling_type="cell",
+               function=PI_OIV,
+               units='')
+        ds.add_field(('gas','CI_OIV'),
+               sampling_type="cell",
+               function=CI_OIV,
+               units='')
+        ds.add_field(('gas','PI_OV'),
+               sampling_type="cell",
+               function=PI_OV,
+               units='')
+        ds.add_field(('gas','CI_OV'),
+               sampling_type="cell",
+               function=CI_OV,
+               units='')
+        ds.add_field(('gas','PI_OVI'),
+               sampling_type="cell",
+               function=PI_OVI,
+               units='')
+        ds.add_field(('gas','CI_OVI'),
+               sampling_type="cell",
+               function=CI_OVI,
+               units='')
+        ds.add_field(('gas','PI_OVII'),
+               sampling_type="cell",
+               function=PI_OVII,
+               units='')
+        ds.add_field(('gas','CI_OVII'),
+               sampling_type="cell",
+               function=CI_OVII,
+               units='')
+        ds.add_field(('gas','PI_OVIII'),
+               sampling_type="cell",
+               function=PI_OVIII,
+               units='')
+        ds.add_field(('gas','CI_OVIII'),
+               sampling_type="cell",
+               function=CI_OVIII,
+               units='')
     
     return PI_OIV,CI_OIV,PI_OV,CI_OV,PI_OVI,CI_OVI,PI_OVII,CI_OVII,PI_OVIII,CI_OVIII

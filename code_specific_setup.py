@@ -1,4 +1,5 @@
 import yt
+from quasarscan import PI_field_defs
 
 codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy']
 sphcodes = ['gizmo','gadget','gear','tipsy']
@@ -33,13 +34,15 @@ def ytload(path,code):
         ds = yt.load(path)
     return ds
 
-def add_necessary_fields_to_ds(code,ds):
+def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
     dstype_name = ds.dataset_type
     if dstype_name not in yt_dstype_names.values():
         print("add_necessary_fields_to_ds was not prepared for the code %s!"%dstype_name)
         print("please edit that file first.")
         raise KeyError
     assert dstype_name == yt_dstype_names[code]
+    if add_pi_fracs:
+        PI_field_defs.make_funcs(ds=ds,add_fields=True)
     if code == 'art':
         #yt has been updated to do ART pre-processing already by me
         pass
@@ -94,8 +97,10 @@ def add_necessary_fields_to_ds(code,ds):
         except:
             pass
 
-def fields_to_keep_in_sightline(code,ions):
+def fields_to_keep_in_sightline(code,ions,add_pi_fracs=False):
     fields_to_keep = [('gas',"density"),('gas',"mass"),('gas',"temperature"),('gas',"radial_velocity")]
+    if add_PI_fracs:
+        fields_to_keep += [('gas',"PI_OIV"),('gas',"PI_OV"),('gas',"PI_OVI"),('gas',"PI_OVII"),('gas',"PI_OVIII")]
     if code not in codes:
         print("set_up_fields_for_sims was not prepared for the code %s!"%code)
         print("please edit that file first.")
@@ -132,7 +137,7 @@ def fields_to_keep_in_sightline(code,ions):
         fields_to_keep.append(('gas',"H_nuclei_density"))
     return fields_to_keep
 
-def load_and_setup(path,code,ions):
+def load_and_setup(path,code,ions,add_pi_fracs=False):
     if "_" in code:
         code = code.split("_")[2]
     if code not in codes:
@@ -145,7 +150,7 @@ def load_and_setup(path,code,ions):
     except:
         print("the code stored at: %s is not of type %s, but of type %s"%(path,code,ds.dataset_type))
         raise AssertionError
-    add_necessary_fields_to_ds(code,ds)
-    fields_to_keep = fields_to_keep_in_sightline(code,ions)
+    add_necessary_fields_to_ds(code,ds,add_pi_fracs=add_pi_fracs)
+    fields_to_keep = fields_to_keep_in_sightline(code,ions,add_pi_fracs=add_pi_fracs)
     return ds, fields_to_keep
 

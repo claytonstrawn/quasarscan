@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source activate myenv3
+source myenv3/bin/activate
 export HDF5_USE_FILE_LOCKING=FALSE
 python quasarscan/decide_next_nihao.py
 until ! [ -s quasarscan/nextfile.sh ]
