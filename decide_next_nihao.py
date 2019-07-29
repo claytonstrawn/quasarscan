@@ -68,7 +68,7 @@ def check_validity(tocheck):
         print("didn't see folder")
         return False
     my_saved_data = os.listdir("/vol/sci/astro/home/cjstrawn/files_to_process/%s"%foldername)
-    if not "%s.%s"%(inverted_namedict[foldername],z2name[str(tocheck[1])]) in my_saved_data:
+    if not "%s.%s"%(inverted_namedict[foldername],z2name['%1.1d'%(tocheck[1])]) in my_saved_data:
         print("didn't see file")
         return False
     if not get_value('Rvir',tocheck[0],tocheck[1],check_exists = True):
@@ -80,7 +80,7 @@ def convert_check_to_strings(tocheck):
     simname = tocheck[0]
     foldername = tocheck[0]
     filename = "/vol/sci/astro/home/cjstrawn/files_to_process/%s/%s.%s"%\
-                                            (foldername,inverted_namedict[foldername],z2name[str(tocheck[1])])
+                                            (foldername,inverted_namedict[foldername],z2name['%1.1d'%(tocheck[1])])
     redshift = tocheck[1]
     return simname, filename, redshift
 
