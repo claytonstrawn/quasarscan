@@ -98,7 +98,7 @@ def write_files(tocheck,cont = 0):
     print("I think we should work on %s where we've so far gotten to %d"%(tocheck,cont))
     simname,filename,redshift = convert_check_to_strings(tocheck)
     firstline = "#!/bin/bash"
-    secondline = "quasarscan/./run_one_new_snapshot_huji.sh %s %s %s %s"%( simname, filename, redshift, cont)
+    secondline = "quasarscan/batch_scripts/./run_one_new_snapshot_huji.sh %s %s %1.1f %s"%( simname, filename, redshift, cont)
     f = open("quasarscan/nextfile.sh")
     currentfirstline = f.readline()
     currentsecondline = f.readline()
