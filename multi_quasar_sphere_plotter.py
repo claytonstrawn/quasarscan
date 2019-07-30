@@ -1220,7 +1220,6 @@ class MultiQuasarSpherePlotter():
                         
                         current_axlolims = np.array([axes[r][c].get_xlim()[0],axes[r][c].get_ylim()[0]])
                         current_axuplims = np.array([axes[r][c].get_xlim()[1],axes[r][c].get_ylim()[1]])
-                        print (axlolims,current_axlolims,labels_x[c],labels_y[r])
                         axlolims = np.amin((axlolims,current_axlolims),axis=0)
                         axuplims = np.amax((axuplims,current_axuplims),axis=0)
                         axes[r][c].set_xlim((axlolims[0],axuplims[0]))

@@ -1,3 +1,6 @@
+import numpy as np
+import yt 
+
 def rhoz_func(z):
     k="""0<z<0.05 -- 0/120
     0.05<z<0.15 -- 16/120
@@ -86,7 +89,7 @@ def make_funcs(ds=None,z=None,add_fields=False):
         tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
         return tr
     def CI_OIV(field,data):
-        tr = data['gas','OIV_PI_dominated']
+        tr = data['gas','PI_OIV']
         return 1.-tr
 
     def PI_OV(field, data):
@@ -114,7 +117,7 @@ def make_funcs(ds=None,z=None,add_fields=False):
         tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
         return tr
     def CI_OV(field,data):
-        tr = data['gas','OV_PI_dominated']
+        tr = data['gas','PI_OV']
         return 1.-tr
 
     def PI_OVI(field, data):
@@ -142,7 +145,7 @@ def make_funcs(ds=None,z=None,add_fields=False):
         tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
         return tr
     def CI_OVI(field,data):
-        tr = data['gas','OVI_PI_dominated']
+        tr = data['gas','PI_OVI']
         return 1.-tr
 
     def PI_OVII(field, data):
@@ -170,7 +173,7 @@ def make_funcs(ds=None,z=None,add_fields=False):
         tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
         return tr
     def CI_OVII(field,data):
-        tr = data['gas','OVII_PI_dominated']
+        tr = data['gas','PI_OVII']
         return 1.-tr
 
     def PI_OVIII(field, data):
@@ -198,7 +201,7 @@ def make_funcs(ds=None,z=None,add_fields=False):
         tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
         return tr
     def CI_OVIII(field,data):
-        tr = data['gas','OVIII_PI_dominated']
+        tr = data['gas','PI_OVIII']
         return 1.-tr
     if ds and add_fields:
         ds.add_field(('gas','PI_OIV'),
