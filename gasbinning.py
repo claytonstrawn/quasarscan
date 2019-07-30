@@ -127,7 +127,7 @@ class GasBinsHolder(object):
         print("that field does not exist!")
         assert 0 == 1
 
-    def get_field_binedges_for_num(self,num):
+    def get_field_binedges_for_num(self,num,ion):
         mykeys = self.get_all_keys()
         return self.get_field_binedges_for_key(mykeys[num])
 
