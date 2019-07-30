@@ -48,7 +48,7 @@ radial_velocity_bin = GasBin("radial_velocity",["inflow",'inflow_slow',"tangenti
 resolution_bin = GasBin("resolution",["high","between1_5","between5_15","low"],['0.00e+00', '1e9', '1.250e+11','3.375e+12', 'np.inf'],field = ('gas','cell_volume'),units = "pc**3")# (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
 pi_bin = GasBin('ionization_mechanism',['PI'],['0.9','1.1'], field = {'O IV':('gas','PI_OIV'), 'O V':('gas','PI_OV'), 'O VI':('gas','PI_OVI'), 'O VII':('gas','PI_OVII'), 'O VIII':('gas','PI_OVIII')})
 #todo: I have to think about this one a little more
-possible_bin_types = ["density","temperature","radial_velocity","resolution","pi_bin"]
+possible_bin_types = ["density","temperature","radial_velocity","resolution","ionization_mechanism"]
 
 
 class GasBinsHolder(object):
@@ -99,7 +99,7 @@ class GasBinsHolder(object):
         if "resolution" in bins:
             self.bin_types.append(resolution_bin)
             #not sure how this works in demeshed
-        if "pi_bin" in bins:
+        if "ionization_mechanism" in bins:
             self.bin_types.append(pi_bin)
 
     def combine_holders(self,other):

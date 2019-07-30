@@ -63,7 +63,10 @@ def make_funcs(ds=None,z=None,add_fields=False):
         print('assuming z=1')
         z=1.0
     elif z is None:
-        z = ds.current_redshift
+        try:
+            z = ds.current_redshift
+        except:
+            z = 1/ds.current_time.value.item()-1
     def PI_OIV(field, data):
         #0 if CI, 1 if PI
         rhoz = np.log10(yt.YTQuantity(rhoz_func(z),'1/cm**3'))

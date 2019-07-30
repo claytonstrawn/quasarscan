@@ -1,5 +1,8 @@
 import yt
-from quasarscan import PI_field_defs
+try:
+    from quasarscan import PI_field_defs
+except:
+    import PI_field_defs
 
 codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy']
 sphcodes = ['gizmo','gadget','gear','tipsy']
