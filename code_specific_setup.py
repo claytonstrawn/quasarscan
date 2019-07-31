@@ -1,3 +1,4 @@
+import yt
 try:
     from quasarscan import PI_field_defs
 except:
