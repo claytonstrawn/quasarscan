@@ -67,34 +67,39 @@ class GasBinsHolder(object):
     def __init__(self,bins = None,string = None):
         self.bin_types = []
         if string:
-            allnames = string.strip("[]").split(", ")
-            i = 0 
-            while i < len(allnames):
-                currentBin = allnames[i].split(":")[0]
-                allinfo = allnames[i].split(":")
-                currentBinNames = [allinfo[1]]
-                currentBinVals = [allinfo[2].split("_")[0],allinfo[2].split("_")[1]]
-                j = 1
-                field = None
-                units = None
-                while i+j < len(allnames) and allnames[i+j].startswith(currentBin):
-                    allinfo = allnames[i+j].split(":")
-                    currentBinNames += [allinfo[1]]
-                    currentBinVals += [allinfo[2].split("_")[1]]
-                    if len(allinfo) >= 4:
-                        if "field" in allinfo[3]:
-                            if allinfo[3].split("-")[1][0] == '{':
-                                field = parse_string_for_dict(allinfo[3].split("-")[1])
-                            else:
-                                fieldlist = allinfo[3].split("-")[1][0].strip("()").split(",")
-                                field = (fieldlist[0],fieldlist[1])
-                        if len(allinfo) > 4 and "units" in allinfo[4]:
-                            units = allinfo[4].split("-")[1]
-                        elif "units" in allinfo[3]:
-                            units = allinfo[3].split("-")[1]
-                    j+=1
-                i+=j
-                newBin = GasBin(currentBin,currentBinNames,currentBinVals,field = field,units = units)
+            fields_with_data = string.strip("[]").split(", ")
+            field_names,bins,edges,fields,units = [],[],[],[],[]
+            for item in fields_with_data:
+                split_by_colon = item.split(":")
+                field_name,current_bin,current_edges = split_by_colon[0:3]
+                field_names.append(field_name)
+                bins.append(current_bin)
+                edges.append(current_edges)
+                if len(split_by_colon)>3 and "field" in split_by_colon[3]:
+                    if split_by_colon[3].split("-")[1][0] == '{':
+                        fields.append(parse_string_for_dict(item.split('{')[1].split('}')[0]))
+                    else:
+                        fieldlist = split_by_colon[3].split("-")[1].strip("()").split(",")
+                        fields.append((fieldlist[0],fieldlist[1]))
+                else:
+                    fields.append(None)
+                if len(split_by_colon) > 3 and "units" in split_by_colon[-1]:
+                    units.append(split_by_colon[-1].split("-")[1])
+                else:
+                    units.append(None)
+            for field_name in np.unique(field_names):
+                current_bins = []
+                current_edges = []
+                current_field = None
+                current_units = None
+                for i in range(len(field_names)):
+                    if field_name == field_names[i]:
+                        current_bins.append(bins[i])
+                        begin,end = edges[i].split('_')
+                        current_edges.append(begin)
+                        current_field = fields[i]
+                        current_units = units[i]
+                newBin = GasBin(field_name,current_bins,current_edges+[end],field = current_field,units = current_units)
                 self.bin_types.append(newBin)
             return
         if bins == "all":

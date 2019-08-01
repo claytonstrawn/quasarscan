@@ -121,10 +121,14 @@ def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,include_0 = Tr
 if __name__ == "__main__":
     name = sys.argv[1]
     path = sys.argv[2]
-    if len(sys.argv)==4:
+    if len(sys.argv)>=4:
         ionlist = sys.argv[3]
     else:
         ionlist = None
+    if 'test' in sys.argv:
+        test = True
+    else:
+        test = False
     code = name.split("_")[2]
     ds = code_specific_setup.ytload(path,code)
     try:
@@ -145,7 +149,8 @@ if __name__ == "__main__":
         include_0 = False
     convert = ds.length_unit.in_units('kpc').value.item()
     defaultsphere = 6*Rvir,12,12,12,1.5*Rvir,448
-    testsphere = 6*Rvir,12,12,12,2*Rvir,10
+    if test:
+        defaultsphere = .1*Rvir,12,12,12.01*Rvir,10
     dsbounds = ds.domain_width.to('kpc').value
     defaultions = ion_lists.agoraions
     if ionlist:
