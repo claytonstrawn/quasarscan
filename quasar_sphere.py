@@ -205,11 +205,11 @@ class QuasarSphere(GeneralizedQuasarSphere):
                 self.compaction_stage = "during"
         else:
             self.compaction_stage = "unknown"
-        try:
+        if 1:
             aDict = parse_metadata.avalsdict[self.simname][self.name]
             aDict_list = sorted(aDict.keys())
             self.final_a0 = aDict_list[-1]
-        except:
+        else:
             self.final_a0 = None
 
     def get_criteria_at_a(self, a0, criteria):

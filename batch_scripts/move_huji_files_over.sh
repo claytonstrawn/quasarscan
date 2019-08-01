@@ -30,17 +30,32 @@ fi
 
 mkdir files_to_process/$n
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.param files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.param files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00112.* files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00112. files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00112 files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00112 files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00160.* files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00160. files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00160 files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00160 files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00240.* files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00240. files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00240 files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00240 files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00320.* files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00320. files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00320 files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00320 files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00432.* files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00432. files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00432 files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00432 files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00640.* files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00640. files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00640 files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.00640 files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.01024.* files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.01024. files_to_process/$n"
 cp /vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.01024 files_to_process/$n
+echo "/vol/sci/astro/cosmo/nas2/Data/nihao/$d/$d.01024 files_to_process/$n"

@@ -1,5 +1,16 @@
 import numpy as np
 
+def parse_string_for_dict(s):
+    s = s.strip('{}')
+    toreturn = {}
+    list_of_terms = s.split('),')
+    for word in list_of_terms:
+        key,value = word.split(':')
+        value = value.strip('()')
+        value0,value1 = value.split(',')
+        toreturn[key] = (value0,value1)
+    return toreturn
+
 class GasBin(object):
 
     def __init__(self,name,binnames,binvalstr,field = None,units = None):
@@ -72,8 +83,11 @@ class GasBinsHolder(object):
                     currentBinVals += [allinfo[2].split("_")[1]]
                     if len(allinfo) >= 4:
                         if "field" in allinfo[3]:
-                            fieldlist = allinfo[3].split("-")[1].strip("()").split(",")
-                            field = (fieldlist[0],fieldlist[1])
+                            if allinfo[3].split("-")[1][0] == '{':
+                                field = parse_string_for_dict(allinfo[3].split("-")[1])
+                            else:
+                                fieldlist = allinfo[3].split("-")[1][0].strip("()").split(",")
+                                field = (fieldlist[0],fieldlist[1])
                         if len(allinfo) > 4 and "units" in allinfo[4]:
                             units = allinfo[4].split("-")[1]
                         elif "units" in allinfo[3]:
