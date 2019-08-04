@@ -92,6 +92,16 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
         # no new fields needed for ENZO
         pass
     elif code == 'tipsy':
+        def _O_mass_density(field, data):
+            O_nuclei_mass_density = data['Gas','OxMassFrac']*data['Gas','Density']
+            return O_nuclei_mass_density
+        if 1:
+            ds.add_field(('gas','O_nuclei_mass_density'),
+                        sampling_type="particle",
+                        function=_O_mass_density,
+                        units='g/cm**3')
+        else:
+            pass
         def _gas_mass(field, data):
             return data['deposit','Gas_mass']
         def _metal_density(field, data):
@@ -112,6 +122,11 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
 
 def fields_to_keep_in_sightline(code,ions,add_pi_fracs=False):
     fields_to_keep = [('gas',"density"),('gas',"mass"),('gas',"temperature"),('gas',"radial_velocity")]
+    def atoms_from_ions(ions):
+        toret = []
+        for ion in ions:
+            toret.append(ion.split(" ")[0])
+        return list(set(toret))
     if add_pi_fracs:
         fields_to_keep += [('gas',"PI_OIV"),('gas',"PI_OV"),('gas',"PI_OVI"),('gas',"PI_OVII"),('gas',"PI_OVIII")]
     if code not in codes:
@@ -121,11 +136,6 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=False):
     elif code == 'art':
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas', 'cell_volume'))
-        def atoms_from_ions(ions):
-            toret = []
-            for ion in ions:
-                toret.append(ion.split(" ")[0])
-            return list(set(toret))
         for atom in atoms:
             if atom in atoms_from_ions(ions):
                 fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
@@ -148,6 +158,8 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=False):
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas',"metallicity"))
         fields_to_keep.append(('gas',"H_nuclei_density"))
+        if 'O' in atoms_from_ions(ions):
+            fields_to_keep.append(('gas',"O_nuclei_mass_density"))
     return fields_to_keep
 
 def load_and_setup(path,code,ions,add_pi_fracs=False):

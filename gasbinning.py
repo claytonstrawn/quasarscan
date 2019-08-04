@@ -59,7 +59,7 @@ radial_velocity_bin = GasBin("radial_velocity",["inflow",'inflow_slow',"tangenti
 resolution_bin = GasBin("resolution",["high","between1_5","between5_15","low"],['0.00e+00', '1e9', '1.250e+11','3.375e+12', 'np.inf'],field = ('gas','cell_volume'),units = "pc**3")# (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
 pi_bin = GasBin('ionization_mechanism',['PI'],['0.9','1.1'], field = {'O IV':('gas','PI_OIV'), 'O V':('gas','PI_OV'), 'O VI':('gas','PI_OVI'), 'O VII':('gas','PI_OVII'), 'O VIII':('gas','PI_OVIII')})
 #todo: I have to think about this one a little more
-possible_bin_types = ["density","temperature","radial_velocity","resolution"]
+possible_bin_types = ["density","temperature","radial_velocity","resolution","ionization_mechanism"]
 
 
 class GasBinsHolder(object):
@@ -68,38 +68,39 @@ class GasBinsHolder(object):
         self.bin_types = []
         if string:
             fields_with_data = string.strip("[]").split(", ")
-            field_names,bins,edges,fields,units = [],[],[],[],[]
+            field_names,bins,edges,ytfields,units,unique_names = [],[],[],[],[],[]
             for item in fields_with_data:
                 split_by_colon = item.split(":")
                 field_name,current_bin,current_edges = split_by_colon[0:3]
                 field_names.append(field_name)
+                unique_names.append(field_name) if field_name not in unique_names else None
                 bins.append(current_bin)
                 edges.append(current_edges)
                 if len(split_by_colon)>3 and "field" in split_by_colon[3]:
                     if split_by_colon[3].split("-")[1][0] == '{':
-                        fields.append(parse_string_for_dict(item.split('{')[1].split('}')[0]))
+                        ytfields.append(parse_string_for_dict(item.split('{')[1].split('}')[0]))
                     else:
                         fieldlist = split_by_colon[3].split("-")[1].strip("()").split(",")
-                        fields.append((fieldlist[0],fieldlist[1]))
+                        ytfields.append((fieldlist[0],fieldlist[1]))
                 else:
-                    fields.append(None)
+                    ytfields.append(None)
                 if len(split_by_colon) > 3 and "units" in split_by_colon[-1]:
                     units.append(split_by_colon[-1].split("-")[1])
                 else:
                     units.append(None)
-            for field_name in np.unique(field_names):
+            for field_name in unique_names:
                 current_bins = []
                 current_edges = []
-                current_field = None
+                current_ytfield = None
                 current_units = None
                 for i in range(len(field_names)):
                     if field_name == field_names[i]:
                         current_bins.append(bins[i])
                         begin,end = edges[i].split('_')
                         current_edges.append(begin)
-                        current_field = fields[i]
+                        current_ytfield = ytfields[i]
                         current_units = units[i]
-                newBin = GasBin(field_name,current_bins,current_edges+[end],field = current_field,units = current_units)
+                newBin = GasBin(field_name,current_bins,current_edges+[end],field = current_ytfield,units = current_units)
                 self.bin_types.append(newBin)
             return
         if bins == "all":
@@ -179,7 +180,7 @@ class GasBinsHolder(object):
                 else:
                     specific_val=":%s"%val
                 if gb.field != ('gas',gb.name):
-                    specific_val += ":field-%s"%str(gb.field).replace(" ","").replace("'","")
+                    specific_val += ":field-%s"%(str(gb.field).replace(', ',',').replace(': ',':').replace("'",""))
                 if gb.units:
                     specific_val += ":units-%s"%gb.units
                 to_return+=", %s%s"%(current_to_add,specific_val)
