@@ -427,7 +427,7 @@ class MultiQuasarSpherePlotter():
                 except:
                     string_to_replace_with = "gq.info[:,%d]"%gq.get_ion_column_num(s)
                 strings_to_replace_with[s] = string_to_replace_with
-        for s in sorted(strings_to_replace_with.keys(),key=len):
+        for s in sorted(strings_to_replace_with.keys(),key=len,reverse=True):
             new_str_to_eval = new_str_to_eval.replace(s,strings_to_replace_with[s])
         to_return = eval(new_str_to_eval)
         return to_return
@@ -810,7 +810,7 @@ class MultiQuasarSpherePlotter():
                 title = "Galaxy 2 Parameter Dependence"
             elif plot_type == 4:
                 title = "Sightline 2 Variable Correlation"
-        title+=" ("+average+") "+extra_title
+        title+=" ("+str(average)+") "+extra_title
 
         if plot_type == 0 and ":" in ion[0] and ion[0].split(":")[1] != "cdens":
             ylabel = "fraction of ion in state"
