@@ -90,7 +90,7 @@ for i in range(0, len(bins)-1):
                     variable_name,edges,units = q.gasbins.get_field_binedges_for_num(k, ion)
                     if variable_name is None:
                         vector[11+j*(num_bin_vars+2)+k+2] = np.nan
-                    if variable_name in ray.derived_field_list:
+                    elif variable_name in ray.derived_field_list:
                         if units:
                             data = field_data[variable_name].in_units(units)
                         else:
