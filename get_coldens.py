@@ -22,7 +22,7 @@ def tprint(*args,**kwargs):
         print(args)
 
 
-yt.funcs.mylog.setLevel(50)
+#yt.funcs.mylog.setLevel(50)
 
 def get_cmd_args():
     filename = sys.argv[1]
