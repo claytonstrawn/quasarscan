@@ -535,9 +535,11 @@ class MultiQuasarSpherePlotter():
         tocompare = x_in_list-x_comp
         if symmetric:
             tocompare = np.abs(tocompare)
-        return np.logical_and(-1e-5<=tocompare,tocompare<=tolerance)
+        return np.logical_and(-tolerance<=tocompare,tocompare<=tolerance)
 
     def combine_xs(self,x_variable,tolerance):
+        if tolerance == 0:
+            return x_variable
         x_values_not_averaged = np.unique(x_variable)
         x_values = []
         i = 0
@@ -639,6 +641,7 @@ class MultiQuasarSpherePlotter():
                     yarys[i][j] = yarys[i][j][np.logical_and(yarys[i][j]>=0,yarys[i][j]<np.inf)]
                     yarys[i][j] = yarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
                     xarys[i][j] = xarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
+        self.debug = xarys,yarys
         return xarys,yarys
     
     def should_take_logs_xy(self,ion,xVar,logx,logy,average='default',**kwargs):
@@ -646,7 +649,7 @@ class MultiQuasarSpherePlotter():
         if logx=='guess':
             if xVar in sightline_xVars:
                 logx=False
-            elif xVar not in probablylinear:
+            elif xVar in probablylinear:
                 logx=False
             elif xVar in param_xVars:
                 logx=True

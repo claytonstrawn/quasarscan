@@ -1,5 +1,6 @@
 import numpy as np
 import yt 
+from yt.utilities.physical_constants import mh
 
 def rhoz_func(z):
     k="""0<z<0.05 -- 0/120
@@ -83,13 +84,13 @@ def make_funcs(ds=None,z=None,add_fields=False):
         mask5 = np.logical_and(4.9 <= temps,temps< 5.0)
         mask6 = temps > 5.0
         comp = np.zeros(temps.shape)
-        comp[mask1] = -np.inf
+        comp[mask1] = np.inf
         comp[mask2] = -2.75+rhoz
         comp[mask3] = -3.0+rhoz
         comp[mask4] = -3.25+rhoz
         comp[mask5] = -3.5+rhoz
-        comp[mask6] = np.inf
-        tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
+        comp[mask6] = -np.inf
+        tr = yt.YTArray((np.log10(data['gas','density']/mh)<comp).astype(float))
         return tr
     def CI_OIV(field,data):
         tr = data['gas','PI_OIV']
@@ -111,13 +112,13 @@ def make_funcs(ds=None,z=None,add_fields=False):
         mask5 = np.logical_and(5.25 <= temps,temps< 5.35)
         mask6 = temps > 5.35
         comp = np.zeros(temps.shape)
-        comp[mask1] = -np.inf
+        comp[mask1] = np.inf
         comp[mask2] = -3.0+rhoz
         comp[mask3] = -3.25+rhoz
         comp[mask4] = -3.5+rhoz
         comp[mask5] = -3.75+rhoz
-        comp[mask6] = np.inf
-        tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
+        comp[mask6] = -np.inf
+        tr = yt.YTArray((np.log10(data['gas','density']/mh)<comp).astype(float))
         return tr
     def CI_OV(field,data):
         tr = data['gas','PI_OV']
@@ -139,13 +140,13 @@ def make_funcs(ds=None,z=None,add_fields=False):
         mask5 = np.logical_and(5.35 <= temps,temps< 5.45)
         mask6 = temps > 5.45
         comp = np.zeros(temps.shape)
-        comp[mask1] = -np.inf
+        comp[mask1] = np.inf
         comp[mask2] = -3.75+rhoz
         comp[mask3] = -4.0+rhoz
         comp[mask4] = -4.15+rhoz
         comp[mask5] = -4.2+rhoz
-        comp[mask6] = np.inf
-        tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
+        comp[mask6] = -np.inf
+        tr = yt.YTArray((np.log10(data['gas','density']/mh)<comp).astype(float))
         return tr
     def CI_OVI(field,data):
         tr = data['gas','PI_OVI']
@@ -167,13 +168,13 @@ def make_funcs(ds=None,z=None,add_fields=False):
         mask5 = np.logical_and(5.5 <= temps,temps< 5.6)
         mask6 = temps > 5.6
         comp = np.zeros(temps.shape)
-        comp[mask1] = -np.inf
+        comp[mask1] = np.inf
         comp[mask2] = -3.8+rhoz
         comp[mask3] = -4.0+rhoz
         comp[mask4] = -4.2+rhoz
         comp[mask5] = -4.4+rhoz
-        comp[mask6] = np.inf
-        tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
+        comp[mask6] = -np.inf
+        tr = yt.YTArray((np.log10(data['gas','density']/mh)<comp).astype(float))
         return tr
     def CI_OVII(field,data):
         tr = data['gas','PI_OVII']
@@ -195,13 +196,13 @@ def make_funcs(ds=None,z=None,add_fields=False):
         mask5 = np.logical_and(6.15 <= temps,temps< 6.25)
         mask6 = temps > 6.25
         comp = np.zeros(temps.shape)
-        comp[mask1] = -np.inf
+        comp[mask1] = np.inf
         comp[mask2] = -4.0+rhoz
         comp[mask3] = -4.25+rhoz
         comp[mask4] = -4.5+rhoz
         comp[mask5] = -4.75+rhoz
-        comp[mask6] = np.inf
-        tr = yt.YTArray((np.log10(data['gas','density'])>comp).astype(float))
+        comp[mask6] = -np.inf
+        tr = yt.YTArray((np.log10(data['gas','density']/mh)<comp).astype(float))
         return tr
     def CI_OVIII(field,data):
         tr = data['gas','PI_OVIII']
