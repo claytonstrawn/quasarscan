@@ -108,11 +108,11 @@ intensives = ["Z","T","rho"]
 intensiveslabels = {"Z":"avg metallicity","T":"avg temperature","rho":"avg density"}
 intensivespositions = {"Z":-1,"T":-2,"rho":-3}
 sightline_xVars = ["r","rdivR","theta","phi"]
-param_xVars = ["redshift","a0","Mvir","gas_Rvir","star_Rvir","dm_Rvir","sfr","ssfr","L_mag","Mstar","Mgas"]
+param_xVars = ["redshift","a0","Mvir","gas_Rvir","star_Rvir","dm_Rvir","sfr","ssfr","L_mag","Mstar","Mgas","Rvir"]
 sightline_unit_labels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
            "theta":"viewing angle (rad)","theta_r>0":"viewing angle (rad)","phi" \
            :"azimuthal viewing angle (rad)"}
-param_unit_labels = {"redshift":"z","a0":"a","Mvir":"Virial Mass (Msun)",\
+param_unit_labels = {"redshift":"z","a0":"a","Rvir":'Virial radius (kpc)',"Mvir":"Virial Mass (Msun)",\
                     "gas_Rvir":"Gas Mass within Rvir (Msun)","Mgas":"Gas Mass within Rvir (Msun)","star_Rvir":"Stellar Mass within Rvir (Msun)",\
                     "Mstar":"Stellar Mass within Rvir (Msun)","dm_Rvir":"Dark Matter Mass within Rvir (Msun)","sfr":"Star Formation Rate (Msun yr-1)",\
                     "ssfr":"Specific Star Formation Rate (Msun yr-1 Mstar-1)","L_mag":"Magnitude of Angular Momentum"}
@@ -276,7 +276,7 @@ class MultiQuasarSpherePlotter():
         for q in self.currentQuasarArray:
             if g.get_bin_str() in q.gasbins.get_bin_str():
                 toReturn.append(q)
-        self.currentQuasarArray = toReturn
+        self.currentQuasarArray = np.array(toReturn)
         
     def get_bin_values(self,constrainCriteria,bins,exclude=False,**kwargs):
         if isinstance(bins, list):                
@@ -641,7 +641,10 @@ class MultiQuasarSpherePlotter():
                     yarys[i][j] = yarys[i][j][np.logical_and(yarys[i][j]>=0,yarys[i][j]<np.inf)]
                     yarys[i][j] = yarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
                     xarys[i][j] = xarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
+                    if xVar == 'rho':
+                        xarys[i][j]/=1.67373522e-24
         self.debug = xarys,yarys
+            
         return xarys,yarys
     
     def should_take_logs_xy(self,ion,xVar,logx,logy,average='default',**kwargs):
@@ -724,6 +727,8 @@ class MultiQuasarSpherePlotter():
                     empty = False
                 if logy:
                     yerrs[i][j][0] = np.log10(ys[i][j])-np.log10(ys[i][j]-yerrs[i][j][0])
+                    if yerrs[i][j][0] == np.inf or np.isnan(yerrs[i][j][0]):
+                        yerrs[i][j][0] = max(np.log10(ys[i][j]),0)
                     yerrs[i][j][1] = np.log10(ys[i][j]+yerrs[i][j][1])-np.log10(ys[i][j])
                     ys[i][j] = np.log10(ys[i][j])
             xs[i] = xs[i][mask]
@@ -887,8 +892,9 @@ class MultiQuasarSpherePlotter():
         ax.legend()
         return future_colors
 
-    def get_observational_data(self,include_observations,plot_type,ion,xVar,logy=True,logx=False,
+    def get_observational_data(self,include_observations,plot_type,ion,xVar,logx='guess',logy='guess',
                                rlims = None,lq=None,observationArray=None,**kwargs):
+        logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
         if include_observations is None:
             return None
         if lq is not None:
@@ -948,15 +954,15 @@ class MultiQuasarSpherePlotter():
         if include_observations == 'only':
             ax.cla()
         detections = ax.errorbar([],[],
-                                     xerr=None,yerr=None,label='observations',ls=linestyle,
-                                     color = 'k',fmt = 's',capsize = 3)
+                                     xerr=None,yerr=None,label='Tumlinson 2011',ls=linestyle,
+                                     fmt = 's',capsize = 3, mec = 'k',ecolor = 'k',mfc='w')
         for i in range(len(xarys_detections)):
             color_store = ax.errorbar(xarys_detections[i],yarys_detections[i],
                                      xerr=None,yerr=yerr_arys_detections[i],ls=linestyle,
-                                     color = coloration[i],fmt = 's',capsize = 3)
+                                     color = coloration[i],fmt = 's',capsize = 3,alpha = .5)
             nondetectioncolor = color_store[0].get_color()
             ax.errorbar(xarys_nondetections[i],yarys_nondetections[i],xerr=None,yerr=.15,uplims=True,ls=linestyle,\
-                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w')
+                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
@@ -1336,7 +1342,7 @@ class MultiSphereSorter(object):
         resultBins = [None] * (len(bins)-1)
         criteriaArray = self.get_criteria_array(criteria,atEnd=atEnd)
         for index in range(len(bins)-1):
-            booleanindices = np.logical_and(criteriaArray >= bins[index], criteriaArray < bins[index+1]) 
+            booleanindices = np.logical_and(criteriaArray >= float(bins[index]), criteriaArray < bins[index+1]) 
             toadd = self.array[booleanindices]
             resultBins[index] = toadd
         return np.array(resultBins)

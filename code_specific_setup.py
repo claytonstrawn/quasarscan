@@ -13,6 +13,8 @@ atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
         'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
         'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn']
 
+all_ions_w_known_PI_defs = PI_field_defs.make_funcs()[0]
+
 def get_aux_files_art(dspath):
     projectdir = dspath.split("10MpcBox")[0]
     a0 = dspath.split("a0.")[1][:3]
@@ -128,7 +130,12 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=False):
             toret.append(ion.split(" ")[0])
         return list(set(toret))
     if add_pi_fracs:
-        fields_to_keep += [('gas',"PI_OIV"),('gas',"PI_OV"),('gas',"PI_OVI"),('gas',"PI_OVII"),('gas',"PI_OVIII")]
+        for ion in ions:
+            if ion not in all_ions_w_known_PI_defs:
+                continue
+            PI_field_name = ('gas','PI_%s'%(ion.replace(' ','')))
+            CI_field_name = ('gas','CI_%s'%(ion.replace(' ','')))
+            fields_to_keep += [PI_field_name,CI_field_name]
     if code not in codes:
         print("set_up_fields_for_sims was not prepared for the code %s!"%code)
         print("please edit that file first.")
