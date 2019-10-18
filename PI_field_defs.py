@@ -3,7 +3,10 @@ import yt
 from yt.utilities.physical_constants import mh
 
 def read_table(filename = "CI_PI_cutoff_tables.txt"):
-    f=open(filename,'r')
+    try:
+        f=open(filename,'r')
+    except:
+        f=open('quasarscan/'+filename)
     lines = f.readlines()
     f.close()
     ions = []
@@ -42,8 +45,23 @@ def cutoffs_for_ion_at_redshift(ion,redshift):
         z_above = redshifts[i]
         fraction_z_below = (float(z_above)-redshift)/(float(z_above)-float(z_below))
         fraction_z_above = 1-fraction_z_below
-        rho_final = rhos[(ion,z_below)]*fraction_z_below+rhos[(ion,z_above)]*fraction_z_above
-        t_final = ts[(ion,z_below)]*fraction_z_below+ts[(ion,z_above)]*fraction_z_above
+        if len(rhos[(ion,z_below)]) > len(rhos[(ion,z_above)]):
+            adjusted_rho_below = rhos[(ion,z_below)][:len(rhos[(ion,z_above)])]
+            adjusted_rho_above = rhos[(ion,z_above)]
+            adjusted_t_below = ts[(ion,z_below)][:len(rhos[(ion,z_above)])]
+            adjusted_t_above = ts[(ion,z_above)]
+        if len(rhos[(ion,z_below)]) < len(rhos[(ion,z_above)]):
+            adjusted_rho_below = rhos[(ion,z_below)]
+            adjusted_rho_above = rhos[(ion,z_above)][:len(rhos[(ion,z_below)])]
+            adjusted_t_below = ts[(ion,z_below)]
+            adjusted_t_above = ts[(ion,z_above)][:len(rhos[(ion,z_below)])]
+        if len(rhos[(ion,z_below)]) == len(rhos[(ion,z_above)]):
+            adjusted_rho_below = rhos[(ion,z_below)]
+            adjusted_rho_above = rhos[(ion,z_above)]
+            adjusted_t_below = ts[(ion,z_below)]
+            adjusted_t_above = ts[(ion,z_above)]
+        rho_final = adjusted_rho_below*fraction_z_below+adjusted_rho_above*fraction_z_above
+        t_final = adjusted_t_below*fraction_z_below+adjusted_t_above*fraction_z_above
         return rho_final,t_final
 
 def make_PI_CI_funcs(ion,redshift):
