@@ -47,7 +47,7 @@ def cutoffs_for_ion_at_redshift(ion,redshift):
         return rho_final,t_final
 
 def make_PI_CI_funcs(ion,redshift):
-    rhos,ts = interpolate_for_redshift(table,ion,redshift)
+    rhos,ts = cutoffs_for_ion_at_redshift(ion,redshift)
     def PI_ion(field, data):
         #0 if CI, 1 if PI
         temps = data['gas','temperature']
