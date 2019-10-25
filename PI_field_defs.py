@@ -46,15 +46,15 @@ def cutoffs_for_ion_at_redshift(ion,redshift):
         fraction_z_below = (float(z_above)-redshift)/(float(z_above)-float(z_below))
         fraction_z_above = 1-fraction_z_below
         if len(rhos[(ion,z_below)]) > len(rhos[(ion,z_above)]):
-            adjusted_rho_below = rhos[(ion,z_below)][:len(rhos[(ion,z_above)])]
+            adjusted_rho_below = np.append(rhos[(ion,z_below)][:len(rhos[(ion,z_above)])-1],rhos[(ion,z_below)][-1])
             adjusted_rho_above = rhos[(ion,z_above)]
-            adjusted_t_below = ts[(ion,z_below)][:len(rhos[(ion,z_above)])]
+            adjusted_t_below = np.append(ts[(ion,z_below)][:len(ts[(ion,z_above)])-1],ts[(ion,z_below)][-1])
             adjusted_t_above = ts[(ion,z_above)]
         if len(rhos[(ion,z_below)]) < len(rhos[(ion,z_above)]):
             adjusted_rho_below = rhos[(ion,z_below)]
-            adjusted_rho_above = rhos[(ion,z_above)][:len(rhos[(ion,z_below)])]
+            adjusted_rho_above = np.append(rhos[(ion,z_above)][:len(rhos[(ion,z_below)])-1],rhos[(ion,z_above)][-1])
             adjusted_t_below = ts[(ion,z_below)]
-            adjusted_t_above = ts[(ion,z_above)][:len(rhos[(ion,z_below)])]
+            adjusted_rho_above = np.append(ts[(ion,z_above)][:len(ts[(ion,z_below)])-1],ts[(ion,z_above)][-1])
         if len(rhos[(ion,z_below)]) == len(rhos[(ion,z_above)]):
             adjusted_rho_below = rhos[(ion,z_below)]
             adjusted_rho_above = rhos[(ion,z_above)]
