@@ -17,9 +17,15 @@ knownredshifts = [1.0,1.5,2.0,3.0,4.0]
 
 minimumlines = 250
 final = True
-if len(sys.argv)>1:
+if len(sys.argv)>2:
     test = True
+    procs = 0
+elif len(sys.argv)==2:
+    test = False
+    procs = int(sys.argv[1])*32
 else:
+    #assume 32 processors unless told otherwise
+    procs = 32
     test = False
 
 def check_in_allfiles(tocheck,alltextfiles,ionlist):
@@ -97,7 +103,7 @@ def write_files(tocheck,cont = 0):
     print("I think we should work on %s where we've so far gotten to %d"%(tocheck,cont))
     simname,filename,redshift = convert_check_to_strings(tocheck)
     firstline = "#!/bin/bash"
-    secondline = "quasarscan/batch_scripts/./run_one_new_snapshot_nersc.sh %s %s %s %s"%( simname, filename, redshift, cont)
+    secondline = "quasarscan/batch_scripts/./run_one_new_snapshot_nersc.sh %s %s %s %s %s"%( simname, filename, redshift, cont, procs)
     f = open("quasarscan/nextfile.sh")
     currentfirstline = f.readline()
     currentsecondline = f.readline()

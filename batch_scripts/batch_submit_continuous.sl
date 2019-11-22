@@ -7,5 +7,6 @@
 #SBATCH -A mp363     #Charge job to mp363 project
 #SBATCH -L SCRATCH   #Job requires $SCRATCH file system
 
-quasarscan/batch_scripts/./run_continuously.sh
+n=4
+quasarscan/batch_scripts/./run_continuously.sh $n
 

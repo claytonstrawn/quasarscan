@@ -1,4 +1,8 @@
 import numpy as np
+try:
+    from quasarscan import PI_field_defs
+except:
+    import PI_field_defs
 
 def parse_string_for_dict(s):
     s = s.strip('{}')
@@ -57,8 +61,11 @@ density_bin = GasBin("density",["low","between6_4","between4_2","between2_0","se
 temperature_bin = GasBin("temperature",["cold","cool","warm_hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"],units = "K")
 radial_velocity_bin = GasBin("radial_velocity",["inflow",'inflow_slow',"tangential",'outflow_slow',"outflow"],['-np.inf','-500','-10','10','500','np.inf'],units = "km/s")
 resolution_bin = GasBin("resolution",["high","between1_5","between5_15","low"],['0.00e+00', '1e9', '1.250e+11','3.375e+12', 'np.inf'],field = ('gas','cell_volume'),units = "pc**3")# (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
-pi_bin = GasBin('ionization_mechanism',['PI'],['0.9','1.1'], field = {'O IV':('gas','PI_OIV'), 'O V':('gas','PI_OV'), 'O VI':('gas','PI_OVI'), 'O VII':('gas','PI_OVII'), 'O VIII':('gas','PI_OVIII')})
-#todo: I have to think about this one a little more
+all_ions_w_known_PI_defs = PI_field_defs.make_funcs()[0]
+allionizationfields = {}
+for ion in all_ions_w_known_PI_defs:
+    allionizationfields[ion]=('gas','PI_%s'%(ion.strip(' ')))
+pi_bin = GasBin('ionization_mechanism',['PI'],['0.9','1.1'], field = allionizationfields)
 possible_bin_types = ["density","temperature","radial_velocity","resolution","ionization_mechanism"]
 
 

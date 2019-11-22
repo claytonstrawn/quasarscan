@@ -54,7 +54,7 @@ def cutoffs_for_ion_at_redshift(ion,redshift):
             adjusted_rho_below = rhos[(ion,z_below)]
             adjusted_rho_above = np.append(rhos[(ion,z_above)][:len(rhos[(ion,z_below)])-1],rhos[(ion,z_above)][-1])
             adjusted_t_below = ts[(ion,z_below)]
-            adjusted_rho_above = np.append(ts[(ion,z_above)][:len(ts[(ion,z_below)])-1],ts[(ion,z_above)][-1])
+            adjusted_t_above = np.append(ts[(ion,z_above)][:len(ts[(ion,z_below)])-1],ts[(ion,z_above)][-1])
         if len(rhos[(ion,z_below)]) == len(rhos[(ion,z_above)]):
             adjusted_rho_below = rhos[(ion,z_below)]
             adjusted_rho_above = rhos[(ion,z_above)]
@@ -88,9 +88,10 @@ def make_PI_CI_funcs(ion,redshift):
     return PI_ion,CI_ion
 
 ions = table[0]
-def make_funcs(ds=None,z=None,ions = ions,add_fields=False):
+def make_funcs(ds=None,z=None,ions = ions,add_fields=False,loud = False):
     if not z and not ds:
-        print('assuming z=1')
+        if loud:
+            print('assuming z=1')
         z=1.0
     elif z is None:
         try:

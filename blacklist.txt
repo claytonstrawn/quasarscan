@@ -1,1 +1,13 @@
 VELA_v2_art_16 4.0
+VELA_v2_art_05 2.0
+VELA_v2_art_05 3.0
+VELA_v2_art_05 4.0
+VELA_v2_art_07 1.5
+VELA_v2_art_07 2.0
+VELA_v2_art_07 3.0
+VELA_v2_art_07 4.0
+VELA_v2_art_08 1.0
+VELA_v2_art_08 1.5
+VELA_v2_art_08 2.0
+VELA_v2_art_08 3.0
+VELA_v2_art_08 4.0
