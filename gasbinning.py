@@ -64,7 +64,7 @@ resolution_bin = GasBin("resolution",["high","between1_5","between5_15","low"],[
 all_ions_w_known_PI_defs = PI_field_defs.make_funcs()[0]
 allionizationfields = {}
 for ion in all_ions_w_known_PI_defs:
-    allionizationfields[ion]=('gas','PI_%s'%(ion.strip(' ')))
+    allionizationfields[ion]=('gas','PI_%s'%(ion.replace(' ','')))
 pi_bin = GasBin('ionization_mechanism',['PI'],['0.9','1.1'], field = allionizationfields)
 possible_bin_types = ["density","temperature","radial_velocity","resolution","ionization_mechanism"]
 

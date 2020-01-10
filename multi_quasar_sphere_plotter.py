@@ -70,14 +70,13 @@ def get_all_observations(inquasarscan = 1,loadonly = 'all'):
     
 def sort_ions(ions,flat = True):
     def sort_ions_one_element(ions,element):
-        from trident import from_roman,to_roman
         nums = [None]*len(ions)
         toreturn = []
         for i in range(len(ions)):
-            nums[i] = from_roman(ions[i].split(" ")[1])
+            nums[i] = roman.from_roman(ions[i].split(" ")[1])
         nums.sort()
         for val in nums:
-            toreturn.append("%s %s"%(element,to_roman(val)))
+            toreturn.append("%s %s"%(element,roman.to_roman(val)))
         return toreturn
     ions = list(ions)
     ions.sort()
@@ -343,7 +342,6 @@ class MultiQuasarSpherePlotter():
             else:
                 if exclude:
                     self.currentQuasarArrayName += 'exclude'
-                    bins = excluded_bins
                 for acceptedValue in bins:
                     self.currentQuasarArrayName += acceptedValue.replace(" ","")
 
@@ -425,7 +423,10 @@ class MultiQuasarSpherePlotter():
                     eval(s)
                     string_to_replace_with = s
                 except:
-                    string_to_replace_with = "gq.info[:,%d]"%gq.get_ion_column_num(s)
+                    try:
+                        string_to_replace_with = "gq.info[:,%d]"%gq.get_ion_column_num(s)
+                    except:
+                        continue
                 strings_to_replace_with[s] = string_to_replace_with
         for s in sorted(strings_to_replace_with.keys(),key=len,reverse=True):
             new_str_to_eval = new_str_to_eval.replace(s,strings_to_replace_with[s])
@@ -924,7 +925,6 @@ class MultiQuasarSpherePlotter():
             _,yerr_arys = self.get_xy_type3(xVar,ion+':eb',observationArray,rlims)
         elif plot_type==4:
             #disabled for now
-            assert 0
             xarys,yarys = self.get_xy_type4(xVar,ion,observationArray,rlims)
             xerr_arys,yerr_arys = self.get_xy_type4(xVar+':eb',ion+':eb',observationArray,rlims)
         xarys_detections = np.copy(xarys)

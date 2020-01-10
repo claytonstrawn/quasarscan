@@ -5,11 +5,13 @@ try:
     from quasarscan import quasar_sphere
     from quasarscan import gasbinning
     from quasarscan.quasar_sphere import GeneralizedQuasarSphere
+    from quasarscan.multi_quasar_sphere_plotter import sort_ions
     level = 0
 except:
     import quasar_sphere
     from quasar_sphere import GeneralizedQuasarSphere
-    import gasbinning    
+    import gasbinning
+    from multi_quasar_sphere_plotter import sort_ions
     level = 1
 
 #input: level (0 meaning working directory is '~', 1 meaning, working directory is '~/quasarscan')
@@ -29,6 +31,37 @@ def read_textfile(filename):
     lines = f.read().splitlines()
     lines = list(filter(None, lines))
     return papername.replace('\n',''),headers, lines
+
+def access_data_values(variable,header_dict,parsed_line):
+    strvars = ['sl','cgm','sightline']
+    numvars = ['z','Rvir','Mstar','sfr','sfr:eb','r']
+    if variable in strvars:
+        try:
+            i,islog = header_dict[variable]
+            assert not islog
+            return parsed_line[i]
+        except:
+            return None
+    elif variable in numvars or 'cdens' in variable or 'eb' in variable:
+        try:
+            i,islog = header_dict[variable]
+            if parsed_line[i] == '<':
+                value = -2.0
+            elif parsed_line[i] == '>':
+                value = -3.0
+            elif parsed_line[i] == 'nan':
+                value = np.nan
+            else:
+                value = float(parsed_line[i])
+            if islog:
+                return 10.**float(value)
+            else:
+                return value
+        except:
+            return np.nan
+    else:
+        print("%s should not be stored in the sightline!"%variable)
+        assert False
 
 def create_observational_quasarArray(papername,headers,lines):
     quasarArray = []
@@ -51,6 +84,22 @@ def create_observational_quasarArray(papername,headers,lines):
             quasarArray.append(Observation(papername,headers,line))
     return np.array(quasarArray)
 
+    
+#input: the ion you are looking for as a string, either like "Ne VIII" or "Ne VIII:cdens" which should both return the column density
+#output: the position i, i.e. you'll find that value in info[0,i]
+
+def get_header_columns_dict(header):
+    to_return = {}
+    for i,name in enumerate(header):
+        if name.startswith('log '):
+            islog = True
+            retname = name.split('log ')[1]
+        else:
+            islog = False
+            retname = name
+        to_return[retname] = i,islog
+    return to_return
+
 class Observation(GeneralizedQuasarSphere):
     # input: the info from read_textfile
     # output: None
@@ -59,8 +108,13 @@ class Observation(GeneralizedQuasarSphere):
         parsed_line = line_from_file.split(",") 
         header = header.split(",")
         self.ions = []
-        header_columns_dict = self.get_header_columns_dict(header)
-        
+        header_columns_dict = get_header_columns_dict(header)
+        temp = header_columns_dict.keys()
+        keylist = []
+        for key in temp:
+            if (key.split(':')[0] not in keylist) and (' ' in key.split(':')[0]):
+                keylist.append(key.split(':')[0])
+        self.ions = sort_ions(keylist)
         self.number = 1 # 1 galaxy
         self.type = "Observation"
         self.length = 1 # 1 sightline
@@ -68,10 +122,10 @@ class Observation(GeneralizedQuasarSphere):
         self.gasbins = gasbinning.GasBinsHolder()
         iondata = []
         for ion in self.ions:
-            iondata.append(self.access_data_values('%s:cdens'%ion,header_columns_dict,parsed_line))
-            iondata.append(self.access_data_values('%s:eb'%ion,header_columns_dict,parsed_line))
+            iondata.append(access_data_values('%s:cdens'%ion,header_columns_dict,parsed_line))
+            iondata.append(access_data_values('%s:eb'%ion,header_columns_dict,parsed_line))
         self.info = np.array([[-1, -1, -1]+
-                             [self.access_data_values('r',header_columns_dict,parsed_line)]+
+                             [access_data_values('r',header_columns_dict,parsed_line)]+
                              [-1, -1, -1,-1,-1, -1, -1] + 
                              iondata + 
                              [-1, -1, -1]])
@@ -85,11 +139,11 @@ class Observation(GeneralizedQuasarSphere):
         #(and we probably won't know theta/phi)
         
         #stringparams - knowable
-        self.name     = self.access_data_values('cgm',header_columns_dict,parsed_line)
+        self.name     = access_data_values('cgm',header_columns_dict,parsed_line)
         self.simname  = papername
         self.Rvir_is_real = 'True'
         self.cgm_name = self.name
-        self.sightline = self.access_data_values('sl',header_columns_dict,parsed_line)
+        self.sightline = access_data_values('sl',header_columns_dict,parsed_line)
         self.compaction_stage = "unknown"
 
         #stringparams - unknowable (should all be None)
@@ -100,14 +154,14 @@ class Observation(GeneralizedQuasarSphere):
         self.dspath = None
         
         #numparams - knowable
-        self.redshift = self.access_data_values('z',header_columns_dict,parsed_line)
+        self.redshift = access_data_values('z',header_columns_dict,parsed_line)
         self.rounded_redshift = quasar_sphere.round_redshift(self.redshift)
-        self.Rvir = self.access_data_values('Rvir',header_columns_dict,parsed_line)
+        self.Rvir = access_data_values('Rvir',header_columns_dict,parsed_line)
         self.a0 = 1./(self.redshift+1)
         self.Mvir = 4./3*np.pi*self.Rvir**3*(200*1.5e-7) #crit_dens = 1.5e-7 M⊙ pc-3 
-        self.Mstar = self.access_data_values('Mstar',header_columns_dict,parsed_line)
+        self.Mstar = access_data_values('Mstar',header_columns_dict,parsed_line)
         self.star_Rvir = self.Mstar
-        self.sfr = self.access_data_values('sfr',header_columns_dict,parsed_line)
+        self.sfr = access_data_values('sfr',header_columns_dict,parsed_line)
         self.ssfr = self.sfr/self.Mstar
         
         #numparams - unknowable (should all be nan)
@@ -121,48 +175,9 @@ class Observation(GeneralizedQuasarSphere):
         self.Mdm = self.dm_Rvir
         self.final_a0 = np.nan
         return
+
     
-    #input: the ion you are looking for as a string, either like "Ne VIII" or "Ne VIII:cdens" which should both return the column density
-    #output: the position i, i.e. you'll find that value in info[0,i]
-    
-    def get_header_columns_dict(self,header):
-        to_return = {}
-        for i,name in enumerate(header):
-            if name.startswith('log '):
-                islog = True
-                name = name.split('log ')[1]
-            else:
-                islog = False
-            if ":cdens" in name:
-                self.ions.append(name.split(':')[0])
-            to_return[name] = i,islog
-        return to_return
-    
-    def access_data_values(self,variable,header_dict,parsed_line):
-        strvars = ['sl','cgm','sightline']
-        ion_name_vars = []
-        for ion in self.ions:
-            ion_name_vars+=['%s:cdens'%ion,'%s:eb'%ion]
-        numvars = ['z','Rvir','Mstar','sfr','r']+ion_name_vars
-        if variable in strvars:
-            try:
-                i,islog = header_dict[variable]
-                assert not islog
-                return parsed_line[i]
-            except:
-                return None
-        elif variable in numvars:
-            try:
-                i,islog = header_dict[variable]
-                if islog:
-                    return 10.**float(parsed_line[i])
-                else:
-                    return float(parsed_line[i])
-            except:
-                return np.nan
-        else:
-            print("%s should not be stored in the sightline!"%variable)
-            assert False
+
             
     def get_ion_column_num(self,ion):
         if not ":" in ion:
