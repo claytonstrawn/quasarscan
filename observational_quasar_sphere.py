@@ -5,19 +5,48 @@ try:
     from quasarscan import quasar_sphere
     from quasarscan import gasbinning
     from quasarscan.quasar_sphere import GeneralizedQuasarSphere
-    from quasarscan.multi_quasar_sphere_plotter import sort_ions
+    from quasarscan import roman
     level = 0
 except:
     import quasar_sphere
     from quasar_sphere import GeneralizedQuasarSphere
     import gasbinning
-    from multi_quasar_sphere_plotter import sort_ions
+    import roman
     level = 1
 
 #input: level (0 meaning working directory is '~', 1 meaning, working directory is '~/quasarscan')
 #output: list of strings, names of the files where observations are being stored
 def get_all_textfiles(level):
     return files
+
+def sort_ions(ions,flat = True):
+    def sort_ions_one_element(ions,element):
+        nums = [None]*len(ions)
+        toreturn = []
+        for i in range(len(ions)):
+            nums[i] = roman.from_roman(ions[i].split(" ")[1])
+        nums.sort()
+        for val in nums:
+            toreturn.append("%s %s"%(element,roman.to_roman(val)))
+        return toreturn
+    ions = list(ions)
+    ions.sort()
+    index = 0
+    element = ions[index].split(" ")[0]
+    tosort = []
+    toreturn = []
+    while index < len(ions):
+        if ions[index].split(" ")[0] == element:
+            tosort.append(ions[index])
+            index += 1
+        else:
+            toreturn.append(sort_ions_one_element(tosort,element))
+            element = ions[index].split(" ")[0]
+            tosort = []
+    toreturn.append(sort_ions_one_element(tosort,element))
+    if flat:
+        toreturn = [item for sublist in toreturn for item in sublist]
+    return toreturn
 
 #input: filename to go into
 #output: a line of headers representing columns, and the lines of the file
@@ -175,8 +204,6 @@ class Observation(GeneralizedQuasarSphere):
         self.Mdm = self.dm_Rvir
         self.final_a0 = np.nan
         return
-
-    
 
             
     def get_ion_column_num(self,ion):

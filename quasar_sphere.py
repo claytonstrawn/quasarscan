@@ -86,7 +86,6 @@ class GeneralizedQuasarSphere(object):
             for ion in self.get_ion_list_w_bins():
                 pos_in_q = q.get_ion_column_num(ion)
                 pos_in_self = self.get_ion_column_num(ion)
-                self.debug = q.info
                 self.info[currentpos:currentpos+size,pos_in_self] = q.info[:size,pos_in_q]
                 convert = 1.0
                 if distance == "Rvir":

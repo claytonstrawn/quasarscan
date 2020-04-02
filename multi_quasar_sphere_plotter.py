@@ -10,6 +10,7 @@ try:
     from quasarscan import ion_lists
     from quasarscan import gasbinning
     from quasarscan import roman
+    from quasarscan.sorter import MultiSphereSorter
     level = 0
 except:
     import quasar_sphere
@@ -17,6 +18,7 @@ except:
     import ion_lists
     import gasbinning
     import roman
+    from sorter import MultiSphereSorter
     level = 1
 #precondition: assumes there are only two levels of depth within the output folder
 #postcondition: returns a list of all textfiles
@@ -252,11 +254,11 @@ class MultiQuasarSpherePlotter():
     
     #param bins either serves as an array with each element being as a cutpoint, or a single value
     #follows array indexing exclusivity and inclusivity rules
-    def sort_by(self, criteria, bins = [0,np.inf], exploration_mode = False,\
+    def sort_by(self, criteria, bins = [0,np.inf],\
         atEnd = False,splitEven = 0,**kwargs):
         bins,oldQuasarArray = self.prepare_to_sort(criteria,bins,atEnd,**kwargs)
-        sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
-        obs_sorter = MultiSphereSorter(self.currentObservationArray,exploration_mode = False)
+        sorter = MultiSphereSorter(self.currentQuasarArray)
+        obs_sorter = MultiSphereSorter(self.currentObservationArray)
         if splitEven:
             labels, bins, quasarBins = sorter.splitEven(criteria,splitEven,atEnd = atEnd)
         else:
@@ -345,11 +347,11 @@ class MultiQuasarSpherePlotter():
                 for acceptedValue in bins:
                     self.currentQuasarArrayName += acceptedValue.replace(" ","")
 
-    def constrain_current_Quasar_Array(self, constrainCriteria,bins=None,exploration_mode=False,**kwargs):
+    def constrain_current_Quasar_Array(self, constrainCriteria,bins=None,**kwargs):
         self.check_criteria_works(constrainCriteria,**kwargs)
         bins = self.get_bin_values(constrainCriteria,bins,**kwargs)
-        sorter = MultiSphereSorter(self.currentQuasarArray,exploration_mode = exploration_mode)
-        obs_sorter = MultiSphereSorter(self.currentObservationArray,exploration_mode = False)
+        sorter = MultiSphereSorter(self.currentQuasarArray)
+        obs_sorter = MultiSphereSorter(self.currentObservationArray)
         bins = self.constrain_array_helper(sorter,obs_sorter,constrainCriteria,bins,**kwargs)
         self.change_array_name(constrainCriteria,bins,**kwargs)
         return bins
@@ -851,7 +853,7 @@ class MultiQuasarSpherePlotter():
 
     def plot_on_ax(self,ax,plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,title,labels=None,
                    average='default',dots=False,grid=False,linestyle='',
-                   fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
+                   fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',alpha = 1,
                    **kwargs):
         coloration = coloration or [None]*len(xs)
         future_colors = []
@@ -865,13 +867,13 @@ class MultiQuasarSpherePlotter():
                 if markersize=='default':
                     markersize=6
                 color_store = ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],
-                                      color=coloration[i],markersize=markersize)
+                                      color=coloration[i],markersize=markersize,alpha = alpha)
                 future_colors.append(color_store[0].get_color())
         elif average == 'scatter':
             if markersize=='default':
                 markersize=6
             for i in range(len(xs)):
-                color_store = ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=2)
+                color_store = ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=2,alpha = alpha)
                 future_colors.append(color_store[0].get_color())
         else:
             fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',"stddev":'.',"median":"."}
@@ -879,7 +881,7 @@ class MultiQuasarSpherePlotter():
                 fmt = fmtdict[self.plots]
             for i in range(len(xs)):
                 color_store = ax.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],ls=linestyle,\
-                             color = coloration[i],fmt = fmt,capsize = 3)
+                             color = coloration[i],fmt = fmt,capsize = 3,alpha = alpha)
                 future_colors.append(color_store[0].get_color())
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -924,45 +926,57 @@ class MultiQuasarSpherePlotter():
             xarys,yarys = self.get_xy_type3(xVar,ion,observationArray)
             _,yerr_arys = self.get_xy_type3(xVar,ion+':eb',observationArray,rlims)
         elif plot_type==4:
-            #disabled for now
             xarys,yarys = self.get_xy_type4(xVar,ion,observationArray,rlims)
-            xerr_arys,yerr_arys = self.get_xy_type4(xVar+':eb',ion+':eb',observationArray,rlims)
+            _,yerr_arys = self.get_xy_type4(xVar,ion+':eb',observationArray,rlims)
         xarys_detections = np.copy(xarys)
         yarys_detections = np.copy(xarys)
         yerr_arys_detections = np.copy(xarys)
         xarys_nondetections = np.copy(xarys)
         yarys_nondetections = np.copy(xarys)
+        yerr_arys_nondetections = np.copy(xarys)
+        
         for i in range(len(xarys)):
             if logy:
-                yarys[i] = np.log10(yarys[i])
-                yerr_arys[i] = np.log10(yerr_arys[i])
+                for j in range(len(xarys[i])):
+                    yarys[i][j] = np.log10(yarys[i][j])
+                    yerr_arys[i][j] = np.log10(yerr_arys[i][j])
             if logx:
-                xarys[i] = np.log10(xarys[i])
-            xarys_detections[i] = xarys[i][~np.isnan(yerr_arys[i])]
-            yarys_detections[i] = yarys[i][~np.isnan(yerr_arys[i])]
-            yerr_arys_detections[i] = yerr_arys[i][~np.isnan(yerr_arys[i])]
-            xarys_nondetections[i] = xarys[i][np.isnan(yerr_arys[i])]
-            yarys_nondetections[i] = yarys[i][np.isnan(yerr_arys[i])]
-        return xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections,yarys_nondetections
+                for j in range(len(xarys[i])):
+                    xarys[i][j] = np.log10(xarys[i][j])
+            xarys_detections[i] = xarys[i][yerr_arys[i]>0]
+            yarys_detections[i] = yarys[i][yerr_arys[i]>0]
+            yerr_arys_detections[i] = yerr_arys[i][yerr_arys[i]>0]
+            xarys_nondetections[i] = xarys[i][yerr_arys[i]<0]
+            yarys_nondetections[i] = yarys[i][yerr_arys[i]<0]
+            yerr_arys_nondetections[i] = yerr_arys[i][yerr_arys[i]<0]
+        return xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections,yarys_nondetections,yerr_arys_nondetections
     
     def plot_observational_data(self,ax,plot_type,include_observations,obs_data,xlabel,ylabel,title,labels=None,
                grid=False,linestyle='',obs_coloration=None,
                fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
                **kwargs):
-        xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections,yarys_nondetections = obs_data
+        xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections,yarys_nondetections,yerr_arys_nondetections = obs_data
         coloration = coloration or obs_coloration
+        if coloration is None:
+            coloration = [None]*len(xarys_detections)
         if include_observations == 'only':
             ax.cla()
         detections = ax.errorbar([],[],
-                                     xerr=None,yerr=None,label='Tumlinson 2011',ls=linestyle,
+                                     xerr=None,yerr=None,label='Werk et al. 2013',ls=linestyle,
                                      fmt = 's',capsize = 3, mec = 'k',ecolor = 'k',mfc='w')
         for i in range(len(xarys_detections)):
             color_store = ax.errorbar(xarys_detections[i],yarys_detections[i],
                                      xerr=None,yerr=yerr_arys_detections[i],ls=linestyle,
                                      color = coloration[i],fmt = 's',capsize = 3,alpha = .5)
             nondetectioncolor = color_store[0].get_color()
-            ax.errorbar(xarys_nondetections[i],yarys_nondetections[i],xerr=None,yerr=.15,uplims=True,ls=linestyle,\
-                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
+            ax.errorbar(xarys_nondetections[i][yerr_arys_nondetections[i]==-2],
+                        yarys_nondetections[i][yerr_arys_nondetections[i]==-2],
+                        xerr=None,yerr=.15,uplims=True,ls=linestyle,
+                        mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
+            ax.errorbar(xarys_nondetections[i][yerr_arys_nondetections[i]==-3],
+                        yarys_nondetections[i][yerr_arys_nondetections[i]==-3],
+                        xerr=None,yerr=.15,lolims=True,ls=linestyle,
+                        mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
@@ -1155,13 +1169,11 @@ class MultiQuasarSpherePlotter():
         #conduct a sort on one dimension and get the labels and bins for the other
         labels_y, bins_y, quasarbins_y, obs_bins_y = self.sort_by(criteria_y, 
                                                       bins_y,
-                                                      exploration_mode = False,
                                                       atEnd = atEnd_y,
                                                       splitEven = splitEven_y,
                                                       reverse = ~reverse_y)
         labels_x, bins_x, _  ,_          = self.sort_by(criteria_x, 
                                                       bins_x, 
-                                                      exploration_mode = False,
                                                       atEnd = atEnd_x, 
                                                       splitEven = splitEven_x,
                                                       reverse = False)
@@ -1172,8 +1184,8 @@ class MultiQuasarSpherePlotter():
 
         #sort the other dimension and store sorted quasarbins
         for i,qlist_y in enumerate(quasarbins_y):
-            sorter = MultiSphereSorter(qlist_y, exploration_mode = False)
-            obs_sorter = MultiSphereSorter(obs_bins_y[i], exploration_mode = False)
+            sorter = MultiSphereSorter(qlist_y)
+            obs_sorter = MultiSphereSorter(obs_bins_y[i])
             _,_, quasarbins_x = sorter.sort(criteria_x,bins_x,atEnd = atEnd_x)
             _,_, obs_bins_x = obs_sorter.sort(criteria_x,bins_x,atEnd = False)
             if reverse_x:
@@ -1269,150 +1281,3 @@ class MultiQuasarSpherePlotter():
         else:
             print('Please use a valid file name or pass True.')
     
-class MultiSphereSorter(object):
-    def __init__(self,myArray,exploration_mode = False):
-        self.array = myArray
-        self.exploration_mode = exploration_mode
-    #param bins the lower parameter is inclusive, the upper parameter is exclusive
-    def sort(self, criteria, bins,atEnd = False):
-        labels = self.make_labels(criteria, bins,atEnd = atEnd)
-        if criteria in stringcriteria:
-            sortfn = self.sort_by_strparam
-        else:
-            sortfn = self.sort_by_default
-        while self.exploration_mode:
-            fakeBins = sortfn(criteria, bins, atEnd = atEnd)
-            print("Bins will be categorized in the following structure: \n")
-            for index in range(len(fakeBins)):
-                oneBin = fakeBins[index]
-                print(labels[index] + " has " + str(len(oneBin)) + " elements out of " + str(len(self.array)) + "\n")
-            response = input("Continue? ([Y]/N) or enter new 'bin' parameter.\n")
-            if response.lower() == "n":
-                return None, None, None
-            elif response.lower() == "y" or response == "":
-                self.exploration_mode = False
-            else:
-                while True:
-                    try:
-                        bins = eval(response)
-                        if isinstance(bins, float) or isinstance(bins, int) or \
-                            (len(bins) == 1 and isinstance(bins[0], float)) or (len(bins) == 1 and isinstance(bins[0], int)):
-                            if isinstance(bins, list) or isinstance(bins,np.ndarray):
-                                bins = bins[0]
-                            bins = np.array([0.0, bins, np.inf])
-                        elif isinstance(bins, str) and criteria in stringcriteria:
-                            bins = [bins]
-                        break
-                    except Exception as e:
-                        print(e)
-                        response = input("Could not evaluate %s. Please re-enter.\n"%response)       
-            labels = self.make_labels(criteria, bins, atEnd = atEnd)
-        return labels, bins, sortfn(criteria, bins, atEnd = atEnd)
-
-    def sort_by_strparam(self, criteria, acceptedValues,atEnd = False):
-        if atEnd:
-            print("dont use atEnd for string sort")
-            return
-        criteriaArray = self.get_criteria_array(criteria)
-        resArray = np.empty(len(acceptedValues),dtype = 'object')
-        for i in range(len(acceptedValues)):
-            toAdd = []
-            for j in range(len(criteriaArray)):
-                add = False
-                if criteria == "ions" and acceptedValues[i] in criteriaArray[j]:
-                    add = True
-                elif criteria != 'ions' and acceptedValues[i] == criteriaArray[j]:
-                    add = True
-                if add:
-                    toAdd.append(self.array[j])
-            resArray[i] = np.array(toAdd)
-        return np.array(resArray)   
-    
-    def sort_by_default(self, criteria, bins, atEnd = False):
-        if len(bins) == 1:
-            criteriaArray = self.get_criteria_array(criteria, atEnd = atEnd)
-            resArray = []
-            for index in range(len(criteriaArray)):
-                if criteriaArray[index] is np.nan:
-                    continue
-                intersection = np.intersect1d(bins, criteriaArray[index])
-                if len(intersection) > 0:
-                    resArray.append(self.array[index]) 
-            return resArray 
-        resultBins = [None] * (len(bins)-1)
-        criteriaArray = self.get_criteria_array(criteria,atEnd=atEnd)
-        for index in range(len(bins)-1):
-            booleanindices = np.logical_and(criteriaArray >= float(bins[index]), criteriaArray < bins[index+1]) 
-            toadd = self.array[booleanindices]
-            resultBins[index] = toadd
-        return np.array(resultBins)
-    
-    def splitEven(self,criteria,num,atEnd = False):
-        if criteria in stringcriteria:
-            print("cannot splitEven over string criteria")
-        criteriaArray = self.get_criteria_array(criteria, atEnd = atEnd)
-        # criteriaArray = criteriaArray[criteriaArray>-1]
-        sortedcriteriaArray = np.sort(criteriaArray)
-        if atEnd:
-            sortedcriteriaArray = np.unique(sortedcriteriaArray)
-        quotient = len(sortedcriteriaArray) // num
-        if quotient == 0:
-            print("Warning: Number of bins exceeds length of criteria array. Not all bins will be filled.")
-        remainder = len(sortedcriteriaArray) % num
-        bin_edges = np.zeros(num + 1)
-        bin_edges[0] = 0
-        bin_edges[-1] = np.inf
-        j = 0
-        for i in range(1,num):
-            if i <= remainder:
-                bin_edges[i] = np.mean(sortedcriteriaArray[i*quotient+j : i*quotient+2+j])
-                j+=1
-            else:
-                bin_edges[i] = np.mean(sortedcriteriaArray[i*quotient-1+j : i*quotient+1+j])
-        return self.sort(criteria, bin_edges,atEnd = atEnd)
-    
-    
-    def get_criteria_array(self, criteria,atEnd = False):
-        if atEnd == False:
-            res = []
-            for q in self.array:
-                criteria_vals = eval("q." + criteria)
-                res.append(criteria_vals)
-            return np.array(res)
-        else:
-            quasar_array = self.array
-            final_a = np.zeros(len(quasar_array))
-            for i in range(len(quasar_array)):
-                final_a[i] = quasar_array[i].final_a0
-            min_a = min(final_a)
-            criteria_final = np.zeros(len(quasar_array))
-            for index in range(len(quasar_array)):
-                q = quasar_array[index]
-                criteria_final[index] = q.get_criteria_at_a(min_a,criteria)
-            return criteria_final
-    
-    def make_labels(self,criteria, bins, atEnd=False):
-        labels = []
-        if criteria in stringcriteria:
-            labels = bins
-        else:
-            if atEnd:
-                quasar_array = self.array
-                final_a = np.zeros(len(quasar_array))
-                for i in range(len(quasar_array)):
-                    final_a[i] = quasar_array[i].final_a0
-                min_a = "%1.3f"%min(final_a)
-                criteria = criteria + "_"+min_a 
-            for index in range(len(bins)-1):
-                low = bins[index]
-                high = bins[index+1]
-                lowstr = "%.1e"%low if low < 0.1 or low > 100.0 else str(low)[:4]
-                highstr = "%.1e"%high if high < 0.1 or high > 100.0 else str(high)[:4]
-                if low == 0.0:
-                    uniqueName = "%s < %s"%(criteria, highstr)
-                elif high == np.inf:
-                    uniqueName = "%s > %s"%(criteria, lowstr)
-                else:
-                    uniqueName = "%s < %s < %s"%(lowstr,criteria,highstr)
-                labels.append(uniqueName)
-        return labels
