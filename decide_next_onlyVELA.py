@@ -136,7 +136,7 @@ def main_func():
     #write a bash script to go get it, and to delete it after
     for i,tocheck in enumerate(list_of_files_to_process):
         print(tocheck)
-        isValid = check_in_allfiles(alltextfiles, filenames_to_make[i])
+        isValid = check_in_allfiles(alltextfiles, filenames_to_make[i]) 
         if type(isValid) is int and check_validity(tocheck):
             write_files(tocheck, cont = isValid)
             return
