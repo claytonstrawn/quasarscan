@@ -78,7 +78,7 @@ def check_validity(tocheck):
         else:
             continue
     my_saved_directories = os.listdir(root_for_data_files)
-    foldername = tocheck[0]
+    foldername = 'VELA_v2_art_%s'%tocheck[0]
     if not foldername in my_saved_directories:
         print("didn't see folder")
         return False
@@ -86,7 +86,7 @@ def check_validity(tocheck):
     if not "10MpcBox_csf512_a%s.d"%tocheck[1] in my_saved_data:
         print("didn't see file")
         return False
-    if not get_value('Rvir','VELA_v2_art_%s'%tocheck[0],a0=float('0.'+tocheck[1]),check_exists = True):
+    if not get_value('Rvir',foldername,a0=float('0.'+tocheck[1]),check_exists = True):
         print("didn't see metadata")
         return False
     return True
@@ -134,9 +134,9 @@ def write_files(tocheck,cont = 0):
 def main_func():
     #figure out what is next necessary file to scan
     #write a bash script to go get it, and to delete it after
-    for tocheck in list_of_files_to_process:
+    for i,tocheck in enumerate(list_of_files_to_process):
         print(tocheck)
-        isValid = check_in_allfiles(tocheck,alltextfiles,ionlist)
+        isValid = check_in_allfiles(filenames_to_make[i])
         if type(isValid) is int and check_validity(tocheck):
             write_files(tocheck, cont = isValid)
             return
