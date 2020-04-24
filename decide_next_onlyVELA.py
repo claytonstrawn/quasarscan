@@ -20,7 +20,7 @@ computer = 'nasa'
 
 root_for_data_files = {'nersc':"/global/cscratch1/sd/cstrawn",'nasa':'/nobackupp2/cstrawn/mydir'}[computer]
 
-ionlist_to_use = Strawn20
+ionlist = Strawn20
 ionlist_name = "Strawn20"
 
 #turn the list into the filenames you expect
@@ -134,7 +134,6 @@ def write_files(tocheck,cont = 0):
 def main_func():
     #figure out what is next necessary file to scan
     #write a bash script to go get it, and to delete it after
-    ionlists = [agoraions]
     for tocheck in list_of_files_to_process:
         print(tocheck)
         isValid = check_in_allfiles(tocheck,alltextfiles,ionlist)
