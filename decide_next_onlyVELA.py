@@ -61,7 +61,6 @@ def check_in_allfiles(alltextfiles,name_to_check):
     return False
 
     
-a2z = {"0.500":"1.0","0.400":"1.5","0.330":"2.0","0.250":"3.0","0.200":"4.0"}
 
 #check if the data file is around that we need, and if it "appears"
 #to be there, but it is in the blacklist, or isn't there, return False
@@ -78,12 +77,12 @@ def check_validity(tocheck):
         else:
             continue
     my_saved_directories = os.listdir(root_for_data_files)
-    foldername = 'VELA_v2_art_%s'%tocheck[0]
+    foldername = 'VELA_v2.0_art_%s'%tocheck[0]
     if not foldername in my_saved_directories:
         print("didn't see folder")
         return False
     my_saved_data = os.listdir(root_for_data_files+'/'+foldername)
-    if not "10MpcBox_csf512_a%s.d"%tocheck[1] in my_saved_data:
+    if not "10MpcBox_csf512_a0.%s.d"%tocheck[1] in my_saved_data:
         print("didn't see file")
         return False
     if not get_value('Rvir',foldername,a0=float('0.'+tocheck[1]),check_exists = True):
