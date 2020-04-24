@@ -85,7 +85,7 @@ def check_validity(tocheck):
     if not "10MpcBox_csf512_a0.%s.d"%tocheck[1] in my_saved_data:
         print("didn't see file")
         return False
-    if not get_value('Rvir',foldername,a0=float('0.'+tocheck[1]),check_exists = True):
+    if not get_value('Rvir','VELA_v2_art_%s'%tocheck[0],a0=float('0.'+tocheck[1]),check_exists = True):
         print("didn't see metadata")
         return False
     return True
