@@ -6,7 +6,7 @@ module use -a /swbuild/analytix/tools/modulefiles
 module load miniconda3/v4
 source activate my_env
 
-python quasarscan/decide_next_onlyVELA.py
+python quasarscan/decide_next_onlyVELA.py $n
 until ! [ -s quasarscan/nextfile.sh ]
 do
     chmod u+x quasarscan/nextfile.sh
