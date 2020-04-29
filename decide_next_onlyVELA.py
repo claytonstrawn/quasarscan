@@ -92,7 +92,7 @@ def check_validity(tocheck):
 
 def convert_check_to_strings(tocheck):
     simname = "VELA_v2_art_%s"%tocheck[0]
-    filename = "/global/cscratch1/sd/cstrawn/%s/%s"%(simname,'10MpcBox_csf512_a%s.d'%tocheck[1])
+    filename = "/global/cscratch1/sd/cstrawn/%s/%s"%(simname,'10MpcBox_csf512_a0.%s.d'%tocheck[1])
     redshift = a2z[tocheck[1]]
     return simname, filename, redshift
 
