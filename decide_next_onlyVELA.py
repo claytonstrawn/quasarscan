@@ -1,8 +1,8 @@
 import os
-from multi_quasar_sphere_plotter import get_all_textfiles
-from parse_metadata import get_value
+from quasarscan.multi_quasar_sphere_plotter import get_all_textfiles
+from quasarscan.parse_metadata import get_value
 import sys
-from ion_lists import *
+from quasarscan.ion_lists import *
 
 alltextfiles = get_all_textfiles(False)
 
@@ -26,7 +26,7 @@ ionlist_name = "Strawn20"
 #turn the list into the filenames you expect
 filenames_to_make = []
 for t in list_of_files_to_process:
-    filenames_to_make.append("quasarscan/output/VELA_v2_art_"+t[0]+"coldensinfo/number_of_lines-"+ionlist_name+'_z'+a2z[t[1]])
+    filenames_to_make.append("quasarscan/output/VELA_v2_art_"+t[0]+"coldensinfo/number_of_lines-"+ionlist_name+'_z'+a2z[t[1]]+'.txt')
 
 # if we successfully cleared 250, we can move on and don't need to start over
 minimumlines = 250
