@@ -23,9 +23,13 @@ except:
 def get_all_textfiles(inquasarscan = 1,loadonly = 'all'):
     
     #pathname by default starts in output
-    path = "output"
-    if not inquasarscan:
+    try:
+        path = "output"
+        dirs = os.listdir(path)
+    except:
         path = "quasarscan/output"
+        dirs = os.listdir(path)
+
     textfiles = []
     def one_is_in_name(name,loadonly):
         if loadonly == 'all':
@@ -37,7 +41,6 @@ def get_all_textfiles(inquasarscan = 1,loadonly = 'all'):
                 return True
         return False
     #gets all folders in output
-    dirs = os.listdir(path)
     for folderName in dirs:
         if not folderName.startswith(".") and one_is_in_name(folderName,loadonly):
             folderPath = path + "/" + folderName
