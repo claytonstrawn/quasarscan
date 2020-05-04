@@ -26,7 +26,7 @@ ionlist_name = "Strawn20"
 #turn the list into the filenames you expect
 filenames_to_make = []
 for t in list_of_files_to_process:
-    filenames_to_make.append("output/VELA_v2_art_"+t[0]+"coldensinfo/number_of_lines-"+ionlist_name+'_z'+a2z[t[1]])
+    filenames_to_make.append("quasarscan/output/VELA_v2_art_"+t[0]+"coldensinfo/number_of_lines-"+ionlist_name+'_z'+a2z[t[1]])
 
 # if we successfully cleared 250, we can move on and don't need to start over
 minimumlines = 250
@@ -92,7 +92,7 @@ def check_validity(tocheck):
 
 def convert_check_to_strings(tocheck):
     simname = "VELA_v2_art_%s"%tocheck[0]
-    filename = "/global/cscratch1/sd/cstrawn/%s/%s"%(simname,'10MpcBox_csf512_a0.%s.d'%tocheck[1])
+    filename = "%s/%s/%s"%(root_for_data_files,simname,'10MpcBox_csf512_a0.%s.d'%tocheck[1])
     redshift = a2z[tocheck[1]]
     return simname, filename, redshift
 
