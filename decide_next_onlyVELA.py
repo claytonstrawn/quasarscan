@@ -1,10 +1,17 @@
 import os
-from quasarscan.multi_quasar_sphere_plotter import get_all_textfiles
-from quasarscan.parse_metadata import get_value
 import sys
-from quasarscan.ion_lists import *
+try:
+    from quasarscan.multi_quasar_sphere_plotter import get_all_textfiles
+    from quasarscan.ion_lists import *
+    from quasarscan.parse_metadata import get_value
+    level = 0
+except:
+    from multi_quasar_sphere_plotter import get_all_textfiles
+    from ion_lists import *
+    from parse_metadata import get_value
+    level = 1
 
-alltextfiles = get_all_textfiles(False)
+alltextfiles = get_all_textfiles(level)
 
 #the list of files we want to process at any given time
 list_of_files_to_process = [('07','500'),
