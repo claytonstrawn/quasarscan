@@ -59,7 +59,7 @@ def check_in_allfiles(alltextfiles,name_to_check):
         lines = int(aftercoldensinfo.split("_of_")[0])
         outOf = int(aftercoldensinfo.split("_of_")[1].split("-")[0])
         if name_to_check.replace('number',str(lines)).replace('lines',str(outOf)) == fil:
-            if lines >= minimumlines and lines >= outOf:
+            if lines >= minimumlines:
                 return True
             elif lines < outOf:
                 return lines
