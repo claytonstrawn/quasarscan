@@ -4,4 +4,4 @@
 #PBS -o my_job_output_file.txt
 #PBS -q debug
 
-bash quasarscan/batch_scripts/run_continuously_nasa.sh
+bash quasarscan/batch_scripts/run_continuously_nasa.sh 96
