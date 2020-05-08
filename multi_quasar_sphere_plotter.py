@@ -856,7 +856,7 @@ class MultiQuasarSpherePlotter():
 
     def plot_on_ax(self,ax,plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,title,labels=None,
                    average='default',dots=False,grid=False,linestyle='',
-                   fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',alpha = 1,
+                   fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',alpha = 1.0,
                    **kwargs):
         coloration = coloration or [None]*len(xs)
         future_colors = []
@@ -929,57 +929,60 @@ class MultiQuasarSpherePlotter():
             xarys,yarys = self.get_xy_type3(xVar,ion,observationArray)
             _,yerr_arys = self.get_xy_type3(xVar,ion+':eb',observationArray,rlims)
         elif plot_type==4:
+            print("plot type 4 (2-ions) disabled for observations until developed")
+            assert False
             xarys,yarys = self.get_xy_type4(xVar,ion,observationArray,rlims)
             _,yerr_arys = self.get_xy_type4(xVar,ion+':eb',observationArray,rlims)
         xarys_detections = np.copy(xarys)
         yarys_detections = np.copy(xarys)
         yerr_arys_detections = np.copy(xarys)
-        xarys_nondetections = np.copy(xarys)
-        yarys_nondetections = np.copy(xarys)
-        yerr_arys_nondetections = np.copy(xarys)
-        
+        xarys_nondetections_up = np.copy(xarys)
+        xarys_nondetections_down = np.copy(xarys)
+        yarys_nondetections_up = np.copy(xarys)
+        yarys_nondetections_down = np.copy(xarys)
+        if plot_type == 4:
+            xerr_arys_detections = np.copy(xarys)
         for i in range(len(xarys)):
+            xarys_detections[i] = xarys[i][yerr_arys[i]>=0]
+            yarys_detections[i] = yarys[i][yerr_arys[i]>=0]
+            yerr_arys_detections[i] = yerr_arys[i][yerr_arys[i]>=0]
+            xarys_nondetections_down[i] = xarys[i][yerr_arys[i]==-2]
+            yarys_nondetections_down[i] = yarys[i][yerr_arys[i]==-2]
+            xarys_nondetections_up[i] = xarys[i][yerr_arys[i]==-3]
+            yarys_nondetections_up[i] = yarys[i][yerr_arys[i]==-3]
             if logy:
-                for j in range(len(xarys[i])):
-                    yarys[i][j] = np.log10(yarys[i][j])
-                    yerr_arys[i][j] = np.log10(yerr_arys[i][j])
+                yarys_detections[i] = np.log10(yarys_detections[i])
+                yerr_arys_detections[i] = np.log10(yerr_arys_detections[i])
+                yarys_nondetections_down[i] = np.log10(yarys_nondetections_down[i])
+                yarys_nondetections_up[i] = np.log10(yarys_nondetections_up[i])
             if logx:
-                for j in range(len(xarys[i])):
-                    xarys[i][j] = np.log10(xarys[i][j])
-            xarys_detections[i] = xarys[i][yerr_arys[i]>0]
-            yarys_detections[i] = yarys[i][yerr_arys[i]>0]
-            yerr_arys_detections[i] = yerr_arys[i][yerr_arys[i]>0]
-            xarys_nondetections[i] = xarys[i][yerr_arys[i]<0]
-            yarys_nondetections[i] = yarys[i][yerr_arys[i]<0]
-            yerr_arys_nondetections[i] = yerr_arys[i][yerr_arys[i]<0]
-        return xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections,yarys_nondetections,yerr_arys_nondetections
+                xarys_detections[i] = np.log10(xarys_detections[i])
+                xarys_nondetections_down[i] = np.log10(xarys_nondetections_down[i])
+                xarys_nondetections_up[i] = np.log10(xarys_nondetections_up[i])
+        return xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections_up,yarys_nondetections_up,xarys_nondetections_down,yarys_nondetections_down
     
     def plot_observational_data(self,ax,plot_type,include_observations,obs_data,xlabel,ylabel,title,labels=None,
                grid=False,linestyle='',obs_coloration=None,
                fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
                **kwargs):
-        xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections,yarys_nondetections,yerr_arys_nondetections = obs_data
+        xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections_up,yarys_nondetections_up,xarys_nondetections_down,yarys_nondetections_down = obs_data
         coloration = coloration or obs_coloration
         if coloration is None:
             coloration = [None]*len(xarys_detections)
         if include_observations == 'only':
             ax.cla()
         detections = ax.errorbar([],[],
-                                     xerr=None,yerr=None,label='Werk et al. 2013',ls=linestyle,
+                                     xerr=None,yerr=None,label='Werk 2013',ls=linestyle,
                                      fmt = 's',capsize = 3, mec = 'k',ecolor = 'k',mfc='w')
         for i in range(len(xarys_detections)):
             color_store = ax.errorbar(xarys_detections[i],yarys_detections[i],
                                      xerr=None,yerr=yerr_arys_detections[i],ls=linestyle,
                                      color = coloration[i],fmt = 's',capsize = 3,alpha = .5)
             nondetectioncolor = color_store[0].get_color()
-            ax.errorbar(xarys_nondetections[i][yerr_arys_nondetections[i]==-2],
-                        yarys_nondetections[i][yerr_arys_nondetections[i]==-2],
-                        xerr=None,yerr=.15,uplims=True,ls=linestyle,
-                        mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
-            ax.errorbar(xarys_nondetections[i][yerr_arys_nondetections[i]==-3],
-                        yarys_nondetections[i][yerr_arys_nondetections[i]==-3],
-                        xerr=None,yerr=.15,lolims=True,ls=linestyle,
-                        mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
+            ax.errorbar(xarys_nondetections_up[i],yarys_nondetections_up[i],xerr=None,yerr=.15,lolims=True,ls=linestyle,\
+                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
+            ax.errorbar(xarys_nondetections_down[i],yarys_nondetections_down[i],xerr=None,yerr=.15,uplims=True,ls=linestyle,\
+                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)

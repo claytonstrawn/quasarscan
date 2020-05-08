@@ -87,9 +87,9 @@ class GeneralizedQuasarSphere(object):
                 pos_in_q = q.get_ion_column_num(ion)
                 pos_in_self = self.get_ion_column_num(ion)
                 self.info[currentpos:currentpos+size,pos_in_self] = q.info[:size,pos_in_q]
-                convert = 1.0
-                if distance == "Rvir":
-                    convert/=q.Rvir
+            convert = 1.0
+            if distance == "Rvir":
+                convert/=q.Rvir
             self.info[currentpos:currentpos+size,-1] = q.info[:size,-1]
             self.info[currentpos:currentpos+size,-2] = q.info[:size,-2] 
             self.info[currentpos:currentpos+size,-3] = q.info[:size,-3] 

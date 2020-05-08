@@ -112,7 +112,7 @@ def access_data_values(variable,header_dict,parsed_line):
                 value = np.nan
             else:
                 value = float(parsed_line[i])
-            if islog:
+            if islog and value > 0.0:
                 return 10.**float(value)
             else:
                 return value
