@@ -90,7 +90,7 @@ def check_validity(tocheck):
         else:
             continue
     my_saved_directories = os.listdir(root_for_data_files)
-    foldername = 'VELA_v2.0_art_%s'%tocheck[0]
+    foldername = 'VELA_v2_%s'%tocheck[0]
     if not foldername in my_saved_directories:
         print("didn't see folder")
         return False
