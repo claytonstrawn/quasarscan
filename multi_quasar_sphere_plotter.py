@@ -855,7 +855,7 @@ class MultiQuasarSpherePlotter():
         return xlabel,ylabel,title
 
     def plot_on_ax(self,ax,plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,title,labels=None,
-                   average='default',dots=False,grid=False,linestyle='',
+                   average='default',dots=False,grid=False,linestyle='',linewidth = 1.5,
                    fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',alpha = 1.0,
                    **kwargs):
         coloration = coloration or [None]*len(xs)
@@ -870,13 +870,14 @@ class MultiQuasarSpherePlotter():
                 if markersize=='default':
                     markersize=6
                 color_store = ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],
-                                      color=coloration[i],markersize=markersize,alpha = alpha)
+                                      color=coloration[i],markersize=markersize,alpha = alpha,linewidth=linewidth)
                 future_colors.append(color_store[0].get_color())
         elif average == 'scatter':
             if markersize=='default':
                 markersize=6
             for i in range(len(xs)):
-                color_store = ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=2,alpha = alpha)
+                color_store = ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=markersize,
+                                        alpha = alpha,linewidth=linewidth)
                 future_colors.append(color_store[0].get_color())
         else:
             fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',"stddev":'.',"median":"."}
@@ -884,7 +885,7 @@ class MultiQuasarSpherePlotter():
                 fmt = fmtdict[self.plots]
             for i in range(len(xs)):
                 color_store = ax.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],ls=linestyle,\
-                             color = coloration[i],fmt = fmt,capsize = 3,alpha = alpha)
+                             color = coloration[i],fmt = fmt,capsize = 3,alpha = alpha,linewidth=linewidth)
                 future_colors.append(color_store[0].get_color())
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -900,6 +901,13 @@ class MultiQuasarSpherePlotter():
 
     def get_observational_data(self,include_observations,plot_type,ion,xVar,logx='guess',logy='guess',
                                rlims = None,lq=None,observationArray=None,**kwargs):
+        def flatten_if_needed(ary):
+            try:
+                for item in ary:
+                    len(item)
+                return np.concatenate(ary)
+            except:
+                return ary
         logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
         if include_observations is None:
             return None
@@ -929,8 +937,6 @@ class MultiQuasarSpherePlotter():
             xarys,yarys = self.get_xy_type3(xVar,ion,observationArray)
             _,yerr_arys = self.get_xy_type3(xVar,ion+':eb',observationArray,rlims)
         elif plot_type==4:
-            print("plot type 4 (2-ions) disabled for observations until developed")
-            assert False
             xarys,yarys = self.get_xy_type4(xVar,ion,observationArray,rlims)
             _,yerr_arys = self.get_xy_type4(xVar,ion+':eb',observationArray,rlims)
         xarys_detections = np.copy(xarys)
@@ -940,8 +946,6 @@ class MultiQuasarSpherePlotter():
         xarys_nondetections_down = np.copy(xarys)
         yarys_nondetections_up = np.copy(xarys)
         yarys_nondetections_down = np.copy(xarys)
-        if plot_type == 4:
-            xerr_arys_detections = np.copy(xarys)
         for i in range(len(xarys)):
             xarys_detections[i] = xarys[i][yerr_arys[i]>=0]
             yarys_detections[i] = yarys[i][yerr_arys[i]>=0]
@@ -951,18 +955,18 @@ class MultiQuasarSpherePlotter():
             xarys_nondetections_up[i] = xarys[i][yerr_arys[i]==-3]
             yarys_nondetections_up[i] = yarys[i][yerr_arys[i]==-3]
             if logy:
-                yarys_detections[i] = np.log10(yarys_detections[i])
-                yerr_arys_detections[i] = np.log10(yerr_arys_detections[i])
-                yarys_nondetections_down[i] = np.log10(yarys_nondetections_down[i])
-                yarys_nondetections_up[i] = np.log10(yarys_nondetections_up[i])
+                yarys_detections[i] = np.log10(flatten_if_needed(yarys_detections[i]))
+                yerr_arys_detections[i] = np.log10(flatten_if_needed(yerr_arys_detections[i]))
+                yarys_nondetections_down[i] = np.log10(flatten_if_needed(yarys_nondetections_down[i]))
+                yarys_nondetections_up[i] = np.log10(flatten_if_needed(yarys_nondetections_up[i]))
             if logx:
-                xarys_detections[i] = np.log10(xarys_detections[i])
-                xarys_nondetections_down[i] = np.log10(xarys_nondetections_down[i])
-                xarys_nondetections_up[i] = np.log10(xarys_nondetections_up[i])
+                xarys_detections[i] = np.log10(flatten_if_needed(xarys_detections[i]))
+                xarys_nondetections_down[i] = np.log10(flatten_if_needed(xarys_nondetections_down[i]))
+                xarys_nondetections_up[i] = np.log10(flatten_if_needed(xarys_nondetections_up[i]))
         return xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections_up,yarys_nondetections_up,xarys_nondetections_down,yarys_nondetections_down
     
     def plot_observational_data(self,ax,plot_type,include_observations,obs_data,xlabel,ylabel,title,labels=None,
-               grid=False,linestyle='',obs_coloration=None,
+               grid=False,linestyle='',obs_coloration=None,alpha=.5,
                fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
                **kwargs):
         xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections_up,yarys_nondetections_up,xarys_nondetections_down,yarys_nondetections_down = obs_data
@@ -977,12 +981,12 @@ class MultiQuasarSpherePlotter():
         for i in range(len(xarys_detections)):
             color_store = ax.errorbar(xarys_detections[i],yarys_detections[i],
                                      xerr=None,yerr=yerr_arys_detections[i],ls=linestyle,
-                                     color = coloration[i],fmt = 's',capsize = 3,alpha = .5)
+                                     color = coloration[i],fmt = 's',capsize = 3,alpha = alpha)
             nondetectioncolor = color_store[0].get_color()
             ax.errorbar(xarys_nondetections_up[i],yarys_nondetections_up[i],xerr=None,yerr=.15,lolims=True,ls=linestyle,\
-                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
+                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = alpha)
             ax.errorbar(xarys_nondetections_down[i],yarys_nondetections_down[i],xerr=None,yerr=.15,uplims=True,ls=linestyle,\
-                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = .5)
+                         mec = nondetectioncolor,ecolor = nondetectioncolor,fmt = 's',capsize = 3,mfc='w',alpha = alpha)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
