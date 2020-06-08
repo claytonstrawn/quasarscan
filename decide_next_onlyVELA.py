@@ -25,9 +25,9 @@ list_of_files_to_process = [('07','500'),
                             ('22','500'),
                             ('22','330'),
                             ('29','500'),
-                            ('29','330')]
+                            ('29','340')]
 
-a2z = {"460":"1.2","500":"1.0","400":"1.5","330":"2.0","250":"3.0","200":"4.0"}
+a2z = {"460":"1.2","500":"1.0","400":"1.5","330":"2.0","340":"2.0","250":"3.0","200":"4.0"}
 
 computer = 'nersc'
 
@@ -90,7 +90,8 @@ def check_validity(tocheck):
         else:
             continue
     my_saved_directories = os.listdir(root_for_data_files)
-    foldername = 'VELA_v2_%s'%tocheck[0]
+    foldername = 'VELA_v2.0_art_%s'%tocheck[0]
+    print("looking for %s/%s/%s"%(root_for_data_files,foldername,"10MpcBox_csf512_a0.%s.d"%tocheck[1]))
     if not foldername in my_saved_directories:
         print("didn't see folder")
         return False
@@ -106,6 +107,10 @@ def check_validity(tocheck):
 def convert_check_to_strings(tocheck):
     simname = "VELA_v2_art_%s"%tocheck[0]
     filename = "%s/%s/%s"%(root_for_data_files,simname.replace('v2','v2.0'),'10MpcBox_csf512_a0.%s.d'%tocheck[1])
+    
+    #only on NERSC (temporary, need to make consistent)
+    #filename.replace('v2.0_art','v2')
+    
     redshift = a2z[tocheck[1]]
     return simname, filename, redshift
 
