@@ -20,15 +20,20 @@ except:
     import roman
     from sorter import MultiSphereSorter
     level = 1
-#precondition: assumes there are only two levels of depth within the output folder
-#postcondition: returns a list of all textfiles
-def get_all_textfiles(inquasarscan = 1,loadonly = 'all'):
+
+#summary: search directory for textfiles
+#
+#inputs: inquasarscan: if True, only look down one level. If false, look two.
+#        loadonly: if not 'all' only load certain simulations (e.g. 'VELA')
+#
+#outputs: textfiles: list of names of textfiles
+def get_all_textfiles(inquasarscan,loadonly = 'all'):
     
     #pathname by default starts in output
-    try:
+    if inquasarscan:
         path = "output"
         dirs = os.listdir(path)
-    except:
+    else:
         path = "quasarscan/output"
         dirs = os.listdir(path)
 
@@ -52,7 +57,13 @@ def get_all_textfiles(inquasarscan = 1,loadonly = 'all'):
                     textfiles.append(os.path.join(folderPath,fileName))
     return textfiles
 
-def get_all_observations(inquasarscan = 1,loadonly = 'all'):
+#summary: search directory for textfiles
+#
+#inputs: inquasarscan: if True, only look down one level. If false, look two.
+#        loadonly: if not 'all' only load certain observations (e.g. 'CASBAH')
+#
+#outputs: textfiles: list of names of textfiles
+def get_all_observations(inquasarscan,loadonly = 'all'):
     path = "observations"
     if not inquasarscan:
         path = "quasarscan/observations"
@@ -72,7 +83,13 @@ def get_all_observations(inquasarscan = 1,loadonly = 'all'):
         if not fileName.startswith(".") and one_is_in_name(fileName,loadonly):
             textfiles.append(os.path.join(path,fileName))
     return textfiles
-    
+
+#summary: put each list in a list of lists of ions in alphabetical/roman numeral order
+#
+#inputs: ions: a list of lists of ions
+#        flat: if true, return only a single list of all the ions
+#
+#outputs: all the lists sorted, or sorted and reduced if 'flat'
 def sort_ions(ions,flat = True):
     def sort_ions_one_element(ions,element):
         nums = [None]*len(ions)
@@ -102,11 +119,17 @@ def sort_ions(ions,flat = True):
         toreturn = [item for sublist in toreturn for item in sublist]
     return toreturn
 
+#summary: reverse an array
+#
+#inputs: ary: an array
+#
+#outputs: the reversed array
 def reversearray(ary):
     ary = list(ary)
     ary.reverse()
     return np.array(ary)
 
+#these are a number of global lists and dictionaries which are checked against in various places
 stringcriteria = ["ions","name","simname","version","code","simnum","Rvir_is_real","compaction_stage"]
 intensives = ["Z","T","rho"]
 intensiveslabels = {"Z":"avg metallicity","T":"avg temperature","rho":"avg density"}
@@ -122,8 +145,17 @@ param_unit_labels = {"redshift":"z","a0":"a","Rvir":'Virial radius (kpc)',"Mvir"
                     "ssfr":"Specific Star Formation Rate (Msun yr-1 Mstar-1)","L_mag":"Magnitude of Angular Momentum"}
 
 class MultiQuasarSpherePlotter():
-    #param: textfiles     if a list of textfiles is specified, those specific textfiles will be loaded; else,
-    #                     all textfiles in output are loaded
+    #summary: initialize mq and load all data
+    #
+    #inputs: loadonly: if not 'all' only load certain simulations (e.g. 'VELA')
+    #        loadobs: if not 'all' only load certain simulations (e.g. 'COS-Halos') [I'm not sure this works]
+    #        textfiles: usually None. Could give a specific list of textfiles to use if you don't want to search here
+    #        cleanup: delete textfiles that fail safety check (will ask user permission first)
+    #        plots: default plots value to use. Will default to mean if not given
+    #        throwErrors: if true, throw errors when reading textfiles if broken. If false, skip ones that create errors
+    #        safetycheck: if False, skip safetychecks and just use whatever you load
+    #
+    #outputs: MultiQuasarSpherePlotter object, usually called 'mq'
     def __init__(self, loadonly = "all",loadobs = 'all',textfiles = None, cleanup = False,plots = "mean",throwErrors = False,safetycheck = True):
         self.plots = "mean"
         self.avgfn = np.mean
@@ -159,9 +191,20 @@ class MultiQuasarSpherePlotter():
         
         if len(self.currentQuasarArray) == 0:
             print ("There are no quasarspheres stored in currentQuasarArray!")
-    
+
+    #summary: print length of list of QuasarSpheres
+    #
+    #inputs: None
+    #
+    #outputs: length of currentQuasarArray
     def length(self):
         return len(self.currentQuasarArray)
+    
+    #summary: print full list of QuasarSpheres, with metadata if requested (by 'criteria')
+    #
+    #inputs: *criteria: any criteria for a quasarSphere
+    #
+    #outputs: None, prints list of current quasarspheres
     def list_all_QuasarSpheres(self, *criteria):
         s = ""
         if len(self.currentQuasarArray)==0:
@@ -184,7 +227,12 @@ class MultiQuasarSpherePlotter():
             s+='\n'
         print(s[:-1])
             
-    #tests each condition, each condition is a safety check
+    #summary: tests each condition, each condition is a safety check on loaded data
+    #
+    #inputs: q: a quasarArray object
+    #        require_metadata: if true, check that metadata loads accurately
+    #
+    #outputs: True if no problem, False otherwise
     def pass_safety_check(self, q,require_metadata = False):
         minlength = 10
         minions = []
@@ -199,12 +247,24 @@ class MultiQuasarSpherePlotter():
                 print("metadata for %s at redshift %s is not valid." %(q.name,str(q.rounded_redshift)))
                 return False
         return True
-        
+
+    #summary: cancel all constraints
+    #
+    #inputs: None
+    #        
+    #outputs: None, changes state of mq.currentQuasarArray and mq.currentQuasarArrayName
     def reset_current_Quasar_Array(self):
         self.currentQuasarArray = np.copy(self.quasarArray)
         self.currentObservationArray = np.copy(self.observationArray)
         self.currentQuasarArrayName = ''
         
+    #summary: Check if you can constrain by a parameter
+    #
+    #inputs: constrainCriteria:  what criteria to constrain by
+    #        atEnd: list of lists of quasarSphere objects that fit in the bins
+    #        
+    #outputs: oldQuasarArray: copy of currentQuasarArray that can be modified without affecting original
+    #         if constraint is illegal, raises error
     def check_criteria_works(self,constrainCriteria,atEnd = False,**kwargs):
         if len(self.currentQuasarArray)==0:
             #"Cannot constrain further"
@@ -218,7 +278,15 @@ class MultiQuasarSpherePlotter():
             if len(self.currentQuasarArray) == 0:
                 print("No galaxies get to that high of a0")
             return oldQuasarArray
-        
+
+    #summary: helper for 'sort_by'. Sets up bins if needed
+    #
+    #inputs: criteria: list of strings for labelling points in legend
+    #        bins: the bins to compare to 
+    #        atEnd: list of lists of quasarSphere objects that fit in the bins
+    #        
+    #outputs: bins: the bins to compare to 
+    #         oldQuasarArray: copy of currentQuasarArray that can be modified without affecting original
     def prepare_to_sort(self, criteria, bins,atEnd,**kwargs):
         
         oldQuasarArray = self.check_criteria_works(criteria,atEnd=atEnd,**kwargs)
@@ -233,6 +301,17 @@ class MultiQuasarSpherePlotter():
         
         return bins,oldQuasarArray
     
+    #summary: helper for 'sort_by'. cleans up and gives options for bins 
+    #
+    #inputs: labels: list of strings for labelling points in legend
+    #        bins: the bins to compare to 
+    #        quasarBins: list of lists of quasarSphere objects that fit in the bins
+    #        onlyNonempty: if True, remove (and do not plot) empty bins
+    #        reverse: if True, return bins and quasarBins sorted in reverse order
+    #        
+    #outputs: labels: list of strings for labelling points in legend
+    #         bins: the bins to compare to 
+    #         quasarBins: list of lists of quasarSphere objects that fit in the bins
     def postprocess_sorted(self, labels, bins, quasarBins, onlyNonempty = False,reverse = False,**kwargs):
         if quasarBins is None:
             raise Exception("No quasars in quasarBin!")
@@ -255,10 +334,27 @@ class MultiQuasarSpherePlotter():
         return labels, bins, quasarBins
     
     
-    #param bins either serves as an array with each element being as a cutpoint, or a single value
-    #follows array indexing exclusivity and inclusivity rules
-    def sort_by(self, criteria, bins = [0,np.inf],\
-        atEnd = False,splitEven = 0,**kwargs):
+    #summary: splits currentQuasarArray into particular bins, either calculated on the fly or given
+    #
+    #inputs: criteria: what criteria to constrain by (simname, simnum, Mvir, Rvir, SFR, 
+    #                           etc. See 'quasar_sphere.py' for full list)
+    #        bins: a list of n numbers, which determine n-1 bins in between them. If string param, n strings which each
+    #              constitute a bin
+    #        atEnd: if True, compare values by their final (z=1 or z=minimum among remaining values) value, 
+    #               not the current one
+    #        splitEven: a number of bins to split into. The bins will be chosen so each has the same number of members.
+    #        **kwargs: onlyNonempty,reverse ['postprocess_sorted']
+    #        
+    #outputs: labels: list of strings for labelling points in legend
+    #         bins: the bins to compare to 
+    #         quasarBins: list of lists of quasarSphere objects that fit in the bins
+    #         obsBins: list of lists of observationalQuasarSphere objects that fit in the bins
+    #          
+    #         NOTE: These are usually combined together and considered an 'lq' object, passed directly 
+    #            into most plots (any except type 0) general use case is e.g.
+    #            >>>lq = mq.sort_by('Mvir',[0,10**11,np.inf])
+    #            >>>mq.plot_err('O VI',lq=lq)
+    def sort_by(self, criteria, bins = [0,np.inf],atEnd = False,splitEven = 0,**kwargs):
         bins,oldQuasarArray = self.prepare_to_sort(criteria,bins,atEnd,**kwargs)
         sorter = MultiSphereSorter(self.currentQuasarArray)
         obs_sorter = MultiSphereSorter(self.currentObservationArray)
@@ -271,7 +367,12 @@ class MultiQuasarSpherePlotter():
         labels,bins,quasarBins = self.postprocess_sorted(labels,bins,quasarBins,**kwargs)
         _,_,obsBins = self.postprocess_sorted(labels,bins,obsBins,**kwargs)
         return labels,bins, quasarBins, obsBins
-    
+
+    #summary: similar to 'constrain_current_Quasar_Array' but specific to gasbins
+    #
+    #inputs: gasbintype: only keep lines where this type of gasbin was defined
+    #        
+    #outputs: none, changes state of 'currentQuasarArray'    
     def constrain_via_gasbins(self,gasbintype=None):
         if gasbintype == None:
             gasbintype = input("Available bins are: %s"%gasbinning.possible_bin_types)
@@ -282,6 +383,15 @@ class MultiQuasarSpherePlotter():
                 toReturn.append(q)
         self.currentQuasarArray = np.array(toReturn)
         
+    #summary: helper function for constrain_array_helper
+    #
+    #inputs: constrainCriteria: what criteria to constrain by (simname, simnum, Mvir, Rvir, SFR, 
+    #                           etc. See 'quasar_sphere.py' for full list)
+    #        bins: either a list of two numbers, if a numerical criteria, or several strings if string criteria
+    #              can leave as None if splitEven is used
+    #        exclude: remove the ones listed, instead of keep the ones listed
+    #        
+    #outputs: bins: the bins to compare to 
     def get_bin_values(self,constrainCriteria,bins,exclude=False,**kwargs):
         if isinstance(bins, list):                
             if len(bins) != 2 and constrainCriteria not in stringcriteria:
@@ -297,7 +407,24 @@ class MultiQuasarSpherePlotter():
             excluded_bins = bins
             bins = list(possible_bins.difference(set(bins)))
         return bins
-    
+
+    #summary: helper function for constrain_current_Quasar_Array
+    #
+    #inputs: sorter: MultiSphereSorter helper object, see 'sorter.py'
+    #        obs_sorter: MultiSphereSorter helper object, see 'sorter.py'
+    #        constrainCriteria: what criteria to constrain by (simname, simnum, Mvir, Rvir, SFR, 
+    #                           etc. See 'quasar_sphere.py' for full list)
+    #        bins: either a list of two numbers, if a numerical criteria, or several strings if string criteria
+    #              can leave as None if splitEven is used
+    #        splitEven: if 'high' or 'low' split into upper or lower half
+    #        atEnd: if True, compare values by their final (z=1 or z=minimum among 
+    #                 remaining values) value, not the current one
+    #        set_main_array: make this array the natural basis which you will "reset" to (if working interactively)
+    #        sortobs: if "default" only sort observations when constraining by 
+    #                 things that are known for observations. Otherwise 
+    #                 sort observations every time, filtering out for unknown data
+    #        
+    #outputs: bins: the bins to compare to   
     def constrain_array_helper(self,sorter,obs_sorter,constrainCriteria,bins,splitEven=False,atEnd=False,\
                                set_main_array=False,sortobs='default',**kwargs):
         if not splitEven:
@@ -324,6 +451,16 @@ class MultiQuasarSpherePlotter():
             self.quasarArray = np.copy(self.currentQuasarArray)
         return bins
     
+    #summary: change the record of what constraints have been applied
+    #
+    #inputs: constrainCriteria: what criteria to constrain by (simname, simnum, Mvir, Rvir, SFR, 
+    #                           etc. See 'quasar_sphere.py' for full list)
+    #        bins: either a list of two numbers, if a numerical criteria, or several strings if string criteria
+    #              can leave as None if splitEven is used
+    #        changeArrayName: use False if you don't want to record a constraint (i.e. if they're getting too complicated)
+    #        exclude: remove the ones listed, instead of keep the ones listed
+    #        
+    #outputs: None, changes state of mq.currentQuasarArrayName
     def change_array_name(self,constrainCriteria,bins,changeArrayName=True,exclude=False,**kwargs):
          if changeArrayName:
             self.currentQuasarArrayName += constrainCriteria 
@@ -350,6 +487,16 @@ class MultiQuasarSpherePlotter():
                 for acceptedValue in bins:
                     self.currentQuasarArrayName += acceptedValue.replace(" ","")
 
+    #summary: restricts to only quasarspheres with galaxy parameters within certain limits
+    #
+    #inputs: constrainCriteria: what criteria to constrain by (simname, simnum, Mvir, Rvir, SFR, 
+    #                           etc. See 'quasar_sphere.py' for full list)
+    #        bins: either a list of two numbers, if a numerical criteria, or several strings if string criteria
+    #              can leave as None if splitEven is used
+    #        **kwargs: changeArrayName, exclude ['change_array_name']
+    #                  splitEven,atEnd,set_main_array,sortobs ['constrain_array_helper']
+    #        
+    #outputs: return the bins used (in the case of 'low' or 'high' for example it'll tell you the cutoff)
     def constrain_current_Quasar_Array(self, constrainCriteria,bins=None,**kwargs):
         self.check_criteria_works(constrainCriteria,**kwargs)
         bins = self.get_bin_values(constrainCriteria,bins,**kwargs)
@@ -358,7 +505,15 @@ class MultiQuasarSpherePlotter():
         bins = self.constrain_array_helper(sorter,obs_sorter,constrainCriteria,bins,**kwargs)
         self.change_array_name(constrainCriteria,bins,**kwargs)
         return bins
-
+    
+    #summary: Sets mq's "plots" parameter. Several options, including median, mean, scatter, covering_fraction
+    #         and combinations.
+    #
+    #inputs: plots: string choosing among ["mean","stderr","stddev","median","med","med_noquartiles",
+    #                                      "median_std","scatter",'covering_fraction','cvf']
+    #        quartiles: if plots == 'median' then you can give specific quartiles. Default is 40th % and 60th %
+    #        
+    #outputs: none. Change of state to mq 
     def setPlots(self,plots,quartiles = None,**kwargs):
         if isinstance(plots,tuple):
             if len(plots) == 3:
@@ -404,6 +559,15 @@ class MultiQuasarSpherePlotter():
             self.avgfn = np.nanmean
             self.errfn = getstderr
             
+    #summary: Fetches y values from saved data. First, has to get relevant info, then has 
+    #         to perform math formula if any
+    #
+    #inputs: gq: GeneralizedQuasarSphere object (one or more quasarSpheres squished into one)
+    #        stringVar: formula to show. Can use basic '+-*/()' characters. Variables have the names
+    #                   'O VI' or 'O VI:temperature:hot' or things like this. Look at gasbinning.py for
+    #                   more info
+    #        
+    #outputs: ys: unprocessed y data            
     def get_yVar_from_str(self,gq,stringVar):
         def split_by_ops(s):
             #NOTE: This will have a bug if a variable legitimately ends in e and adds/subtracts
@@ -438,6 +602,15 @@ class MultiQuasarSpherePlotter():
         to_return = eval(new_str_to_eval)
         return to_return
 
+    #summary: In a type 0 plot, get sightline values for y and either discrete sightline values for x
+    #         or metadata values for x. (it really just calls 'get_xy_type1' or 'get_xy_type2')
+    #
+    #inputs: xVar: xVar or xVar formula being displayed
+    #        yVars: list of ions or formulas being displayed
+    #        rlims: what impact parameters to accept. (from 'get_sightline_xy_vals')
+    #        
+    #outputs: xs: raw x data for processing
+    #         ys: raw y data for processing 
     def get_xy_type0(self,xVar,yVars,rlims):
         quasarArray = [self.currentQuasarArray]
         xs = np.empty(len(yVars),dtype = object)
@@ -454,6 +627,15 @@ class MultiQuasarSpherePlotter():
             ys[i] = y[0]
         return xs,ys
 
+    #summary: In a type 1 plot, get sightline values for y and discrete sightline values for x
+    #
+    #inputs: xVar: xVar or xVar formula being displayed
+    #        yVar: ion or formula being displayed
+    #        quasarArray: array to use (from 'get_sightline_xy_vals')
+    #        rlims: what impact parameters to accept. (from 'get_sightline_xy_vals')
+    #        
+    #outputs: xs: raw x data for processing
+    #         ys: raw y data for processing  
     def get_xy_type1(self,xVar,yVar,quasarArray,rlims):
         if rlims is None:
             rlims = [0.1,np.inf]
@@ -478,6 +660,15 @@ class MultiQuasarSpherePlotter():
             ys[i] = ys[i][acceptedLines]
         return xs,ys
     
+    #summary: In a type 2 plot, get sightline values for y and metadata values for x
+    #
+    #inputs: xVar: xVar or xVar formula being displayed
+    #        yVar: ion or formula being displayed
+    #        quasarArray: array to use (from 'get_sightline_xy_vals')
+    #        rlims: what impact parameters to accept. (from 'get_sightline_xy_vals')
+    #        
+    #outputs: xs: raw x data for processing
+    #         ys: raw y data for processing    
     def get_xy_type2(self,xVar,yVar,quasarArray,rlims):
         if rlims is None:
             rlims = np.array([0.1,1.0])
@@ -500,6 +691,14 @@ class MultiQuasarSpherePlotter():
                 ys[i] = np.append(ys[i],y)
         return xs,ys
     
+    #summary: In a type 3 plot, get values in the same way for both x and y. And they're just metadata table lookups
+    #
+    #inputs: xVar: xVar or xVar formula being displayed
+    #        yVar: ion or formula being displayed
+    #        quasarArray: array to use (from 'get_sightline_xy_vals')
+    #        
+    #outputs: xs: raw x data for processing
+    #         ys: raw y data for processing
     def get_xy_type3(self,xVar,yVar,quasarArray):
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
@@ -514,6 +713,15 @@ class MultiQuasarSpherePlotter():
                 ys[i] = np.append(ys[i],y)
         return xs,ys
     
+    #summary: In a type 4 plot, get values in the same way for both x and y
+    #
+    #inputs: xVar: xVar or xVar formula being displayed
+    #        yVar: ion or formula being displayed
+    #        quasarArray: array to use (from 'get_sightline_xy_vals')
+    #        rlims: what impact parameters to accept. (from 'get_sightline_xy_vals')
+    #        
+    #outputs: xs: raw x data for processing
+    #         ys: raw y data for processing
     def get_xy_type4(self, xVar, yVar, quasarArray, rlims):
         if rlims is None:
             rlims = [0.1,1.0]
@@ -536,13 +744,30 @@ class MultiQuasarSpherePlotter():
                 xs[i][j] = x
                 ys[i][j] = y
         return xs,ys
-
+    
+    #summary: helper for combine_xs. Checks if values are within tolerance
+    #
+    #inputs: x_in_list: value we're checking proximity to
+    #        x_comp: value we're checking for proximity of
+    #        tolerance: If x values are within tolerance, then count them as the same. 
+    #        symmetric: if true, check values above and below. If false, only check above
+    #                   (want to return from combine_xs the bottom end of the bins then)
+    #        
+    #outputs: True if close enough, False if not
     def values_within_tolerance(self,x_in_list,x_comp,tolerance,symmetric = True):
         tocompare = x_in_list-x_comp
         if symmetric:
             tocompare = np.abs(tocompare)
         return np.logical_and(-tolerance<=tocompare,tocompare<=tolerance)
 
+    #summary: In a type 0, 1, or 2 plot, this is used to combine together a number of sightlines into 
+    #         single data points affiliated with certain xVar values. This function only creates the 
+    #         xVar values to use, they are applied in 'process_errbars_onlyvertical'
+    #
+    #inputs: x_variable: the set of all xVar numerical values
+    #        tolerance: If x values are within tolerance, then count them as the same. 
+    #        
+    #outputs: unique_xs (for use in 'process_errbars_onlyvertical')
     def combine_xs(self,x_variable,tolerance):
         if tolerance == 0:
             return x_variable
@@ -561,7 +786,27 @@ class MultiQuasarSpherePlotter():
         if i == len(x_values_not_averaged)-1:
             x_values.append(x_values_not_averaged[-1]) 
         return np.array(x_values)
-
+    
+    #summary: given ion and xVar, figure out which kind of plot it is and 
+    #         check the other information given is consistent with that type
+    #
+    #inputs: ion: ion or formula being displayed. Can be a tuple (formula, name)
+    #        xVar: xVar or xVar formula being displayed. Can be a tuple (formula, name)
+    #        labels: list of labels for all lines to plot. if labels, return them as is
+    #        lq: this will include labels, if labels return as is
+    #        
+    #outputs: plot_type: 0,1,2,3,4 depending on kinds of variables
+    #             - Type 0 compares several different y variables for the same set of sightlines. Each curve is a different 
+    #               variable, and all variables are applied to the whole sample. Any xVar works.
+    #             - Type 1 compares a single y variable for the same set of sightlines. Each curve is a different 
+    #               subsample (i.e. a different galaxy snapshot/subset). Only sightline xVars accepted
+    #             - Type 2 compares a single y variable for the same set of sightlines. Each curve is a different 
+    #               subsample (i.e. a different galaxy subset). Only param xVars accepted (so probably only one datapoint per 
+    #               galaxy)
+    #             - Type 3 compares 2 params. Doesn't use our data really so not important. 
+    #               Just lets us fit in Nir's data catalogue into our plotting system
+    #             - Type 4 compares 2 ions or formulas against each other. Very useful for scatterplots.
+    #               colored by subset or snapshot.
     def decide_plot_type(self,ion,xVar,labels=None,quasarArray=None,lq=None,**kwargs):
         if lq:
             labels = lq[0]
@@ -582,6 +827,20 @@ class MultiQuasarSpherePlotter():
         else:
             print("Requirements not met (type could not be detected). Cannot plot.")
 
+    #summary: In a type 0 plot, or a plot with no labels specified, guess what the labels should be
+    #         also disaggregates ion formula and ion name if given
+    #
+    #inputs: plot_type: 0,1,2,3,4 depending on kinds of variables (see 'decide_plot_type')
+    #        ion: ion or formula being displayed. Can be a tuple (formula, name)
+    #        xVar: xVar or xVar formula being displayed. Can be a tuple (formula, name)
+    #        labels: list of labels for all lines to plot. if labels, return them as is
+    #        lq: this will include labels, if labels return as is
+    #        
+    #outputs: ion: formula to use to calculate y vals
+    #         ion_name: name to use for those y vals
+    #         xVar: formula to use to calculate x vals
+    #         xVar_name: name to use for those y vals
+    #         labels: list of list of labels for all lines to plot
     def get_labels_from_ion(self,plot_type,ion,xVar,labels=None,lq=None,**kwargs):
         if lq is not None:
             labels=lq[0]
@@ -614,6 +873,18 @@ class MultiQuasarSpherePlotter():
             labels = ['all']
         return ion,ion_name,xVar,xVar_name,labels
 
+    #summary: Get raw data for processing from saved data. Basically this just 
+    #         calls one of four different functions depending on plot_type
+    #
+    #inputs: plot_type: 0,1,2,3,4 depending on kinds of variables (see 'decide_plot_type')
+    #        ion: ion or formula being displayed
+    #        xVar: xVar or xVar formula being displayed
+    #        lq: tuple of splitting, from 'sort_by'
+    #        quasarArray: array to use if not 'currentQuasarArray'
+    #        rlims: what impact parameters to accept. Default is .1 Rvir to infinity
+    #        
+    #outputs: xarys: raw x data for processing
+    #         yarys: raw y data for processing
     def get_sightline_xy_vals(self,plot_type,ion,xVar,lq=None,quasarArray=None,rlims=None,**kwargs):
         if lq is not None:
             quasarArray = lq[2]
@@ -635,7 +906,6 @@ class MultiQuasarSpherePlotter():
             xarys,yarys = self.get_xy_type3(xVar,ion,quasarArray)
         elif plot_type==4:
             xarys,yarys = self.get_xy_type4(xVar,ion,quasarArray,rlims)
-
         if plot_type in [0,1,2,3]:
             for i in range(len(yarys)):
                 xarys[i] = xarys[i][np.logical_and(yarys[i]>=0,yarys[i]<np.inf)]
@@ -649,10 +919,19 @@ class MultiQuasarSpherePlotter():
                     xarys[i][j] = xarys[i][j][np.logical_and(xarys[i][j]>=0,xarys[i][j]<np.inf)]
                     if xVar == 'rho':
                         xarys[i][j]/=1.67373522e-24
-        self.debug = xarys,yarys
             
         return xarys,yarys
-    
+
+    #summary: Detect whether x and y variables are naturally plotted as logs
+    #
+    #inputs: ion: ion or formula to use
+    #        xVar: xVar or formula to use
+    #        logx: whether to plot x logarithmically. If not 'guess', return whatever was given
+    #        logy: whether to plot y logarithmically. If not 'guess', return whatever was given
+    #        average: basically checking if you're plotting 'covering_fraction'
+    #        
+    #outputs: logx: whether to plot x logarithmically
+    #         logy: whether to plot y logarithmically
     def should_take_logs_xy(self,ion,xVar,logx,logy,average='default',**kwargs):
         probablylinear = ['redshift','rounded_redshift','a0','Rvir']
         if logx=='guess':
@@ -673,7 +952,21 @@ class MultiQuasarSpherePlotter():
                 logy=True
         return logx,logy
     
-
+    #summary: if not plotting errorbars but instead plotting random individual sightlines 
+    #         data (average = 'scatter'), this will return the values needed
+    #
+    #inputs: xarys: raw x data (from 'get_sightline_xy_vals')
+    #        yarys: raw y data (from 'get_sightline_xy_vals')
+    #        logx: whether to plot x logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        logy: whether to plot y logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        subsample: only plot this fraction of points. (half of points, 1/3 of points etc)
+    #        offsetx: if True, calculate a small offset for x values and add it. (so errorbars don't overlap)
+    #        tolerance: If x values are within tolerance, then count them as the same. The only effect on this is 
+    #                   if offsetx is true
+    #        
+    #outputs: xs: processed x data to plot
+    #         ys: processed y data to plot
+    #         empty: if True, no data points to plot
     def process_scatter_points(self,xarys,yarys,logx,logy,subsample=1.0,offsetx=False,tolerance=1e-5,**kwargs):
         def flatten_if_needed(ary):
             try:
@@ -709,7 +1002,20 @@ class MultiQuasarSpherePlotter():
                 add = (np.random.random(len(xs[i]))-.5)*randomscatterwidth*.5
                 xs[i] += add
         return xs,ys,empty
-
+    
+    #summary: calculate the averages and errorbars in any plot except type 4
+    #
+    #inputs: xarys: raw x data (from 'get_sightline_xy_vals')
+    #        yarys: raw y data (from 'get_sightline_xy_vals')
+    #        logx: whether to plot x logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        logy: whether to plot y logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        offsetx: if True, calculate a small offset for x values and add it. (so errorbars don't overlap)
+    #        tolerance: If x values are within tolerance, then count them as the same. Might need to change for ssfr
+    #        
+    #outputs: xs: processed x data to plot
+    #         ys: processed y data to plot
+    #         yerrs: processed y error data to plot
+    #         empty: if True, no data points to plot
     def process_errbars_onlyvertical(self,xarys,yarys,logx,logy,offsetx=False,tolerance=1e-5,**kwargs):
         xs = np.empty(len(yarys),dtype = object)
         ys = np.empty(len(yarys),dtype = object)
@@ -740,16 +1046,34 @@ class MultiQuasarSpherePlotter():
             xs[i] = xs[i][mask]
             ys[i] = ys[i][mask]
             yerrs[i] = yerrs[i][mask]
-            if offsetx and len(xs[i])>0:
+            if isinstance(offsetx,tuple):
+                xs[i]+=offsetx[1]
+                offsetx_bool=offsetx[0]
+            else:
+                offsetx_bool = offsetx
+            if offsetx_bool and len(xs[i])>0:
                 scatterwidth = np.min(np.diff(np.unique(xs[i])))
                 if logx:
                     xs[i][xs[i]>0]*=10**((float(i)/len(xs)-.5)*scatterwidth*.2)
                 else:
                     xs[i]+=(float(i)/len(xs)-.5)*scatterwidth*.5
+
             if logx:
                 xs[i] = np.log10(xs[i])
         return xs,ys,yerrs,empty
-
+    
+    #summary: calculate the averages and errorbars in type 4 plot
+    #
+    #inputs: xarys: raw x data (from 'get_sightline_xy_vals')
+    #        yarys: raw y data (from 'get_sightline_xy_vals')
+    #        logx: whether to plot x logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        logy: whether to plot y logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        
+    #outputs: xs: processed x data to plot
+    #         ys: processed y data to plot
+    #         xerrs: processed x error data to plot (if type 4, otherwise None)
+    #         yerrs: processed y error data to plot
+    #         empty: if True, no data points to plot
     def process_errbars_vertandhoriz(self,xarys,yarys,logx,logy,**kwargs):
         xs = np.empty(len(yarys),dtype = object)
         ys = np.empty(len(yarys),dtype = object)
@@ -779,6 +1103,25 @@ class MultiQuasarSpherePlotter():
                     ys[i][j] = np.log10(ys[i][j])
         return xs,ys,xerrs,yerrs,empty
 
+    #summary: helper function for plot_err that gets the appropriate data from the different data gathering functions
+    #
+    #inputs: plot_type: 0,1,2,3,4 depending on kinds of variables (see 'decide_plot_type')
+    #        ion: ion or formula being displayed
+    #        xVar: xVar or xVar formula being displayed
+    #        xarys: raw x data (from 'get_sightline_xy_vals')
+    #        yarys: raw y data (from 'get_sightline_xy_vals')
+    #        average: what kind of average to use. See 'setPlots' for details. default is take mean and stderr
+    #        logx: whether to plot x logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        logy: whether to plot y logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        visibility_threshold: a float value. Count how many of the data points 
+    #                              are above the value instead of averaging the values themselves. Only used
+    #                              if average = 'covering_fraction'
+    #        
+    #outputs: xs: processed x data to plot
+    #         ys: processed y data to plot
+    #         xerrs: processed x error data to plot (if type 4, otherwise None)
+    #         yerrs: processed y error data to plot
+    #         empty: if True, no data points to plot
     def process_datapoints(self,plot_type,ion,xVar,xarys,yarys,average='default',logx='guess',logy='guess',\
                            visibility_threshold=None,**kwargs):
         logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
@@ -805,7 +1148,23 @@ class MultiQuasarSpherePlotter():
         if average!='default':
             self.setPlots(oldplots,**kwargs)
         return xs,ys,xerrs,yerrs,empty
-
+    
+    #summary: helper function for plot_err that gets the labels of things
+    #
+    #inputs: plot_type: 0,1,2,3,4 depending on kinds of variables (see 'decide_plot_type')
+    #        ion: ion or formula being displayed
+    #        ion_name: display name for ion. Especially useful for formulas
+    #        xVar: xVar or xVar formula being displayed
+    #        xVar_name: display name for xVar. Especially useful for formulas and for Type 4 plots
+    #        replacement_title: clear title and replace with this
+    #        extra_title: add this to the autogenerated title
+    #        average: what kind of average to use. See 'setPlots' for details. default is take mean and stderr
+    #        logx: whether to plot x logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        logy: whether to plot y logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        
+    #outputs:  xlabel: label for x axis
+    #          ylabel: label for y axis
+    #          title: label for top of figure
     def get_title_and_axislabels(self,plot_type,ion,ion_name,xVar,xVar_name,replacement_title=None,extra_title='',\
                                  average='default',logx='guess',logy='guess',**kwargs):
         logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
@@ -854,9 +1213,37 @@ class MultiQuasarSpherePlotter():
 
         return xlabel,ylabel,title
 
+    #summary: helper function for plot_err that handles simulation data
+    #
+    #inputs: ax: axis (from 'plot_err')
+    #        plot_type: 0,1,2,3,4 depending on kinds of variables (see 'decide_plot_type')
+    #        xs: x values (calculated in 'process_datapoints')
+    #        ys: y values (calculated in 'process_datapoints')
+    #        xerrs: x errors (calculated in 'process_datapoints'). Should be None unless type 4 plot
+    #        yerrs: y values (calculated in 'process_datapoints')
+    #        xlabel: label to write along x axis (from 'get_title_and_axislabels')
+    #        ylabel: label to write along y axis (from 'get_title_and_axislabels')
+    #        title: label to write along top (from 'get_title_and_axislabels')
+    #        ylabel: label to write along y axis (from 'get_title_and_axislabels')
+    #        labels: list of labels for curves
+    #        average: what kind of average to use. See 'setPlots' for details. default is take mean and stderr
+    #        dots: If True, plot points instead of errorbars
+    #        grid: whether to plot grid underneath values
+    #        linestyle: how to connect points, default is no connection (which is probably best in all cases for observations)
+    #        linewidth: thickness of connecting line
+    #        fmt: style of points ('o','s','x','v', etc)
+    #        coloration: a list of colors. If none go through the default matplotlib colors
+    #        xlims: limits of x axis of plot. Default is matplotlib default
+    #        ylims: limits of y axis of plot. Default is matplotlib default
+    #        markersize: size of datapoints on plot
+    #        alpha: transparency of datapoints
+    #        elinewidth: thickness of errorbars. Default is linewidth
+    #        
+    #outputs:  future_colors: list of colors plotted to replicate in other plots if desired
     def plot_on_ax(self,ax,plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,title,labels=None,
                    average='default',dots=False,grid=False,linestyle='',linewidth = 1.5,
-                   fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',alpha = 1.0,
+                   fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
+                   alpha = 1.0,elinewidth=None,
                    **kwargs):
         coloration = coloration or [None]*len(xs)
         future_colors = []
@@ -883,10 +1270,19 @@ class MultiQuasarSpherePlotter():
             fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',"stddev":'.',"median":"."}
             if not fmt:
                 fmt = fmtdict[self.plots]
-            for i in range(len(xs)):
-                color_store = ax.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],ls=linestyle,\
-                             color = coloration[i],fmt = fmt,capsize = 3,alpha = alpha,linewidth=linewidth)
-                future_colors.append(color_store[0].get_color())
+            if fmt=='fill':
+                for i in range(len(xs)):
+                        color_store = ax.plot(xs[i],ys[i],label=labels[i],ls=linestyle,\
+                                     color = coloration[i],marker = fmtdict[self.plots],alpha = alpha, linewidth=linewidth)
+                        future_colors.append(color_store[0].get_color())
+                        ax.fill_between(xs[i],ys[i]-yerrs[i][0,:],ys[i]+yerrs[i][1,:],color = future_colors[-1],\
+                                        alpha = alpha/2,linewidth = linewidth/2)
+            else:
+                for i in range(len(xs)):
+                        color_store = ax.errorbar(xs[i],ys[i],xerr=xerrs[i],yerr=yerrs[i],label=labels[i],ls=linestyle,\
+                                     color = coloration[i],fmt = fmt,capsize = 3,alpha = alpha, linewidth=linewidth, \
+                                     elinewidth=elinewidth)
+                        future_colors.append(color_store[0].get_color())
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
@@ -899,6 +1295,19 @@ class MultiQuasarSpherePlotter():
         ax.legend()
         return future_colors
 
+    #summary: gets processed data for 'plot_observational_data' from the current observationarray
+    #
+    #inputs: include_observations: if None return None
+    #        plot_type: 0,1,2,3,4 depending on kinds of variables (see 'decide_plot_type')
+    #        ion: the ion or formula to plot(can only use single ion b/c shows detailed ion info as color)
+    #        xVar: the xVar to plot. Can use any variable, will figure out what kind in 'decide_plot_type'
+    #        logx: whether to plot x logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        logy: whether to plot y logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        rlims: what impact parameters to include. Default is .1 Rvir to infinity
+    #        lq: tuple of splitting, from 'sort_by'
+    #        observationArray: observations to use if not all current observations
+    #
+    #outputs:  None. This actually does the plot operation (ax.errorbar)
     def get_observational_data(self,include_observations,plot_type,ion,xVar,logx='guess',logy='guess',
                                rlims = None,lq=None,observationArray=None,**kwargs):
         def flatten_if_needed(ary):
@@ -965,9 +1374,32 @@ class MultiQuasarSpherePlotter():
                 xarys_nondetections_up[i] = np.log10(flatten_if_needed(xarys_nondetections_up[i]))
         return xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections_up,yarys_nondetections_up,xarys_nondetections_down,yarys_nondetections_down
     
+    #summary: helper function for plot_err that handles observational data
+    #
+    #inputs: ion: the ion or formula to plot(can only use single ion b/c shows detailed ion info as color)
+    #        xVar: the xVar to plot. Can use any variable, will figure out what kind in 'decide_plot_type'
+    #        ax: axis (from 'plot_err')
+    #        fig: fig (from 'plot_err')
+    #        plot_type: 0,1,2,3,4 depending on kinds of variables (see 'decide_plot_type')
+    #        include_observations: 'only' or 'both' (if False, this func won't be called)
+    #        obs_data: package of data (from 'get_observational_data')
+    #        xlabel: label to write along x axis (from 'get_title_and_axislabels')
+    #        ylabel: label to write along y axis (from 'get_title_and_axislabels')
+    #        title: label to write along top (from 'get_title_and_axislabels')
+    #        labels: list of labels for curves
+    #        grid: whether to plot grid underneath values
+    #        linestyle: how to connect points, default is no connection (which is probably best in all cases for observations)
+    #        obs_coloration: if observations should be colored different from simulation, this is a list of colors
+    #        alpha: transparency of observations
+    #        fmt: style of points ('o','s','x','v', etc)
+    #        coloration: a list of colors, inherited from simulation colors. If obs_coloration, ignore this
+    #        xlims: limits of x axis of plot. Default is matplotlib default
+    #        ylims: limits of y axis of plot. efault is matplotlib default
+    #
+    #outputs:  None. This actually does the plot operation (ax.errorbar)
     def plot_observational_data(self,ax,plot_type,include_observations,obs_data,xlabel,ylabel,title,labels=None,
                grid=False,linestyle='',obs_coloration=None,alpha=.5,
-               fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
+               fmt=None,coloration=None,xlims='default',ylims='default',
                **kwargs):
         xarys_detections,yarys_detections,yerr_arys_detections,xarys_nondetections_up,yarys_nondetections_up,xarys_nondetections_down,yarys_nondetections_down = obs_data
         coloration = coloration or obs_coloration
@@ -998,6 +1430,24 @@ class MultiQuasarSpherePlotter():
             ax.grid()
         ax.legend()
         
+    #summary: plots errorbar(s) of ion column density vs incrementing xvariable, 
+    #         uses a color bar to show the average (or median) of sightlines for a 
+    #         certain column density at a specific x value
+    #
+    #inputs: ion: the ion or formula to plot(can only use single ion b/c shows detailed ion info as color)
+    #        xVar: the xVar to plot. Can use any variable, will figure out what kind in 'decide_plot_type'
+    #        ax: axis if exists
+    #        fig: fig if exists
+    #        show: True if show and clear fig
+    #        include_observations: True if you want to plot observations alongside simulation data
+    #        **kwargs: obs_data, obs_coloration,xlabel,ylabel,title,labels,
+    #                  grid,linestyle,alpha,fmt,coloration,xlims,ylims ['plot_observational_data']
+    #                  logx, logy, rlims, lq, observationArray ['get_observational_data']
+    #                  average, dots, linewidth, markersize, elinewidth ['plot_on_ax']
+    #                  replacement_title, extra_title ['get_title_and_axislabels']
+    #                  visibility_threshold ['process_datapoints']
+    #                  offsetx, tolerance ['process_errbars_onlyvertical']
+    #outputs: None. Will plot errorbars if show is true, otherwise will add errorbar to plt
     def plot_err(self,ion,xVar='rdivR',ax=None,show=False,include_observations = None,**kwargs):
         if not ax:
             print("Current constraints (name): "+self.currentQuasarArrayName)
@@ -1017,7 +1467,13 @@ class MultiQuasarSpherePlotter():
                 plt.show()
         else:
             print("No values detected!")
-
+            
+    #summary: a number of custom colormaps
+    #
+    #inputs: bar_type: one of three options: 'HotCustom','RainbowCustom','BlackandWhite'
+    #        call 'plot_hist' with the keyword 'bar_type' to use any besides HotCustom
+    #
+    #outputs: colormap object
     def definecolorbar(self, bar_type = 'HotCustom',**kwargs):
         from matplotlib.colors import LinearSegmentedColormap
         f= 256.0
@@ -1088,6 +1544,26 @@ class MultiQuasarSpherePlotter():
             custom = LinearSegmentedColormap('BlackandWhite', bwdict)
         return custom
     
+    #summary: creates data to plot for histogram
+    #
+    #inputs: ion: ion or formula to plot
+    #        xs: raw x values for all sightlines(from 'get_sightline_xy_vals')
+    #        ys: raw y values for all sightlines(from 'get_sightline_xy_vals')
+    #        xVar: what the raw x values represent
+    #        tolerance: how close values can be to count as a single value (can be off by floating point error)
+    #                   in the case of small values (e.g. ssfr) this may need to be reduced
+    #        weights: whether to calculate in terms of raw sightline numbers (False) or 
+    #                 fraction of each unique xVar (True, default)
+    #        weight: multiplier for values to scale by individual densities at each xVar 
+    #                (calculated in 'process_xy_vals_hist')
+    #        logx: whether to plot x logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #        logy: whether to plot y logarithmically. Default is "guess", it'll ask 'should_take_logs_xy'
+    #
+    #outputs: xs: x values for histogram
+    #         ys: x values for histogram
+    #         weight: weight values for each x in histogram
+    #         cbarlabel: basically, tell whether or not values are weighted
+    #         len(xs)<=0: true if the histogram will be empty (if so, it'll be skipped)
     def process_xy_vals_hist(self,ion,xs,ys,xVar='rdivR',tolerance=1e-5,weights=True,logx='guess',logy='guess',**kwargs):
         logx,logy = self.should_take_logs_xy(ion,xVar,logx,logy,**kwargs)
         unique_xs = self.combine_xs(xs,tolerance)
@@ -1113,14 +1589,32 @@ class MultiQuasarSpherePlotter():
             ys = ys[ys>0]
             ys = np.log10(ys)
         return xs,ys,weight,cbarlabel,len(xs)<=0
-    
+
+    #summary: helper function for plot_hist where plot function is actually called
+    #
+    #inputs: ax: matplotlib axis (from 'plot_hist')
+    #        fig: matplotlib fig (from 'plot_hist')
+    #        xs: x values (calculated in 'process_xy_vals_hist')
+    #        ys: y values (calculated in 'process_xy_vals_hist')
+    #        xlabel: label to write along x axis (from 'get_title_and_axislabels')
+    #        ylabel: label to write along y axis (from 'get_title_and_axislabels')
+    #        title: label to write top (from 'get_title_and_axislabels')
+    #        weight: multiplier for values to scale by individual densities at each xVar 
+    #                (calculated in 'process_xy_vals_hist')
+    #        cbarlabel: label to write along colorbar (from 'get_title_and_axislabels')
+    #        ns: grid spacing on plot. increase first number to get more, thinner boxes. Increase second number
+    #            to get more, shorter boxes. Too many gives essentially binary results. Default usually works
+    #        xlims: x limits, defaults to the max and min
+    #        ylims: y limits, defaults to the max and min
+    #
+    #outputs: None. Actually does the plot operation (ax.pcolormesh)
     def plot_on_ax_hist(self,ax,fig,xs,ys,xlabel,ylabel,title,weight,cbarlabel,ns = (42,15),\
                         xlims='default',ylims='default',**kwargs):
-        hotcustom = self.definecolorbar(**kwargs)
+        cmap = self.definecolorbar(**kwargs)
         H, xedges, yedges = np.histogram2d(xs, ys, bins=ns,weights = weight)
         H = H.T
         X, Y = np.meshgrid(xedges, yedges)
-        cms=ax.pcolormesh(X,Y, H, cmap=hotcustom)
+        cms=ax.pcolormesh(X,Y, H, cmap=cmap)
         fig.colorbar(cms,label = cbarlabel,ax=ax)
         def get_new_axislim(current,divideBy = 200):
             x1 = current[0]
@@ -1142,9 +1636,16 @@ class MultiQuasarSpherePlotter():
     #summary: plots histogram(s) of ion column density vs incrementing xvariable, 
     #         uses a color bar to show the percentage of sightlines for a certain column density at a specific x value
     #
-    #    def plot_err(self, ion, quasarArray = None, xVar = "r", save_fig = False, \
-    #             reset = False, labels = None,extra_title = "",rlims = None,\
-    #             tolerance = 1e-5,dots = False,logx = False,average = None,logy = True
+    #inputs: ion: the ion or formula to plot(can only use single ion b/c shows detailed ion info as color)
+    #        xVar: the xVar to plot (can only use sightline params here)
+    #        ax: axis if exists
+    #        fig: fig if exists
+    #        show: True if show and clear fig
+    #        **kwargs: ns, xlims, ylims ['plot_on_ax_hist']
+    #                tolerance, weights, logx, logy ['process_xy_vals_hist']
+    #                bar_type ['definecolorbar']
+    #
+    #outputs: None. Will plot histogram if show is true, otherwise will add histogram to plt
     def plot_hist(self,ion,xVar='rdivR',ax=None,fig=None,show=False,**kwargs):
         if isinstance(ion,tuple):
             ion_name = ion[1]
@@ -1171,7 +1672,38 @@ class MultiQuasarSpherePlotter():
                 plt.show()
         else:
             print("No values detected!")
-            
+
+    #summary: splits currentQuasarArray into two dimensions of bins, either calculated on the fly or given
+    #
+    #inputs: criteria_x: what criteria to constrain by horizontally (simname, simnum, Mvir, Rvir, SFR, 
+    #                           etc. See 'quasar_sphere.py' for full list)
+    #        criteria_y: what criteria to constrain by vertically 
+    #        bins_x: a list of n numbers, which determine n-1 horizontal bins in between them. If string  
+    #              param, n strings which each constitute a bin
+    #        bins_y: a list of n numbers, which determine n-1 horizontal bins in between them. If string  
+    #              param, n strings which each constitute a bin
+    #        atEnd_x: if True, compare horizontal values by their final (z=1 or 
+    #                 z=minimum among remaining values) value, not the current one
+    #        atEnd_y: if True, compare vertical values by their final (z=1 or 
+    #                 z=minimum among remaining values) value, not the current one
+    #        splitEven_x: a number of bins to split into horizontally. 
+    #                     The bins will be chosen so each has the same number of members.
+    #        splitEven_y: a number of bins to split into vertically. 
+    #                     The bins will be chosen so each has the same number of members.
+    #        reverse_x: if True, return x bins in reverse order
+    #        reverse_y: if True, return y bins in reverse order
+    #        
+    #outputs: labels_x: list of strings for labelling panels on top of faberplot
+    #         labels_y: list of strings for labelling panels on left of faberplot
+    #         bins_x: the bins to compare to horizontally
+    #         bins_y: the bins to compare to vertically
+    #         quasarBins: 2D list of lists of quasarSphere objects that fit in the bins
+    #         obsBins: 2D list of lists of observationalQuasarSphere objects that fit in the bins
+    #          
+    #         NOTE: These are usually combined together and considered an 'lq2' object, passed directly 
+    #            into faberplots (any except type 0) general use case is e.g.
+    #            >>>lq2 = mq.sort_by2D('Mvir','redshift',[0,10**11,np.inf],splitEven_y = 3)
+    #            >>>mq.faberplot('err','O VI',lq=lq)       
     def sort_by_2D(self, criteria_x, criteria_y, bins_x = [0,np.inf], bins_y = [0,np.inf], \
                    atEnd_x = False, atEnd_y = False, splitEven_x = 0, splitEven_y = 0, \
                    reverse_x = False,reverse_y = False):
@@ -1205,9 +1737,27 @@ class MultiQuasarSpherePlotter():
                 quasarBins[i][j] = qlist_x
                 obsBins[i][j] = obs_bins_x[j]
         return labels_x,labels_y,bins_x,bins_y,quasarBins,obsBins                      
-    
-    def faberplot(self,plot_type,yVar,labels_x=None,labels_y=None,quasarArray=None,obsArray=None,lq2=None,criteria_legend=None,\
-                  bins_legend=None,sharex=True,sharey=True,figsize='guess', save_fig = False,dpi=300, **kwargs):
+
+    #summary: creates 2d array of labelled miniplots
+    #
+    #inputs: plot_type: either 'err' or 'hist', will call those above
+    #        yVar: what to plot (also pass xVar, but it counts in **kwargs here)
+    #        lq2: output of 'sort_by_2D'
+    #              param, n strings which each constitute a bin
+    #        criteria_legend: to make type 1,2,3,4 error plots, you need to pass in a way of sorting
+    #                         the subpanels. So pass in a 'sort_by' criteria. But don't sort in advance
+    #                         the sort will happen inside faberplot
+    #        bins_legend: bins for sorting inside subpanels. [bins for legend, not legend for bins]
+    #        sharex: if True, all subpanels share same x values
+    #        sharey: if True, all subpanels share same y values
+    #        figsize: size of finalized image. Will guess according to number of bins if none given
+    #        save_fig: whether to save. if string, this will be the file's name
+    #        dpi: resolution of saved fig
+    #        
+    #outputs: None, makes plot. Can save if 'save_fig'
+    def faberplot(self,plot_type,yVar,lq2=None,criteria_legend=None,bins_legend=None,\
+                  sharex=True,sharey=True,figsize='guess', save_fig = False,dpi=300,\
+                  **kwargs):
         #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
         #ask plot_err or plot_hist for completed plots of type given, for 
         #quasars in that cell of quasarArray, put them in subplots of a n by m subplots object
@@ -1281,11 +1831,19 @@ class MultiQuasarSpherePlotter():
         self.currentQuasarArray = oldQuasarArray
         self.currentObservationArray = oldObsArray
 
+    #summary: create name for saved fig if not given
+    #
+    #inputs: save_fig: either True or a string. if a string skip this func 
+    #        yVar: y variable plotted
+    #        xVar x variable plotted
+    #        
+    #outputs: returns a string of a filename
     def save_fig_filename(self, save_fig, yVar, xVar = 'rdivR', **kwargs):
         if isinstance(save_fig, str):
-            return 'quasarscan/plots/' + str + '.png'
+            return 'quasarscan/plots/' + save_fig + '.png'
         elif save_fig == True:
-            filename = 'quasarscan/plots/' + yVar.replace('/','div') + '_vs_' + xVar.replace('/','div') + '_' + str(datetime.datetime.now())[:19] + '.png'
+            filename = 'quasarscan/plots/' + yVar.replace('/','div') + '_vs_' + \
+                        xVar.replace('/','div') + '_' + str(datetime.datetime.now())[:19] + '.png'
             filename = filename.replace(' ','')
             return filename
         else:

@@ -68,7 +68,7 @@ class GeneralizedQuasarSphere(object):
             else:
                 assert self.type == q.type, "quasar_sphere types must be the same."
             ions_lists.append(q.ions) 
-            sum_of_lengths += q.length
+            sum_of_lengths += q.length_reached
             self.gasbins.combine_holders(q.gasbins)
         if self.number > 0:
             ions_in_all = list(reduce(set.intersection, map(set, ions_lists)))
@@ -81,7 +81,7 @@ class GeneralizedQuasarSphere(object):
         currentpos = 0
         for i in range(self.number):
             q = list_of_quasar_spheres[i]
-            size = min(q.length_reached,q.length)
+            size = q.length_reached
             self.info[currentpos:currentpos+size,:11] = q.info[:size,:11]
             for ion in self.get_ion_list_w_bins():
                 pos_in_q = q.get_ion_column_num(ion)
