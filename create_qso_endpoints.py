@@ -139,7 +139,11 @@ if __name__ == "__main__":
     Rvir = parse_metadata.get_value("Rvir",name,z)
     if np.isnan(Rvir):
         Rvir = 100#kpc
-    center = ds.find_max(('gas','density'))[1]
+    if name == 'VELA_v2_art_29' and np.abs(z-1)<.1:
+        print('Using VELA29 special center....')
+        center = ds.arr([0.49281657, 0.49691165, 0.49609502], 'code_length')
+    else:
+        center = ds.find_max(('gas','density'))[1]
     L = parse_metadata.get_value("L",name,z)
     if np.isnan(L).all():
         L = np.array([0,0,1.])

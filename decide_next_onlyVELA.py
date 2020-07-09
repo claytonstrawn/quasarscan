@@ -22,10 +22,13 @@ list_of_files_to_process = [('07','500'),
                             ('10','330'),
                             ('21','500'),
                             ('21','330'),
+                            ('21','250'),
                             ('22','500'),
                             ('22','330'),
+                            ('22','250'),
                             ('29','500'),
-                            ('29','340')]
+                            ('29','340'),
+                            ('29','250')]
 
 a2z = {"460":"1.2","500":"1.0","400":"1.5","330":"2.0","340":"2.0","250":"3.0","200":"4.0"}
 
@@ -75,7 +78,7 @@ def check_in_allfiles(alltextfiles,name_to_check):
 
     
 
-#check if the data file is around that we need, and if it "appears"
+#check if the data file exists that we need, and if it "appears"
 #to be there, but it is in the blacklist, or isn't there, return False
 def check_validity(tocheck):
     blacklist = open("quasarscan/blacklist.txt")
