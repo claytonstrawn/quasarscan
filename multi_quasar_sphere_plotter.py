@@ -1050,7 +1050,10 @@ class MultiQuasarSpherePlotter():
             if isinstance(offsetx,tuple):
                 xs[i]+=offsetx[1]
                 offsetx_bool=offsetx[0]
-            else:
+            elif isinstance(offsetx,float) or isinstance(offsetx,int):
+                xs[i]+=offsetx
+                offsetx_bool = False
+            elif isinstance(offsetx,bool):
                 offsetx_bool = offsetx
             if offsetx_bool and len(xs[i])>0:
                 scatterwidth = np.min(np.diff(np.unique(xs[i])))
@@ -1230,7 +1233,7 @@ class MultiQuasarSpherePlotter():
     #        average: what kind of average to use. See 'setPlots' for details. default is take mean and stderr
     #        dots: If True, plot points instead of errorbars
     #        grid: whether to plot grid underneath values
-    #        linestyle: how to connect points, default is no connection (which is probably best in all cases for observations)
+    #        linestyle: how to connect points, default is no connection
     #        linewidth: thickness of connecting line
     #        fmt: style of points ('o','s','x','v', etc)
     #        coloration: a list of colors. If none go through the default matplotlib colors
