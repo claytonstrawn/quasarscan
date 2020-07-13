@@ -186,6 +186,7 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.star_Rvir = parse_metadata.get_value("star_Rvir",self.name,redshift = self.redshift)
         self.Mstar = self.star_Rvir
         self.Mstar_cgm = self.star_Rvir - parse_metadata.get_value("star_.1Rvir",self.name,redshift = self.redshift)
+        self.Mstar_10kpc = parse_metadata.get_value("star_10kpc",self.name,redshift = self.redshift)
         self.dm_Rvir = parse_metadata.get_value("dm_Rvir",self.name,redshift = self.redshift)
         self.Mdm = self.dm_Rvir
         self.sfr = parse_metadata.get_value("SFR",self.name,redshift = self.redshift)
