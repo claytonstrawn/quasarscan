@@ -11,15 +11,18 @@ except:
     from parse_metadata import get_value
     level = 1
 
-alltextfiles = get_all_textfiles(level)
+alltextfiles = get_all_textfiles(0)
 
 #the list of files we want to process at any given time
 list_of_files_to_process = [('07','500'),
                             ('07','330'),
+                            ('07','250'),
                             ('08','460'),
                             ('08','330'),
+                            ('08','250'),
                             ('10','500'),
                             ('10','330'),
+                            ('10','250'),
                             ('21','500'),
                             ('21','330'),
                             ('21','250'),
@@ -30,9 +33,9 @@ list_of_files_to_process = [('07','500'),
                             ('29','340'),
                             ('29','250')]
 
-a2z = {"460":"1.2","500":"1.0","400":"1.5","330":"2.0","340":"2.0","250":"3.0","200":"4.0"}
+a2z = {"460":"1.1","500":"1.0","400":"1.5","330":"2.0","340":"2.0","250":"3.0","200":"4.0"}
 
-computer = 'nersc'
+computer = 'nasa'
 
 root_for_data_files = {'nersc':"/global/cscratch1/sd/cstrawn",'nasa':'/nobackupp2/cstrawn/mydir'}[computer]
 
@@ -48,7 +51,7 @@ for t in list_of_files_to_process:
 minimumlines = 250
 
 #this is just to turn off writing to blacklists while testing
-final = False
+final = True
 
 #can do this just to test, by printing the output instead of writing 
 #to actual file (in this case the number of processors won't matter)

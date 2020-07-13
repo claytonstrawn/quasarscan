@@ -32,6 +32,7 @@ def get_all_textfiles(inquasarscan,loadonly = 'all'):
     #pathname by default starts in output
     if inquasarscan:
         path = "output"
+        print('still true lol')
         dirs = os.listdir(path)
     else:
         path = "quasarscan/output"
