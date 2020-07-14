@@ -726,7 +726,7 @@ class MultiQuasarSpherePlotter():
     def get_xy_type4(self, xVar, yVar, quasarArray, rlims):
         if rlims is None:
             rlims = [0.1,1.0]
-        elif rlims is "all":
+        elif rlims == "all":
             rlims = [0.0,np.inf]
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
