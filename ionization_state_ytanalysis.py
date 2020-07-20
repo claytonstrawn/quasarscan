@@ -2,6 +2,7 @@
 import sys
 
 #define analysis functions
+print('starting the script...')
 
 def rahuls_function(galaxy_name,galaxy_file_loc,options):
 	#do things
