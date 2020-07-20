@@ -5,9 +5,7 @@ import sys
 print('starting the script...')
 
 def rahuls_function(galaxy_name,galaxy_file_loc,options):
-	#do things
-	#save some images and 
-	#save some raw data values
+	print("test")
 
 def sallys_function(galaxy_name,galaxy_file_loc,options):
 	#do other things
