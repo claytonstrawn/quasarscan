@@ -248,7 +248,7 @@ if __name__ == '__main__':
 	galaxy_name = sys.argv[1]
 	galaxy_file_loc = sys.argv[2]
 	redshift = sys.argv[3]
-	rahuls_function(galaxy_name,galaxy_file_loc)
+	rahuls_function(galaxy_name,galaxy_file_loc,options)
 	sallys_function(galaxy_name,galaxy_file_loc,redshift)
 
 
