@@ -4,7 +4,8 @@ import yt
 import trident
 import numpy as np
 import matplotlib.pyplot as plt
-from quasarscan import parse_metadata
+# from quasarscan import parse_metadata
+import parse_metadata
 
 #define analysis functions
 print('starting the script...')
@@ -12,7 +13,7 @@ print('starting the script...')
 def rahuls_function(galaxy_name,galaxy_file_loc,options):
 	print("test")
 
-def o_fraction_plot(simulation, filename, redshift):
+def sallys_function(simulation, filename, redshift):
     # print("loading file, calculating Rvir and Mvir")
     # loading the file, calculate Rvir and Mvir
     ds = yt.load(filename)
@@ -21,7 +22,8 @@ def o_fraction_plot(simulation, filename, redshift):
     # print("Rvir" + str(Rvir))
     # print("Mvir" + str(Mvir))
     # add all the oxygen ion fields
-    from quasarscan import code_specific_setup
+    # from quasarscan import code_specific_setup
+    import code_specific_setup
     ds,_ = code_specific_setup.load_and_setup(filename,'art',
                                              ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
                                              add_pi_fracs = True)
@@ -245,8 +247,9 @@ if __name__ == '__main__':
 	# if you're running this from terminal like "python ionization_state_ytanalysis.py galname file_loc"
 	galaxy_name = sys.argv[1]
 	galaxy_file_loc = sys.argv[2]
+	redshift = sys.argv[3]
 	rahuls_function(galaxy_name,galaxy_file_loc)
-	sallys_function(galaxy_name,galaxy_file_loc)
+	sallys_function(galaxy_name,galaxy_file_loc,redshift)
 
 
 
