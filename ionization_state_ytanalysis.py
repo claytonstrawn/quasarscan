@@ -247,9 +247,9 @@ if __name__ == '__main__':
 	# if you're running this from terminal like "python ionization_state_ytanalysis.py galname file_loc"
 	galaxy_name = sys.argv[1]
 	galaxy_file_loc = sys.argv[2]
-	redshift = sys.argv[3]
+	options = sys.argv[3]
 	rahuls_function(galaxy_name,galaxy_file_loc,options)
-	sallys_function(galaxy_name,galaxy_file_loc,redshift)
+	sallys_function(galaxy_name,galaxy_file_loc,options)
 
 
 
