@@ -28,7 +28,7 @@ def sallys_function(simulation, filename, redshift):
     ds,_ = code_specific_setup.load_and_setup(filename,'art',
                                              ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
                                              add_pi_fracs = True)
-    print("adding ion fields")
+    # print("adding ion fields")
     trident.add_ion_fields(ds,['O I'])
     trident.add_ion_fields(ds,['O II'])
     trident.add_ion_fields(ds,['O III'])
@@ -225,8 +225,11 @@ def sallys_function(simulation, filename, redshift):
         O_PI_nogal_fraction.append((O_PI_mass[i] - O_PI_gal_mass[i])/(O_mass-O_gal_mass))
         O_CI_nogal_fraction.append((O_CI_mass[i] - O_CI_gal_mass[i])/(O_mass-O_gal_mass))
         O_nogal_fraction.append(O_PI_nogal_fraction[i]+O_CI_nogal_fraction[i])
+    print("PI fractions:")
     print(O_PI_nogal_fraction)
+    print("CI fractions:")
     print(O_CI_nogal_fraction)
+    print("total fractions:")
     print(O_nogal_fraction)
     
     # print("plotting")
@@ -243,6 +246,7 @@ def sallys_function(simulation, filename, redshift):
     plt.plot(x, np.log10(O_CI_nogal_fraction), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
     plt.plot(x, np.log10(O_nogal_fraction), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
+    # plt.savefig(' ')
 
 if __name__ == '__main__':
 	# if you're running this from terminal like "python ionization_state_ytanalysis.py galname file_loc"
