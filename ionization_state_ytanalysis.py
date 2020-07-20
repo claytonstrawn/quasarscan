@@ -17,7 +17,7 @@ def sallys_function(simulation, filename, redshift):
     # print("loading file, calculating Rvir and Mvir")
     # loading the file, calculate Rvir and Mvir
     ds = yt.load(filename)
-    redshift = int(redshift)
+    redshift = float(redshift)
     Rvir = parse_metadata.get_value('Rvir',simulation, redshift = redshift)
     Mvir = '%e'%parse_metadata.get_value('Mvir',simulation, redshift = redshift)
     # print("Rvir" + str(Rvir))
