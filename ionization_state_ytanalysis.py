@@ -11,10 +11,10 @@ import parse_metadata
 print('starting the script...')
 
 def rahuls_function(simulation,filename,redshift,):
-  #load file, calculate Rvir
+  #load file, calculate Rvir and center
 	ds = yt.load(filename)
-  redshift = float(redshift)
-  Rvir = parse_metadata.get_value('Rvir',simulation, redshift, field)
+  Rvir = parse_metadata.get_value('Rvir',simulation, redshift)
+  center = find_max('density')
 
   #add fields
   trident.add_ion_fields(ds, ['O I'])
@@ -61,8 +61,8 @@ def rahuls_function(simulation,filename,redshift,):
                 ('dpurple', 1),('dred', 1),('dorange', 1),('dyellow', 1),('dgreen', 1)], 
                  name='15', interpolate=False)
 
-  proj = yt.ProjectionPlot(ds,'x',('gas', field), width = (2* Rvir, 'kpc'))
-         proj.set_cmap(('gas', field), ('15'))
+  proj = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_number_density'),center=center, width = (2* Rvir, 'kpc'))
+         proj.set_cmap(('gas', 'O_p0_number_density'), ('15'))
          # proj.set_zlim(('gas', field),minimum, maximum)
          proj.show()
          proj.save()
