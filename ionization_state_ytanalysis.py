@@ -254,9 +254,9 @@ def sallys_function(simulation, filename, redshift):
     f = open(dataname, "a")
     f.write("PI fraction:")
     f.write(str(O_PI_nogal_fraction))
-    f.write("CI fraction:")
+    f.write("\n CI fraction:")
     f.write(str(O_CI_nogal_fraction))
-    f.write("total fraction:")
+    f.write("\n total fraction:")
     f.write(str(O_nogal_fraction))
     f.close()
 
