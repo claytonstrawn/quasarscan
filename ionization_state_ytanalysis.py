@@ -252,11 +252,13 @@ def sallys_function(simulation, filename, redshift):
     f = open(dataname, "x")
     f.close()
     f = open(dataname, "a")
-    f.write(O_PI_nogal_fraction)
-    f.write(O_CI_nogal_fraction)
-    f.write(O_nogal_fraction)
+    f.write("PI fraction:")
+    f.write(str(O_PI_nogal_fraction))
+    f.write("CI fraction:")
+    f.write(str(O_CI_nogal_fraction))
+    f.write("total fraction:")
+    f.write(str(O_nogal_fraction))
     f.close()
-    # plt.savefig(' ')
 
 if __name__ == '__main__':
 	# if you're running this from terminal like "python ionization_state_ytanalysis.py galname file_loc"
