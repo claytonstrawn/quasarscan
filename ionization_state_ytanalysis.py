@@ -18,7 +18,7 @@ def rahuls_function(simulation,filename,redshift):
     ds = yt.load(filename)
     redshift = float(redshift)
     Rvir = parse_metadata.get_value('Rvir',simulation,redshift)
-    center = ds.find_max(‘density’)[1]
+    center = ds.find_max('density')[1]
 
     #add fields
     trident.add_ion_fields(ds, ['O I'])
