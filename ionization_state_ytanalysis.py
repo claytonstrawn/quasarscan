@@ -246,6 +246,16 @@ def sallys_function(simulation, filename, redshift):
     plt.plot(x, np.log10(O_CI_nogal_fraction), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
     plt.plot(x, np.log10(O_nogal_fraction), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
+    figname = simulation + "_" + str(redshift) + "_o_ion_fraction_plot.png"
+    plt.savefig(figname)
+    dataname = simulation + "_" + str(redshift) + "_o_ion_fraction_data.txt"
+    f = open(dataname, "x")
+    f.close()
+    f = open(dataname, "a")
+	f.write(O_PI_nogal_fraction)
+	f.write(O_CI_nogal_fraction)
+	f.write(O_nogal_fraction)
+	f.close()
     # plt.savefig(' ')
 
 if __name__ == '__main__':
