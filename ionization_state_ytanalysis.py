@@ -15,7 +15,7 @@ def rahuls_function(simulation,filename,redshift):
     #load file, calculate Rvir and center
     ds = yt.load(filename)
     Rvir = parse_metadata.get_value('Rvir',simulation,redshift)
-    center = find_max('density')
+    center = ds.find_max('density')
 
     #add fields
     trident.add_ion_fields(ds, ['O I'])
@@ -36,8 +36,68 @@ def rahuls_function(simulation,filename,redshift):
         plot.save()
         return plot
 
-    #extracting colors function
-    def extract_colors(img_path):
+    #create custom colormap with 15 colors
+    yt.make_colormap([('blue',  1), ('green', 1), ('red',   1), ('black', 1), ('gray', 1),
+              ('purple', 1), ('orange', 1),('yellow', 1),('dgray', 1),('dblue', 1),
+              ('dpurple', 1),('dred', 1),('dorange', 1),('dyellow', 1),('dgreen', 1)], 
+               name='15', interpolate=False)
+
+    proj_OI = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj.set_cmap(('gas', 'O_p0_number_density'), ('15'))
+    proj = remove_extraneous(proj)
+    proj.show()
+    proj.save()
+
+    proj_OII = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj.set_cmap(('gas', 'O_p1_number_density'), ('15'))
+    proj = remove_extraneous(proj)
+    proj.show()
+    proj.save()
+
+    proj_OIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p2_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj.set_cmap(('gas', 'O_p2_number_density'), ('15'))
+    proj = remove_extraneous(proj)
+    proj.show()
+    proj.save()
+
+    proj_OIV = yt.ProjectionPlot(ds,'x',('gas', 'O_p3_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj.set_cmap(('gas', 'O_p3_number_density'), ('15'))
+    proj = remove_extraneous(proj)
+    proj.show()
+    proj.save()
+
+    proj_OV = yt.ProjectionPlot(ds,'x',('gas', 'O_p4_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj.set_cmap(('gas', 'O_p4_number_density'), ('15'))
+    proj = remove_extraneous(proj)
+    proj.show()
+    proj.save()
+
+    proj_OVI = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj.set_cmap(('gas', 'O_p5_number_density'), ('15'))
+    proj = remove_extraneous(proj)
+    proj.show()
+    proj.save()
+
+    proj_OVII = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj.set_cmap(('gas', 'O_p6_number_density'), ('15'))
+    proj = remove_extraneous(proj)
+    proj.show()
+    proj.save()
+
+    proj_OVIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p7_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj.set_cmap(('gas', 'O_p7_number_density'), ('15'))
+    proj = remove_extraneous(proj)
+    proj.show()
+    proj.save()
+
+    proj_OIX = yt.ProjectionPlot(ds,'x',('gas', 'O_p8_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj.set_cmap(('gas', 'O_p8_number_density'), ('15'))
+    proj = remove_extraneous(proj)
+    proj.show()
+    proj.save()
+
+#extracting colors from saved images
+def extract_colors(img_path):
         im = Image.open(img_path)   
         width = im.width
         height = im.height
@@ -54,67 +114,7 @@ def rahuls_function(simulation,filename,redshift):
             total+=color_map[k]
 
         color_map = {k: (v/total) * 100 for k, v in color_map.items()}
-        print(color_map)
-
-        #create custom colormap with 15 colors
-        yt.make_colormap([('blue',  1), ('green', 1), ('red',   1), ('black', 1), ('gray', 1),
-                  ('purple', 1), ('orange', 1),('yellow', 1),('dgray', 1),('dblue', 1),
-                  ('dpurple', 1),('dred', 1),('dorange', 1),('dyellow', 1),('dgreen', 1)], 
-                   name='15', interpolate=False)
-
-        proj_O1 = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p0_number_density'), ('15'))
-        proj = remove_extraneous(proj)
-        proj.show()
-        proj.save()
-
-        proj_O2 = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p1_number_density'), ('15'))
-        proj = remove_extraneous(proj)
-        proj.show()
-        proj.save()
-
-        proj_O3 = yt.ProjectionPlot(ds,'x',('gas', 'O_p2_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p2_number_density'), ('15'))
-        proj = remove_extraneous(proj)
-        proj.show()
-        proj.save()
-
-        proj_O4 = yt.ProjectionPlot(ds,'x',('gas', 'O_p3_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p3_number_density'), ('15'))
-        proj = remove_extraneous(proj)
-        proj.show()
-        proj.save()
-
-        proj_O5 = yt.ProjectionPlot(ds,'x',('gas', 'O_p4_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p4_number_density'), ('15'))
-        proj = remove_extraneous(proj)
-        proj.show()
-        proj.save()
-
-        proj_O6 = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p5_number_density'), ('15'))
-        proj = remove_extraneous(proj)
-        proj.show()
-        proj.save()
-
-        proj_O7 = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p6_number_density'), ('15'))
-        proj = remove_extraneous(proj)
-        proj.show()
-        proj.save()
-
-        proj_O8 = yt.ProjectionPlot(ds,'x',('gas', 'O_p7_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p7_number_density'), ('15'))
-        proj = remove_extraneous(proj)
-        proj.show()
-        proj.save()
-
-        proj_O9 = yt.ProjectionPlot(ds,'x',('gas', 'O_p8_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p8_number_density'), ('15'))
-        proj = remove_extraneous(proj)
-        proj.show()
-        proj.save()
+        print(color_map) 
 
 
 def sallys_function(simulation, filename, redshift):
@@ -366,9 +366,9 @@ def sallys_function(simulation, filename, redshift):
 
 if __name__ == '__main__':
 	# if you're running this from terminal like "python ionization_state_ytanalysis.py galname file_loc"
-	galaxy_name = sys.argv[0]
-	galaxy_file_loc = sys.argv[1]
-	options = sys.argv[2]
+	galaxy_name = sys.argv[1]
+	galaxy_file_loc = sys.argv[2]
+	options = sys.argv[3]
 	rahuls_function(galaxy_name,galaxy_file_loc,options)
 	sallys_function(galaxy_name,galaxy_file_loc,options)
 
