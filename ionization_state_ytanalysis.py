@@ -18,7 +18,7 @@ def rahuls_function(simulation,filename,redshift):
     ds = yt.load(filename)
     redshift = float(redshift)
     Rvir = parse_metadata.get_value('Rvir',simulation,redshift)
-    center = ds.find_max('density')
+    center = ds.find_max(‘density’)[1]
 
     #add fields
     trident.add_ion_fields(ds, ['O I'])
@@ -49,6 +49,7 @@ def rahuls_function(simulation,filename,redshift):
     proj.set_cmap(('gas', 'O_p0_number_density'), ('15'))
     proj = remove_extraneous(proj)
     proj.show()
+    print("done OI")
     proj.save()
 
     proj_OII = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
