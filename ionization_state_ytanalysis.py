@@ -4,6 +4,7 @@ import yt
 import trident
 import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
 # from quasarscan import parse_metadata
 import parse_metadata
 
@@ -61,19 +62,59 @@ def rahuls_function(simulation,filename,redshift):
                   ('dpurple', 1),('dred', 1),('dorange', 1),('dyellow', 1),('dgreen', 1)], 
                    name='15', interpolate=False)
 
-        proj0 = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj_O1 = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_number_density'),center=center, width = (2* Rvir, 'kpc'))
         proj.set_cmap(('gas', 'O_p0_number_density'), ('15'))
         proj = remove_extraneous(proj)
         proj.show()
         proj.save()
 
-        proj1 = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
-        proj.set_cmap(('gas', 'O_p0_number_density'), ('15'))
+        proj_O2 = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p1_number_density'), ('15'))
         proj = remove_extraneous(proj)
         proj.show()
         proj.save()
 
+        proj_O3 = yt.ProjectionPlot(ds,'x',('gas', 'O_p2_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p2_number_density'), ('15'))
+        proj = remove_extraneous(proj)
+        proj.show()
+        proj.save()
 
+        proj_O4 = yt.ProjectionPlot(ds,'x',('gas', 'O_p3_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p3_number_density'), ('15'))
+        proj = remove_extraneous(proj)
+        proj.show()
+        proj.save()
+
+        proj_O5 = yt.ProjectionPlot(ds,'x',('gas', 'O_p4_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p4_number_density'), ('15'))
+        proj = remove_extraneous(proj)
+        proj.show()
+        proj.save()
+
+        proj_O6 = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p5_number_density'), ('15'))
+        proj = remove_extraneous(proj)
+        proj.show()
+        proj.save()
+
+        proj_O7 = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p6_number_density'), ('15'))
+        proj = remove_extraneous(proj)
+        proj.show()
+        proj.save()
+
+        proj_O8 = yt.ProjectionPlot(ds,'x',('gas', 'O_p7_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p7_number_density'), ('15'))
+        proj = remove_extraneous(proj)
+        proj.show()
+        proj.save()
+
+        proj_O9 = yt.ProjectionPlot(ds,'x',('gas', 'O_p8_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p8_number_density'), ('15'))
+        proj = remove_extraneous(proj)
+        proj.show()
+        proj.save()
 
 
 def sallys_function(simulation, filename, redshift):
@@ -325,9 +366,9 @@ def sallys_function(simulation, filename, redshift):
 
 if __name__ == '__main__':
 	# if you're running this from terminal like "python ionization_state_ytanalysis.py galname file_loc"
-	galaxy_name = sys.argv[1]
-	galaxy_file_loc = sys.argv[2]
-	options = sys.argv[3]
+	galaxy_name = sys.argv[0]
+	galaxy_file_loc = sys.argv[1]
+	options = sys.argv[2]
 	rahuls_function(galaxy_name,galaxy_file_loc,options)
 	sallys_function(galaxy_name,galaxy_file_loc,options)
 
