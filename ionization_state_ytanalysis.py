@@ -340,6 +340,14 @@ def sallys_function(simulation, filename, redshift):
     print("total fractions:")
     print(O_nogal_fraction)
     
+    O_PI_cgm_mass = []
+    O_CI_cgm_mass = []
+    O_cgm_mass = []
+    for i in range(9):
+        O_PI_cgm_mass.append(O_PI_mass[i] - O_PI_gal_mass[i])
+        O_CI_cgm_mass.append(O_CI_mass[i] - O_CI_gal_mass[i])
+        O_cgm_mass.append(O_PI_cgm_mass[i] + O_CI_cgm_mass[i])
+    
     # print("plotting")
     # plotting the fraction of ion levels linear
     x=[1,2,3,4,5,6,7,8,9]
@@ -354,6 +362,7 @@ def sallys_function(simulation, filename, redshift):
     plt.plot(x, np.log10(O_CI_nogal_fraction), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
     plt.plot(x, np.log10(O_nogal_fraction), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
+    plt.show()
     figname = simulation + "_" + str(redshift) + "_o_ion_fraction_plot.png"
     plt.savefig(figname)
     dataname = simulation + "_" + str(redshift) + "_o_ion_fraction_data.txt"
@@ -362,11 +371,38 @@ def sallys_function(simulation, filename, redshift):
     f = open(dataname, "a")
     f.write("PI fraction:")
     f.write(str(O_PI_nogal_fraction))
-    f.write("\n CI fraction:")
+    f.write("\n \n CI fraction:")
     f.write(str(O_CI_nogal_fraction))
-    f.write("\n total fraction:")
+    f.write("\n \n total fraction:")
     f.write(str(O_nogal_fraction))
+    f.write("\n \n Rvir: ")
+    f.write(str(Rvir))
+    f.write("\n \n Mvir: ")
+    f.write(str(Mvir))
     f.close()
+    plt.plot(x, O_PI_cgm_mass, label="PI oxygen mass",color='b',linewidth=1,marker='o',linestyle='-')
+    plt.plot(x, O_CI_cgm_mass, label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
+    plt.plot(x, O_cgm_mass, label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
+    plt.legend(loc=0, fontsize=10)
+    plt.show()
+    plotname = simulaiton + "_" + str(redshift) + "_o_ion_mass_plot.png"
+    plt.savefig(plotname)
+    textname = simulation + "_" + str(redshift) + "_o_ion_mass_data.txt"
+    f1 = open(textname, "x")
+    f1.close()
+    f1 = open(textname, "a")
+    f1.write("PI mass:")
+    f1.write(str(O_PI_cgm_mass))
+    f1.write("\n \n CI mass:")
+    f1.write(str(O_CI_cgm_mass))
+    f1.write("\n \n total mass:")
+    f1.write(str(O_cgm_mass))
+    f1.write("\n \n Rvir: ")
+    f1.write(str(Rvir))
+    f1.write("\n \n Mvir: ")
+    f1.write(str(Mvir))
+    f1.close()
+    
 
 if __name__ == '__main__':
 	# if you're running this from terminal like "python ionization_state_ytanalysis.py galname file_loc"
