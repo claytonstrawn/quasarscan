@@ -10,62 +10,69 @@ import parse_metadata
 #define analysis functions
 print('starting the script...')
 
-def rahuls_function(simulation,filename,redshift,):
-  #load file, calculate Rvir and center
-	ds = yt.load(filename)
-  Rvir = parse_metadata.get_value('Rvir',simulation, redshift)
-  center = find_max('density')
+def rahuls_function(simulation,filename,redshift):
+    #load file, calculate Rvir and center
+    ds = yt.load(filename)
+    Rvir = parse_metadata.get_value('Rvir',simulation,redshift)
+    center = find_max('density')
 
-  #add fields
-  trident.add_ion_fields(ds, ['O I'])
-  trident.add_ion_fields(ds, ['O II'])
-  trident.add_ion_fields(ds, ['O III'])
-  trident.add_ion_fields(ds, ['O IV'])
-  trident.add_ion_fields(ds, ['O V'])
-  trident.add_ion_fields(ds, ['O VI'])
-  trident.add_ion_fields(ds, ['O VII'])
-  trident.add_ion_fields(ds, ['O VIII'])
-  trident.add_ion_fields(ds, ['O IX'])
+    #add fields
+    trident.add_ion_fields(ds, ['O I'])
+    trident.add_ion_fields(ds, ['O II'])
+    trident.add_ion_fields(ds, ['O III'])
+    trident.add_ion_fields(ds, ['O IV'])
+    trident.add_ion_fields(ds, ['O V'])
+    trident.add_ion_fields(ds, ['O VI'])
+    trident.add_ion_fields(ds, ['O VII'])
+    trident.add_ion_fields(ds, ['O VIII'])
+    trident.add_ion_fields(ds, ['O IX'])
 
-  #removing colorbar, tick marks, etc
-  def remove_extraneous(plot):
-    plot.hide_colorbar()
-    plot.hide_axes()
-    plot.set_minorticks('all', False)
-    plot.save()
-    return plot
+    #removing colorbar, tick marks, etc
+    def remove_extraneous(plot):
+        plot.hide_colorbar()
+        plot.hide_axes()
+        plot.set_minorticks('all', False)
+        plot.save()
+        return plot
 
-  #extracting colors function
-  def extract_colors(img_path):
-    im = Image.open(img_path)   
-    width = im.width
-    height = im.height
-    color_map = {}
-    for i in range(width):
-        for j in range(height):
-            current_color = im.getpixel((i,j))
-            if current_color in color_map.keys():
-                color_map[current_color]+=1
-            else:
-                color_map[current_color]=1
-    total = 0
-    for k in color_map.keys():
-        total+=color_map[k]
+    #extracting colors function
+    def extract_colors(img_path):
+        im = Image.open(img_path)   
+        width = im.width
+        height = im.height
+        color_map = {}
+        for i in range(width):
+            for j in range(height):
+                current_color = im.getpixel((i,j))
+                if current_color in color_map.keys():
+                    color_map[current_color]+=1
+                else:
+                    color_map[current_color]=1
+        total = 0
+        for k in color_map.keys():
+            total+=color_map[k]
 
-    color_map = {k: (v/total) * 100 for k, v in color_map.items()}
-    print(color_map)
+        color_map = {k: (v/total) * 100 for k, v in color_map.items()}
+        print(color_map)
 
-  #create custom colormap with 15 colors
-  yt.make_colormap([('blue',  1), ('green', 1), ('red',   1), ('black', 1), ('gray', 1),
-                ('purple', 1), ('orange', 1),('yellow', 1),('dgray', 1),('dblue', 1),
-                ('dpurple', 1),('dred', 1),('dorange', 1),('dyellow', 1),('dgreen', 1)], 
-                 name='15', interpolate=False)
+        #create custom colormap with 15 colors
+        yt.make_colormap([('blue',  1), ('green', 1), ('red',   1), ('black', 1), ('gray', 1),
+                  ('purple', 1), ('orange', 1),('yellow', 1),('dgray', 1),('dblue', 1),
+                  ('dpurple', 1),('dred', 1),('dorange', 1),('dyellow', 1),('dgreen', 1)], 
+                   name='15', interpolate=False)
 
-  proj = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_number_density'),center=center, width = (2* Rvir, 'kpc'))
-         proj.set_cmap(('gas', 'O_p0_number_density'), ('15'))
-         # proj.set_zlim(('gas', field),minimum, maximum)
-         proj.show()
-         proj.save()
+        proj0 = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p0_number_density'), ('15'))
+        proj = remove_extraneous(proj)
+        proj.show()
+        proj.save()
+
+        proj1 = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
+        proj.set_cmap(('gas', 'O_p0_number_density'), ('15'))
+        proj = remove_extraneous(proj)
+        proj.show()
+        proj.save()
+
 
 
 
