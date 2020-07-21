@@ -12,8 +12,11 @@ import parse_metadata
 print('starting the script...')
 
 def rahuls_function(simulation,filename,redshift):
+
+
     #load file, calculate Rvir and center
     ds = yt.load(filename)
+    redshift = float(redshift)
     Rvir = parse_metadata.get_value('Rvir',simulation,redshift)
     center = ds.find_max('density')
 
