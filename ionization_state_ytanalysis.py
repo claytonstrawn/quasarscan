@@ -5,6 +5,7 @@ import trident
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+import os
 # from quasarscan import parse_metadata
 import parse_metadata
 
@@ -12,7 +13,7 @@ import parse_metadata
 print('starting the script...')
 
 def rahuls_function(simulation,filename,redshift):
-
+    os.mkdir('example')
 
     #load file, calculate Rvir and center
     ds = yt.load(filename)
@@ -49,7 +50,8 @@ def rahuls_function(simulation,filename,redshift):
     proj_OI.set_cmap(('gas', 'O_p0_number_density'), ('15'))
     proj_OI = remove_extraneous(proj_OI)
     # proj_OI.show()
-    proj_OI.save('OI.png')
+    proj_OI.save('example/OI.png')
+    extract_colors('example/OI.png')
 
     proj_OII = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OII.set_cmap(('gas', 'O_p1_number_density'), ('15'))
