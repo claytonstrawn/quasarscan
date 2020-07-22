@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import os
+import shutil
 # from quasarscan import parse_metadata
 import parse_metadata
 
@@ -13,7 +14,12 @@ import parse_metadata
 print('starting the script...')
 
 def rahuls_function(simulation,filename,redshift):
-    os.mkdir('O_num_density_plots')
+  
+    #create folder
+    dir = 'O_num_density_plots'
+    if os.path.exists(dir):
+      shutil.rmtree(dir)
+    os.makedirs(dir)  
 
     #load file, calculate Rvir and center
     ds = yt.load(filename)
