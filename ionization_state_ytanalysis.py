@@ -76,7 +76,7 @@ def rahuls_function(simulation,filename,redshift):
     proj_OV.save('O_num_density_plots/OV.png')
     extract_colors('O_num_density_plots/OV.png')
 
-    proj_OVI = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
+    proj_OVI = yt.ProjectionPlot(ds,'x',('gas', 'O_p5_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVI.set_cmap(('gas', 'O_p5_number_density'), ('15'))
     proj_OVI = remove_extraneous(proj_OVI)
     proj_OVI.save('O_num_density_plots/OVI.png')
