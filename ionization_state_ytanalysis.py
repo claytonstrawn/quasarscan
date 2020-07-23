@@ -377,7 +377,7 @@ def sallys_function(simulation, filename, redshift):
     plt.plot(x, np.log10(O_CI_nogal_fraction), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
     plt.plot(x, np.log10(O_nogal_fraction), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
-    plt.show()
+    #plt.show()
     figname = simulation + "_" + str(redshift) + "_o_ion_fraction_plot.png"
     plt.savefig(figname)
     dataname = simulation + "_" + str(redshift) + "_o_ion_fraction_data.txt"
@@ -399,7 +399,7 @@ def sallys_function(simulation, filename, redshift):
     plt.plot(x, O_CI_cgm_mass, label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
     plt.plot(x, O_cgm_mass, label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
-    plt.show()
+    #plt.show()
     plotname = simulation + "_" + str(redshift) + "_o_ion_mass_plot.png"
     plt.savefig(plotname)
     textname = simulation + "_" + str(redshift) + "_o_ion_mass_data.txt"
