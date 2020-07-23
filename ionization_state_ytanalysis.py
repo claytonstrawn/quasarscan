@@ -68,7 +68,7 @@ def rahuls_function(simulation,filename,redshift):
 
     proj_OIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p2_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIII.set_cmap(('gas', 'O_p2_number_density'), ('15'))
-    proj_OIII.set_zlim(('gas', 'O_p1_number_density'),10**3, 10**18)
+    proj_OIII.set_zlim(('gas', 'O_p2_number_density'),10**3, 10**18)
     proj_OIII = remove_extraneous(proj_OIII)
     proj_OIII.save('O_num_density_plots/OIII.png')
     extract_colors('O_num_density_plots/OIII.png')
