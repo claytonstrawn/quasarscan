@@ -380,6 +380,7 @@ def sallys_function(simulation, filename, redshift):
     #plt.show()
     figname = simulation + "_" + str(redshift) + "_o_ion_fraction_plot.png"
     plt.savefig(figname)
+    plt.clf()
     dataname = simulation + "_" + str(redshift) + "_o_ion_fraction_data.txt"
     f = open(dataname, "x")
     f.close()
