@@ -1,0 +1,2 @@
+simulations = ["VELA_v2_art_01", "VELA_v2_art_02", "VELA_v2_art_03", "VELA_v2_art_04", "VELA_v2_art_05", "VELA_v2_art_16", "VELA_v2_art_17", "VELA_v2_art_18", "VELA_v2_art_19", "VELA_v2_art_20", "VELA_v2_art_21", "VELA_v2_art_22", "VELA_v2_art_23", "VELA_v2_art_24", "VELA_v2_art_25", "VELA_v2_art_26", "VELA_v2_art_27", "VELA_v2_art_28", "VELA_v2_art_29", "VELA_v2_art_30", "VELA_v2_art_31", "VELA_v2_art_32", "VELA_v2_art_33", "VELA_v2_art_34", "VELA_v2_art_35"]
+files = /global/cfs/cdirs/mp363/SIP_INTERNS_2020/VELA_v2_art_01/10MpcBox_csf512_a0.500.d
