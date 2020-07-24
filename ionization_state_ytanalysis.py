@@ -23,8 +23,9 @@ def rahuls_function(simulation,filename,redshift):
 
     #initialize file
     new_file = simulation + "_" + str(redshift) + "/o_number_density_data.txt"
+    f = open(str(new_file), "w+")
+    f.close()
    
-
     #load file, calculate Rvir and center
     ds = yt.load(filename)
     redshift = float(redshift)
@@ -110,9 +111,7 @@ def rahuls_function(simulation,filename,redshift):
     proj_OIX = remove_extraneous(proj_OIX)
     proj_OIX.save('O_num_density_plots/OIX.png')
 
-    f = open(new_file, "x")
-    f.close()
-    f = open(new_file, "a")
+    f = open(str(new_file), "a")
     f.write("OI values: ")
     f.write(str('O_num_density_plots/OI.png'))
     f.write("\n \n OII values: ")
