@@ -156,6 +156,7 @@ def extract_colors(img_path):
 
         color_map = {k: (v/total) * 100 for k, v in color_map.items()}
         print(color_map) 
+        return color_map
 
 
 def sallys_function(simulation, filename, redshift):
