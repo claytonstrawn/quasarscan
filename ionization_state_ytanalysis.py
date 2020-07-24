@@ -22,7 +22,8 @@ def rahuls_function(simulation,filename,redshift):
     os.makedirs(dir)  
 
     #initialize file
-    f = open('simulation + " " + str(redshift)', 'a')
+    new_file = simulation + "_" + str(redshift) + "/o_number_density_data.txt"
+   
 
     #load file, calculate Rvir and center
     ds = yt.load(filename)
@@ -61,21 +62,11 @@ def rahuls_function(simulation,filename,redshift):
     proj_OI = remove_extraneous(proj_OI)
     proj_OI.save('O_num_density_plots/OI.png')
 
-    f = open('simulation + " " + str(redshift)')
-    f.write('OI')
-    f.write(extract_colors('O_num_density_plots/OI.png'))
-    f.close()
-
     proj_OII = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OII.set_cmap(('gas', 'O_p1_number_density'), ('15'))
     proj_OII.set_zlim(('gas', 'O_p1_number_density'),10**3, 10**18)
     proj_OII = remove_extraneous(proj_OII)
     proj_OII.save('O_num_density_plots/OII.png')
-
-    f = open('simulation + " " + str(redshift)')
-    f.write('OII')
-    f.write(extract_colors('O_num_density_plots/OII.png'))
-    f.close()
 
     proj_OIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p2_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIII.set_cmap(('gas', 'O_p2_number_density'), ('15'))
@@ -83,21 +74,11 @@ def rahuls_function(simulation,filename,redshift):
     proj_OIII = remove_extraneous(proj_OIII)
     proj_OIII.save('O_num_density_plots/OIII.png')
 
-    f = open('simulation + " " + str(redshift)')
-    f.write('OIII')
-    f.write(extract_colors('O_num_density_plots/OIII.png'))
-    f.close()
-
     proj_OIV = yt.ProjectionPlot(ds,'x',('gas', 'O_p3_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIV.set_cmap(('gas', 'O_p3_number_density'), ('15'))
     proj_OIV.set_zlim(('gas', 'O_p3_number_density'),10**3, 10**18)
     proj_OIV = remove_extraneous(proj_OIV)
     proj_OIV.save('O_num_density_plots/OIV.png')
-
-    f = open('simulation + " " + str(redshift)')
-    f.write('OIV')
-    f.write(extract_colors('O_num_density_plots/OIV.png'))
-    f.close()
 
     proj_OV = yt.ProjectionPlot(ds,'x',('gas', 'O_p4_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OV.set_cmap(('gas', 'O_p4_number_density'), ('15'))
@@ -105,21 +86,11 @@ def rahuls_function(simulation,filename,redshift):
     proj_OV = remove_extraneous(proj_OV)
     proj_OV.save('O_num_density_plots/OV.png')
 
-    f = open('simulation + " " + str(redshift)')
-    f.write('OV')
-    f.write(extract_colors('O_num_density_plots/OV.png'))
-    f.close()
-
     proj_OVI = yt.ProjectionPlot(ds,'x',('gas', 'O_p5_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVI.set_cmap(('gas', 'O_p5_number_density'), ('15'))
     proj_OVI.set_zlim(('gas', 'O_p5_number_density'),10**3, 10**18)
     proj_OVI = remove_extraneous(proj_OVI)
     proj_OVI.save('O_num_density_plots/OVI.png')
-
-    f = open('simulation + " " + str(redshift)')
-    f.write('OVI')
-    f.write(extract_colors('O_num_density_plots/OVI.png'))
-    f.close()
 
     proj_OVII = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVII.set_cmap(('gas', 'O_p6_number_density'), ('15'))
@@ -127,21 +98,11 @@ def rahuls_function(simulation,filename,redshift):
     proj_OVII = remove_extraneous(proj_OVII)
     proj_OVII.save('O_num_density_plots/OVII.png')
 
-    f = open('simulation + " " + str(redshift)')
-    f.write('OVII')
-    f.write(extract_colors('O_num_density_plots/OVII.png'))
-    f.close()
-
     proj_OVIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p7_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVIII.set_cmap(('gas', 'O_p7_number_density'), ('15'))
     proj_OVIII.set_zlim(('gas', 'O_p7_number_density'),10**3, 10**18)
     proj_OVIII = remove_extraneous(proj_OVIII)
     proj_OVIII.save('O_num_density_plots/OVIII.png')
-
-    f = open('simulation + " " + str(redshift)')
-    f.write('OVIII')
-    f.write(extract_colors('O_num_density_plots/OVIII.png'))
-    f.close()
 
     proj_OIX = yt.ProjectionPlot(ds,'x',('gas', 'O_p8_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIX.set_cmap(('gas', 'O_p8_number_density'), ('15'))
@@ -149,9 +110,27 @@ def rahuls_function(simulation,filename,redshift):
     proj_OIX = remove_extraneous(proj_OIX)
     proj_OIX.save('O_num_density_plots/OIX.png')
 
-    f = open('simulation + " " + str(redshift)')
-    f.write('OIX')
-    f.write(extract_colors('O_num_density_plots/OIX.png'))
+    f = open(new_file, "x")
+    f.close()
+    f = open(new_file, "a")
+    f.write("OI values: ")
+    f.write(str('O_num_density_plots/OI.png'))
+    f.write("\n \n OII values: ")
+    f.write(str('O_num_density_plots/OII.png'))
+    f.write("\n \n OIII values: ")
+    f.write(str('O_num_density_plots/OIII.png'))
+    f.write("\n \n OIV values: ")
+    f.write(str('O_num_density_plots/OIV.png'))
+    f.write("\n \n OV values: ")
+    f.write(str('O_num_density_plots/OV.png'))
+    f.write("\n \n OVI values: ")
+    f.write(str('O_num_density_plots/OVI.png'))
+    f.write("\n \n OVII values: ")
+    f.write(str('O_num_density_plots/OVII.png'))
+    f.write("\n \n OVIII values: ")
+    f.write(str('O_num_density_plots/OVIII.png'))
+    f.write("\n \n OIX values: ")
+    f.write(str('O_num_density_plots/OIX.png'))
     f.close()
 
 #extracting colors from saved images
