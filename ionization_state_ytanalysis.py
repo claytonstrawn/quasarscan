@@ -19,7 +19,12 @@ def rahuls_function(simulation,filename,redshift):
     dir = 'O_num_density_plots'
     if os.path.exists(dir):
       shutil.rmtree(dir)
-    os.makedirs(dir)  
+    os.makedirs(dir) 
+    
+    dir = simulation + "_" str(redshift)
+    if os.path.exists(dir):
+      shutil.rmtree(dir)
+    os.makedirs(dir) 
 
     #initialize file
     new_file = simulation + "_" + str(redshift) + "/o_number_density_data.txt"
