@@ -16,20 +16,20 @@ print('starting the script...')
 def rahuls_function(simulation,filename,redshift):
 
     #create folder for images
-    dir = 'O_num_density_plots'
-    if os.path.exists(dir):
-      shutil.rmtree(dir)
-    os.makedirs(dir) 
+    dir_1 = 'O_num_density_plots'
+    if os.path.exists(dir_1):
+      shutil.rmtree(dir_1)
+    os.makedirs(dir_1) 
     
-    dir = simulation + "_" + str(redshift)
-    if os.path.exists(dir):
-      shutil.rmtree(dir)
-    os.makedirs(dir) 
+    dir_2 = simulation + "_" + str(redshift)
+    if os.path.exists(dir_2):
+      shutil.rmtree(dir_2)
+    os.makedirs(dir_2) 
 
-    dir = 'O_distribution_plots'
-    if os.path.exists(dir):
-      shutil.rmtree(dir)
-    os.makedirs(dir)
+    dir_3 = 'O_distribution_plots'
+    if os.path.exists(dir_3):
+      shutil.rmtree(dir_3)
+    os.makedirs(dir_3)
 
     #initialize file
     new_file_name = simulation + "_" + str(redshift) + "/o_number_density_data.txt"
@@ -179,7 +179,6 @@ def rahuls_function(simulation,filename,redshift):
     plt.legend()
     plt.savefig('O_distribution_plots/OIX.png')
   
-
 #extracting colors from saved images
 def extract_colors_to_file(img_path, file, oxygen_state):
     im = Image.open(img_path)   
