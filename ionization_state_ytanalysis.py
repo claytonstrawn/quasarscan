@@ -21,7 +21,7 @@ def rahuls_function(simulation,filename,redshift):
       shutil.rmtree(dir)
     os.makedirs(dir) 
     
-    dir = simulation + "_" str(redshift)
+    dir = simulation + "_" + str(redshift)
     if os.path.exists(dir):
       shutil.rmtree(dir)
     os.makedirs(dir) 
