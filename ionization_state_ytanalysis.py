@@ -16,18 +16,23 @@ print('starting the script...')
 def rahuls_function(simulation,filename,redshift):
 
     #create folder
-    dir = 'O_num_density_plots'
+    dir = 'ion_state_ytanalysis'
+    if (os.path.exists(dir) == False):
+        os.makedirs(dir)
+    
+    dir = 'ion_state_ytanalysis/O_num_density_plots'
     if os.path.exists(dir):
       shutil.rmtree(dir)
     os.makedirs(dir) 
     
-    dir = simulation + "_" + str(redshift)
+    dir = 'ion_state_ytanlysis' + simulation + "_" + str(redshift)
     if os.path.exists(dir):
       shutil.rmtree(dir)
-    os.makedirs(dir) 
+    os.makedirs(dir)
+   
 
     #initialize file
-    new_file = simulation + "_" + str(redshift) + "/o_number_density_data.txt"
+    new_file = "ion_state_ytanalysis/" + simulation + "_" + str(redshift) + "/o_number_density_data.txt"
     f = open(str(new_file), "w+")
     f.close()
    
@@ -66,55 +71,55 @@ def rahuls_function(simulation,filename,redshift):
     proj_OI.set_cmap(('gas', 'O_p0_number_density'), ('15'))
     proj_OI.set_zlim(('gas', 'O_p0_number_density'),10**3, 10**18)
     proj_OI = remove_extraneous(proj_OI)
-    proj_OI.save('O_num_density_plots/OI.png')
+    proj_OI.save('ion_state_ytanalysis/O_num_density_plots/OI.png')
 
     proj_OII = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OII.set_cmap(('gas', 'O_p1_number_density'), ('15'))
     proj_OII.set_zlim(('gas', 'O_p1_number_density'),10**3, 10**18)
     proj_OII = remove_extraneous(proj_OII)
-    proj_OII.save('O_num_density_plots/OII.png')
+    proj_OII.save('ion_state_ytanalysis/O_num_density_plots/OII.png')
 
     proj_OIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p2_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIII.set_cmap(('gas', 'O_p2_number_density'), ('15'))
     proj_OIII.set_zlim(('gas', 'O_p2_number_density'),10**3, 10**18)
     proj_OIII = remove_extraneous(proj_OIII)
-    proj_OIII.save('O_num_density_plots/OIII.png')
+    proj_OIII.save('ion_state_ytanalysis/O_num_density_plots/OIII.png')
 
     proj_OIV = yt.ProjectionPlot(ds,'x',('gas', 'O_p3_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIV.set_cmap(('gas', 'O_p3_number_density'), ('15'))
     proj_OIV.set_zlim(('gas', 'O_p3_number_density'),10**3, 10**18)
     proj_OIV = remove_extraneous(proj_OIV)
-    proj_OIV.save('O_num_density_plots/OIV.png')
+    proj_OIV.save('ion_state_ytanalysis/O_num_density_plots/OIV.png')
 
     proj_OV = yt.ProjectionPlot(ds,'x',('gas', 'O_p4_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OV.set_cmap(('gas', 'O_p4_number_density'), ('15'))
     proj_OV.set_zlim(('gas', 'O_p4_number_density'),10**3, 10**18)
     proj_OV = remove_extraneous(proj_OV)
-    proj_OV.save('O_num_density_plots/OV.png')
+    proj_OV.save('ion_state_ytanalysis/O_num_density_plots/OV.png')
 
     proj_OVI = yt.ProjectionPlot(ds,'x',('gas', 'O_p5_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVI.set_cmap(('gas', 'O_p5_number_density'), ('15'))
     proj_OVI.set_zlim(('gas', 'O_p5_number_density'),10**3, 10**18)
     proj_OVI = remove_extraneous(proj_OVI)
-    proj_OVI.save('O_num_density_plots/OVI.png')
+    proj_OVI.save('ion_state_ytanalysis/O_num_density_plots/OVI.png')
 
     proj_OVII = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVII.set_cmap(('gas', 'O_p6_number_density'), ('15'))
     proj_OVII.set_zlim(('gas', 'O_p6_number_density'),10**3, 10**18)
     proj_OVII = remove_extraneous(proj_OVII)
-    proj_OVII.save('O_num_density_plots/OVII.png')
+    proj_OVII.save('ion_state_ytanalysis/O_num_density_plots/OVII.png')
 
     proj_OVIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p7_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVIII.set_cmap(('gas', 'O_p7_number_density'), ('15'))
     proj_OVIII.set_zlim(('gas', 'O_p7_number_density'),10**3, 10**18)
     proj_OVIII = remove_extraneous(proj_OVIII)
-    proj_OVIII.save('O_num_density_plots/OVIII.png')
+    proj_OVIII.save('ion_state_ytanalysis/O_num_density_plots/OVIII.png')
 
     proj_OIX = yt.ProjectionPlot(ds,'x',('gas', 'O_p8_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIX.set_cmap(('gas', 'O_p8_number_density'), ('15'))
     proj_OIX.set_zlim(('gas', 'O_p8_number_density'),10**3, 10**18)
     proj_OIX = remove_extraneous(proj_OIX)
-    proj_OIX.save('O_num_density_plots/OIX.png')
+    proj_OIX.save('ion_state_ytanalysis/O_num_density_plots/OIX.png')
 
     f = open(str(new_file), "a")
     f.write("OI values: ")
@@ -401,10 +406,10 @@ def sallys_function(simulation, filename, redshift):
     plt.plot(x, np.log10(O_nogal_fraction), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
     #plt.show()
-    figname = simulation + "_" + str(redshift) + "/o_ion_fraction_plot.png"
+    figname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_fraction_plot.png"
     plt.savefig(figname)
     plt.clf()
-    dataname = simulation + "_" + str(redshift) + "/o_ion_fraction_data.txt"
+    dataname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_fraction_data.txt"
     f = open(dataname, "x")
     f.close()
     f = open(dataname, "a")
@@ -424,9 +429,9 @@ def sallys_function(simulation, filename, redshift):
     plt.plot(x, O_cgm_mass, label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
     #plt.show()
-    plotname = simulation + "_" + str(redshift) + "/o_ion_mass_plot.png"
+    plotname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_mass_plot.png"
     plt.savefig(plotname)
-    textname = simulation + "_" + str(redshift) + "/o_ion_mass_data.txt"
+    textname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_mass_data.txt"
     f1 = open(textname, "x")
     f1.close()
     f1 = open(textname, "a")

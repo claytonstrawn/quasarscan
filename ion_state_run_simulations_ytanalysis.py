@@ -26,13 +26,17 @@ def run_functions():
     for i in range(len(simulations)):
         files.append("/global/cfs/cdirs/mp363/SIP_INTERNS_2020/" + simulations[i] + "/10MpcBox_csf512_a0.500.d")
         file_exists.append(path.exists(files[i]))
-        filename = "/global/homes/s/sallyzhu/" + simulations[i] + "_" + str(1.0) + "/o_ion_fraction_plot.png"
+        filename = "/global/homes/s/sallyzhu/ion_state_ytanalysis/" + simulations[i] + "_" + str(1.0) + "/o_ion_fraction_plot.png"
         already_done.append(path.exists(filename))
 
     for i in range(len(simulations)):
         if(file_exists[i] == True and already_done[i] == False):
             rahuls_function(simulations[i],files[i],1.0)
             sallys_function(simulations[i],files[i],1.0)
+        else if (already_done[i] == True): 
+            print(simulations[i] + " was already done")
+        else:
+            print(simulations[i] + " file did not exist")
 
 if __name__ == '__main__':
     run_functions()
