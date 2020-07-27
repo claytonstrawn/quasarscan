@@ -1,15 +1,15 @@
 import sys
-import yt
-import trident
-import numpy as np
-import matplotlib.pyplot as plt
-import PIL
-from PIL import Image
-import os
-import shutil
-import parse_metadata
-import os.path
-from os import path
+# import yt
+# import trident
+# import numpy as np
+# import matplotlib.pyplot as plt
+# import PIL
+# from PIL import Image
+# import os
+# import shutil
+# import parse_metadata
+# import os.path
+# from os import path
 from ionization_state_ytanalysis import *
 
 def run_functions():
