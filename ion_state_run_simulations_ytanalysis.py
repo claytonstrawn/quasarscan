@@ -30,7 +30,7 @@ def run_functions():
         already_done.append(path.exists(filename))
 
     for i in range(len(simulations)):
-        if(file_exists[i] == True && already_done[i] == False):
+        if(file_exists[i] == True and already_done[i] == False):
             rahuls_function(simulations[i],files[i],1.0)
             sallys_function(simulations[i],files[i],1.0)
 
