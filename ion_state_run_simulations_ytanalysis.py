@@ -1,6 +1,6 @@
 import sys
-import yt
-import trident
+#import yt
+#import trident
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
