@@ -23,10 +23,9 @@ def run_functions():
     already_done = []
 
     for i in range(len(simulations)):
-        files.append("/quasarscan/" + simulations[i] + "/10MpcBox_csf512_a0.500.d")
+        files.append("/global/cfs/cdirs/mp363/SIP_INTERNS_2020/" + simulations[i] + "/10MpcBox_csf512_a0.500.d")
         file_exists.append(path.exists(files[i]))
-        filename = "/quasarscan/" + simulations[i]
-        filename = filename + "/" + simulations[i] + "_" + str(redshift) + "/o_ion_fraction_plot.png"
+        filename = "/quasarscan/" + simulations[i] + "_" + str(redshift) + "/o_ion_fraction_plot.png"
         already_done.append(path.exists(filename))
 
     for i in range(len(simulations)):
