@@ -5,7 +5,7 @@ quantity_dict_Mstar = {"a":0,"Rvir":1,"Rdisk":2,"Mvir":3,\
                 "gas_.1Rvir":5,"star_.1Rvir":6,"dm_.1Rvir":7,\
                 "gas_10kpc":8,"star_10kpc":9,"dm_10kpc":10,\
                 "gas_Rdisk":11,"star_Rdisk":12,"dm_Rdisk":13}
-quantity_dict_Nir_disc_cat = {"L":[8,9,10],"cm":[2,3,4],"vcm":[5,6,7],"L_mag":11}
+quantity_dict_Nir_disc_cat = {"L":[7,8,9],"cm":[2,3,4],"vcm":[5,6,7],"L_mag":10}
 quantity_dict_Nir_spherical_galaxy_cat = {"SFR":13}
 
 quantity_dict = quantity_dict_Mstar.copy()

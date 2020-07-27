@@ -2,7 +2,6 @@
 
 n=$1
 module load python
-conda init
 conda activate myenv3v2
 chmod u+x quasarscan/batch_scripts/run_one_new_snapshot_nersc.sh
 

@@ -135,11 +135,11 @@ stringcriteria = ["ions","name","simname","version","code","simnum","Rvir_is_rea
 intensives = ["Z","T","rho"]
 intensiveslabels = {"Z":"avg metallicity","T":"avg temperature","rho":"avg density"}
 intensivespositions = {"Z":-1,"T":-2,"rho":-3}
-sightline_xVars = ["r","rdivR","theta","phi"]
+sightline_xVars = ["r","rdivR","rMpc","theta","phi"]
 param_xVars = ["redshift","a0","Mvir","gas_Rvir","star_Rvir","dm_Rvir","sfr","ssfr","L_mag","Mstar","Mgas","Rvir"]
 sightline_unit_labels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
            "theta":"viewing angle (rad)","theta_r>0":"viewing angle (rad)","phi" \
-           :"azimuthal viewing angle (rad)"}
+           :"azimuthal viewing angle (rad)","rMpc":"r (Mpc)"}
 param_unit_labels = {"redshift":"z","a0":"a","Rvir":'Virial radius (kpc)',"Mvir":"Virial Mass (Msun)",\
                     "gas_Rvir":"Gas Mass within Rvir (Msun)","Mgas":"Gas Mass within Rvir (Msun)","star_Rvir":"Stellar Mass within Rvir (Msun)",\
                     "Mstar":"Stellar Mass within Rvir (Msun)","dm_Rvir":"Dark Matter Mass within Rvir (Msun)","sfr":"Star Formation Rate (Msun yr-1)",\
@@ -206,7 +206,7 @@ class MultiQuasarSpherePlotter():
     #inputs: *criteria: any criteria for a quasarSphere
     #
     #outputs: None, prints list of current quasarspheres
-    def list_all_QuasarSpheres(self, *criteria):
+    def list_all_QuasarSpheres(self, *criteria,log=False):
         s = ""
         if len(self.currentQuasarArray)==0:
             print("no QuasarSpheres")
@@ -216,6 +216,8 @@ class MultiQuasarSpherePlotter():
                 v = eval('q.%s'%c)
                 if isinstance(v,str) or isinstance(v,list):
                     s+="%s = %s, "%(c,v)
+                elif log:
+                    s+="%s = 10^%0.3f, "%(c,np.log10(v))
                 elif .001<v<1:
                     s+="%s = %0.3f, "%(c,v)
                 elif 1<v<1000:
@@ -642,8 +644,8 @@ class MultiQuasarSpherePlotter():
             rlims = [0.1,np.inf]
         elif rlims == "all":
             rlims = [0.0,np.inf]
-        vardict = {"theta":1,"phi":2,"r":3,"rdivR":3}
-        distances = "kpc" if xVar == "r" else "Rvir"
+        vardict = {"theta":1,"phi":2,"r":3,"rdivR":3,"rMpc":3}
+        distances = "kpc" if xVar == "r" or xVar == "rMpc" else "Rvir"
         gqary = []
         xs = np.empty(len(quasarArray),dtype = object)
         ys = np.empty(len(quasarArray),dtype = object)
@@ -654,6 +656,8 @@ class MultiQuasarSpherePlotter():
                 ys[i] = np.empty(0)
                 continue
             xs[i] = gq.info[:,vardict[xVar]]
+            if xVar == "rMpc":
+                xs[i]/=1000
             ys[i] = self.get_yVar_from_str(gq,yVar)
             rs = gq.info[:,3]
             acceptedLines = np.logical_and(rlims[0]<=rs,rs<=rlims[1])
@@ -1413,7 +1417,7 @@ class MultiQuasarSpherePlotter():
             ax.cla()
         detections = ax.errorbar([],[],
                                      xerr=None,yerr=None,label='Werk 2013',ls=linestyle,
-                                     fmt = 's',capsize = 3, mec = 'k',ecolor = 'k',mfc='w')
+                                     fmt = 's',capsize = 3, mec = 'b',ecolor = 'b',mfc='b')
         for i in range(len(xarys_detections)):
             color_store = ax.errorbar(xarys_detections[i],yarys_detections[i],
                                      xerr=None,yerr=yerr_arys_detections[i],ls=linestyle,
