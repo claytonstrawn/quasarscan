@@ -25,7 +25,7 @@ def rahuls_function(simulation,filename,redshift):
       shutil.rmtree(dir)
     os.makedirs(dir) 
     
-    dir = 'ion_state_ytanlysis' + simulation + "_" + str(redshift)
+    dir = 'ion_state_ytanlysis/' + simulation + "_" + str(redshift)
     if os.path.exists(dir):
       shutil.rmtree(dir)
     os.makedirs(dir)
