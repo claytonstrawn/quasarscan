@@ -33,7 +33,7 @@ def run_functions():
         if(file_exists[i] == True and already_done[i] == False):
             rahuls_function(simulations[i],files[i],1.0)
             sallys_function(simulations[i],files[i],1.0)
-        else if (already_done[i] == True): 
+        elif(already_done[i] == True): 
             print(simulations[i] + " was already done")
         else:
             print(simulations[i] + " file did not exist")
