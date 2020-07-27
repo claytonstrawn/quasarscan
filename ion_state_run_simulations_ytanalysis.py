@@ -3,6 +3,7 @@ import yt
 import trident
 import numpy as np
 import matplotlib.pyplot as plt
+import PIL
 from PIL import Image
 import os
 import shutil
