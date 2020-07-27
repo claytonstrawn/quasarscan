@@ -28,7 +28,7 @@ def run_functions():
         files.append("/global/cfs/cdirs/mp363/SIP_INTERNS_2020/" + simulations[i] + "/10MpcBox_csf512_a0.500.d")
         file_exists.append(path.exists(files[i]))
         # edit this if redshift is changed!!
-        filename = "/ion_state_ytanalysis/" + simulations[i] + "_" + str(1.0) + "/o_ion_fraction_plot.png"
+        filename = "ion_state_ytanalysis/" + simulations[i] + "_" + str(1.0) + "/o_ion_fraction_plot.png"
         already_done.append(path.exists(filename))
 
     for i in range(len(simulations)):
