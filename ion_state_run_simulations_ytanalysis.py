@@ -1,15 +1,7 @@
 import sys
-# import yt
-# import trident
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import PIL
-# from PIL import Image
 import os
 import datetime
 import pytz
-# import shutil
-# import parse_metadata
 import os.path
 from os import path
 from ionization_state_ytanalysis import *
@@ -54,9 +46,9 @@ def run_functions():
                 current_time = datetime.datetime.now(pytz.timezone('America/Los_Angeles'))
                 print("Time for simulation " + simulations[i] + " after Sally's function: " + str(current_time))
             elif(already_done[i] == True): 
-                print(simulations[i] + " was already done")
+                print(simulations[i] + "for redshift z = " + str(redshifts[z]) + " was already done")
             else:
-                print(simulations[i] + " file did not exist")
+                print(simulations[i] + "for redshift z = " + str(redshifts[z]) + " file did not exist")
 
 if __name__ == '__main__':
     run_functions()
