@@ -18,7 +18,7 @@ def run_functions():
 #                    "VELA_v2_art_23", "VELA_v2_art_24", "VELA_v2_art_25", "VELA_v2_art_26", "VELA_v2_art_27", "VELA_v2_art_28",
 #                    "VELA_v2_art_29", "VELA_v2_art_30", "VELA_v2_art_31", "VELA_v2_art_32", "VELA_v2_art_33", "VELA_v2_art_34",
 #                    "VELA_v2_art_35"]
-    simulations = ["VELA_v2_art_01", "VELA_v2_art_02", "VELA_v2_art_03"]
+    simulations = ["VELA_v2_art_01", "VELA_v2_art_02", "VELA_v2_art_03", "VELA_v2_art_04"]
     files = []
     file_exists = []
     already_done = []
