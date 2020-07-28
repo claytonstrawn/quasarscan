@@ -405,8 +405,8 @@ def sallys_function(simulation, filename, redshift):
     plt.plot(x, np.log10(O_CI_nogal_fraction), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
     plt.plot(x, np.log10(O_nogal_fraction), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
-    plt.set_xlabel("Oxygen ion")
-    plt.set_ylabel("ion fraction of total oxygen mass in log10")
+    plt.xlabel("Oxygen ion")
+    plt.ylabel("ion fraction of total oxygen mass in log10")
     #plt.show()
     figname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_fraction_plot.png"
     plt.savefig(figname)
@@ -430,8 +430,8 @@ def sallys_function(simulation, filename, redshift):
     plt.plot(x, O_CI_cgm_mass, label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
     plt.plot(x, O_cgm_mass, label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
-    plt.set_xlabel("Oxygen ion")
-    plt.set_ylabel("total mass of oxygen ion")
+    plt.xlabel("Oxygen ion")
+    plt.ylabel("total mass of oxygen ion")
     #plt.show()
     plotname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_mass_plot.png"
     plt.savefig(plotname)
