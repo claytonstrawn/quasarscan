@@ -407,6 +407,7 @@ def sallys_function(simulation, filename, redshift):
     plt.legend(loc=0, fontsize=10)
     plt.xlabel("Oxygen ion")
     plt.ylabel("ion fraction of total oxygen mass in log10")
+    plt.title(simulation + " z = " + str(redshift) + " Rvir = " + str(Rvir) + " Mvir = " + str(Mvir))
     #plt.show()
     figname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_fraction_plot.png"
     plt.savefig(figname)
@@ -432,6 +433,7 @@ def sallys_function(simulation, filename, redshift):
     plt.legend(loc=0, fontsize=10)
     plt.xlabel("Oxygen ion")
     plt.ylabel("total mass of oxygen ion")
+    plt.title(simulation + " z = " + str(redshift) + " Rvir = " + str(Rvir) + " Mvir = " + str(Mvir))
     #plt.show()
     plotname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_mass_plot.png"
     plt.savefig(plotname)
