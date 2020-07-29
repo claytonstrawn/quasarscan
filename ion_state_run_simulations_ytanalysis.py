@@ -16,13 +16,13 @@ def run_functions():
     file_exists = []
     already_done = []
     redshifts = [1.0, 2.0]
-    names = ["/10MpcBox_csf512_a0.500.d", "/10MpcBox_csf512_a0.400.d"]
+    names = ["10MpcBox_csf512_a0.500.d", "10MpcBox_csf512_a0.400.d"]
 
     for z in range(len(redshifts)):
         print("Starting redshift = " + str(redshifts[z]))
         for i in range(len(simulations)):
             # edit this if redshift is changed!!
-            files.append("/global/cfs/cdirs/mp363/SIP_INTERNS_2020/" + simulations[i] + names[z])
+            files.append("/global/cfs/cdirs/mp363/SIP_INTERNS_2020/" + simulations[i] + '/' + names[z])
             file_exists.append(path.exists(files[i]))
             # edit this if redshift is changed!!
             filename = "ion_state_ytanalysis/" + simulations[i] + "_" + str(redshifts[z]) + "/o_ion_fraction_plot.png"

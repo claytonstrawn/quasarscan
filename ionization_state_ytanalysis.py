@@ -11,14 +11,29 @@ import shutil
 import parse_metadata
 
 #define analysis functions
-print('starting the script...')
 
-def rahuls_function(simulation,filename,redshift):
-
-    #create folder for images
-    dir = 'ion_state_ytanalysis'
-    if os.path.exists(dir) == False: 
-        os.makedirs(dir)
+def setup(simulation,filename,redshift):
+    ds = yt.load(filename)
+    redshift = float(redshift)
+    Rvir = parse_metadata.get_value('Rvir',simulation,redshift)
+    Mvir = '%e'%parse_metadata.get_value('Mvir',simulation, redshift = redshift)
+    center = ds.find_max('density')[1]
+    trident.add_ion_fields(ds, ['O I'])
+    trident.add_ion_fields(ds, ['O II'])
+    trident.add_ion_fields(ds, ['O III'])
+    trident.add_ion_fields(ds, ['O IV'])
+    trident.add_ion_fields(ds, ['O V'])
+    trident.add_ion_fields(ds, ['O VI'])
+    trident.add_ion_fields(ds, ['O VII'])
+    trident.add_ion_fields(ds, ['O VIII'])
+    trident.add_ion_fields(ds, ['O IX'])
+    import code_specific_setup
+    ds,_ = code_specific_setup.load_and_setup(filename,'art',
+                                             ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
+                                             add_pi_fracs = True)
+    dir_0 = 'ion_state_ytanalysis'
+    if os.path.exists(dir_0) == False: 
+        os.makedirs(dir_0)
     
     dir_1 = 'ion_state_ytanalysis/O_num_density_plots'
     if os.path.exists(dir_1):
@@ -34,6 +49,29 @@ def rahuls_function(simulation,filename,redshift):
     if os.path.exists(dir_3):
       shutil.rmtree(dir_3)
     os.makedirs(dir_3)
+    return ds, redshift, Rvir, Mvir, center
+    
+def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
+
+    #create folder for images
+#     dir = 'ion_state_ytanalysis'
+#     if os.path.exists(dir) == False: 
+#         os.makedirs(dir)
+    
+#     dir_1 = 'ion_state_ytanalysis/O_num_density_plots'
+#     if os.path.exists(dir_1):
+#       shutil.rmtree(dir_1)
+#     os.makedirs(dir_1) 
+    
+#     dir_2 = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift)
+#     if os.path.exists(dir_2):
+#       shutil.rmtree(dir_2)
+#     os.makedirs(dir_2) 
+
+#     dir_3 = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots'
+#     if os.path.exists(dir_3):
+#       shutil.rmtree(dir_3)
+#     os.makedirs(dir_3)
 
     #initialize file
     new_file_name = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_number_density_data.txt"
@@ -41,21 +79,21 @@ def rahuls_function(simulation,filename,redshift):
     f.close()
    
     #load file, calculate Rvir and center
-    ds = yt.load(filename)
-    redshift = float(redshift)
-    Rvir = parse_metadata.get_value('Rvir',simulation,redshift)
-    center = ds.find_max('density')[1]
+#     ds = yt.load(filename)
+#     redshift = float(redshift)
+#     Rvir = parse_metadata.get_value('Rvir',simulation,redshift)
+#     center = ds.find_max('density')[1]
 
     #add fields
-    trident.add_ion_fields(ds, ['O I'])
-    trident.add_ion_fields(ds, ['O II'])
-    trident.add_ion_fields(ds, ['O III'])
-    trident.add_ion_fields(ds, ['O IV'])
-    trident.add_ion_fields(ds, ['O V'])
-    trident.add_ion_fields(ds, ['O VI'])
-    trident.add_ion_fields(ds, ['O VII'])
-    trident.add_ion_fields(ds, ['O VIII'])
-    trident.add_ion_fields(ds, ['O IX'])
+#     trident.add_ion_fields(ds, ['O I'])
+#     trident.add_ion_fields(ds, ['O II'])
+#     trident.add_ion_fields(ds, ['O III'])
+#     trident.add_ion_fields(ds, ['O IV'])
+#     trident.add_ion_fields(ds, ['O V'])
+#     trident.add_ion_fields(ds, ['O VI'])
+#     trident.add_ion_fields(ds, ['O VII'])
+#     trident.add_ion_fields(ds, ['O VIII'])
+#     trident.add_ion_fields(ds, ['O IX'])
 
     #removing colorbar, tick marks, etc
     def remove_extraneous(plot):
@@ -289,31 +327,31 @@ def extract_colors_to_return(img_path):
     return(graph_values)
 
 
-def sallys_function(simulation, filename, redshift):
+def sallys_function(simulation, filename, ds, redshift, Rvir, Mvir, center):
     # print("loading file, calculating Rvir and Mvir")
     # loading the file, calculate Rvir and Mvir
-    ds = yt.load(filename)
-    redshift = float(redshift)
-    Rvir = parse_metadata.get_value('Rvir',simulation, redshift = redshift)
-    Mvir = '%e'%parse_metadata.get_value('Mvir',simulation, redshift = redshift)
+#     ds = yt.load(filename)
+#     redshift = float(redshift)
+#     Rvir = parse_metadata.get_value('Rvir',simulation, redshift = redshift)
+#     Mvir = '%e'%parse_metadata.get_value('Mvir',simulation, redshift = redshift)
     # print("Rvir" + str(Rvir))
     # print("Mvir" + str(Mvir))
     # add all the oxygen ion fields
     # from quasarscan import code_specific_setup
-    import code_specific_setup
-    ds,_ = code_specific_setup.load_and_setup(filename,'art',
-                                             ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
-                                             add_pi_fracs = True)
+#     import code_specific_setup
+#     ds,_ = code_specific_setup.load_and_setup(filename,'art',
+#                                              ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
+#                                              add_pi_fracs = True)
     # print("adding ion fields")
-    trident.add_ion_fields(ds,['O I'])
-    trident.add_ion_fields(ds,['O II'])
-    trident.add_ion_fields(ds,['O III'])
-    trident.add_ion_fields(ds,['O IV'])
-    trident.add_ion_fields(ds,['O V'])
-    trident.add_ion_fields(ds,['O VI'])
-    trident.add_ion_fields(ds,['O VII'])
-    trident.add_ion_fields(ds,['O VIII'])
-    trident.add_ion_fields(ds,['O IX'])
+#     trident.add_ion_fields(ds,['O I'])
+#     trident.add_ion_fields(ds,['O II'])
+#     trident.add_ion_fields(ds,['O III'])
+#     trident.add_ion_fields(ds,['O IV'])
+#     trident.add_ion_fields(ds,['O V'])
+#     trident.add_ion_fields(ds,['O VI'])
+#     trident.add_ion_fields(ds,['O VII'])
+#     trident.add_ion_fields(ds,['O VIII'])
+#     trident.add_ion_fields(ds,['O IX'])
     
     # adding fields for PI and CI O_mass
     # print("defining and adding new fields for PI CI mass")
@@ -445,10 +483,10 @@ def sallys_function(simulation, filename, redshift):
     
     # print("Making CGM and galaxy spheres")
     # making the CGM sphere
-    sp = ds.sphere('m', (Rvir, "kpc"))
+    sp = ds.sphere(center, (Rvir, "kpc"))
     
     # making the galaxy sphere
-    gal = ds.sphere('m', (0.1*Rvir,"kpc"))
+    gal = ds.sphere(center, (0.1*Rvir,"kpc"))
     
     # calculating the PI / CI mass in the CGM
     O_PI_mass = []
@@ -585,8 +623,9 @@ if __name__ == '__main__':
 	galaxy_name = sys.argv[1]
 	galaxy_file_loc = sys.argv[2]
 	options = sys.argv[3]
-	rahuls_function(galaxy_name,galaxy_file_loc,options)
-	sallys_function(galaxy_name,galaxy_file_loc,options)
+    ds, redshift, Rvir, Mvir, center = setup(galaxy_name, galaxy_file_loc, options)
+	rahuls_function(galaxy_name,galaxy_file_loc, ds, redshift, Rvir, Mvir, center)
+	sallys_function(galaxy_name,galaxy_file_loc, ds, redshift, Rvir, Mvir, center)
 
 
 
