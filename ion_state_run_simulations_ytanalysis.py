@@ -30,6 +30,7 @@ def run_functions():
 
         for i in range(len(simulations)):
             current_time = datetime.datetime.now(pytz.timezone('America/Los_Angeles'))
+            ds, redshift, Rvir, Mvir, center = setup(galaxy_name, galaxy_file_loc, options)
             print("Time for simulation " + simulations[i] + " before Rahul's function: " + str(current_time))
             if(file_exists[i] == True and already_done[i] == False):
                 # edit this if red shift is changed!!
