@@ -18,6 +18,10 @@ def setup(simulation,filename,redshift):
     Rvir = parse_metadata.get_value('Rvir',simulation,redshift)
     Mvir = '%e'%parse_metadata.get_value('Mvir',simulation, redshift = redshift)
     center = ds.find_max('density')[1]
+    import code_specific_setup
+    ds,_ = code_specific_setup.load_and_setup(filename,'art',
+                                             ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
+                                             add_pi_fracs = True)
     trident.add_ion_fields(ds, ['O I'])
     trident.add_ion_fields(ds, ['O II'])
     trident.add_ion_fields(ds, ['O III'])
@@ -334,20 +338,20 @@ def sallys_function(simulation, filename, ds, redshift, Rvir, Mvir, center):
     # print("Mvir" + str(Mvir))
     # add all the oxygen ion fields
     # from quasarscan import code_specific_setup
-    import code_specific_setup
-    ds,_ = code_specific_setup.load_and_setup(filename,'art',
-                                             ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
-                                             add_pi_fracs = True)
+#     import code_specific_setup
+#     ds,_ = code_specific_setup.load_and_setup(filename,'art',
+#                                              ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
+#                                              add_pi_fracs = True)
     # print("adding ion fields")
-    trident.add_ion_fields(ds,['O I'])
-    trident.add_ion_fields(ds,['O II'])
-    trident.add_ion_fields(ds,['O III'])
-    trident.add_ion_fields(ds,['O IV'])
-    trident.add_ion_fields(ds,['O V'])
-    trident.add_ion_fields(ds,['O VI'])
-    trident.add_ion_fields(ds,['O VII'])
-    trident.add_ion_fields(ds,['O VIII'])
-    trident.add_ion_fields(ds,['O IX'])
+#     trident.add_ion_fields(ds,['O I'])
+#     trident.add_ion_fields(ds,['O II'])
+#     trident.add_ion_fields(ds,['O III'])
+#     trident.add_ion_fields(ds,['O IV'])
+#     trident.add_ion_fields(ds,['O V'])
+#     trident.add_ion_fields(ds,['O VI'])
+#     trident.add_ion_fields(ds,['O VII'])
+#     trident.add_ion_fields(ds,['O VIII'])
+#     trident.add_ion_fields(ds,['O IX'])
     
     # adding fields for PI and CI O_mass
     # print("defining and adding new fields for PI CI mass")
