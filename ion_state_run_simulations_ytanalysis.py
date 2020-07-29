@@ -30,11 +30,11 @@ def run_functions():
 
         for i in range(len(simulations)):
             current_time = datetime.datetime.now(pytz.timezone('America/Los_Angeles'))
-            ds, redshift, Rvir, Mvir, center = setup(galaxy_name, galaxy_file_loc, options)
+            ds, redshift, Rvir, Mvir, center = setup(simulations[i],files[i],redshifts[z])
             print("Time for simulation " + simulations[i] + " before Rahul's function: " + str(current_time))
             if(file_exists[i] == True and already_done[i] == False):
                 # edit this if red shift is changed!!
-                rahuls_function(simulations[i],files[i],redshifts[z])
+                rahuls_function(simulations[i],files[i], ds, redshift, Rvir, Mvir, center)
                 for j in range(9):
                     # edit this if redshift is changed!!
                     new_file = names[z] + '_Projection_x_O_p' + str(j) + '_number_density.png'
@@ -43,7 +43,7 @@ def run_functions():
                 current_time = datetime.datetime.now(pytz.timezone('America/Los_Angeles'))
                 print("Time for simulation " + simulations[i] + " after Rahul's function: " + str(current_time))
                 # edit this if redshift is changed!!
-                sallys_function(simulations[i],files[i],redshifts[z])
+                sallys_function(simulations[i],files[i],ds, redshift, Rvir, Mvir, center)
                 current_time = datetime.datetime.now(pytz.timezone('America/Los_Angeles'))
                 print("Time for simulation " + simulations[i] + " after Sally's function: " + str(current_time))
             elif(already_done[i] == True): 
