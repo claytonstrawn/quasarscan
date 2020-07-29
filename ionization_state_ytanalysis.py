@@ -623,11 +623,6 @@ if __name__ == '__main__':
 	galaxy_name = sys.argv[1]
 	galaxy_file_loc = sys.argv[2]
 	options = sys.argv[3]
-    ds, redshift, Rvir, Mvir, center = setup(galaxy_name, galaxy_file_loc, options)
+	ds, redshift, Rvir, Mvir, center = setup(galaxy_name, galaxy_file_loc, options)
 	rahuls_function(galaxy_name,galaxy_file_loc, ds, redshift, Rvir, Mvir, center)
 	sallys_function(galaxy_name,galaxy_file_loc, ds, redshift, Rvir, Mvir, center)
-
-
-
-
-
