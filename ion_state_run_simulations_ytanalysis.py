@@ -36,7 +36,7 @@ def run_functions():
                 rahuls_function(simulations[i],files[i],redshifts[z])
                 for j in range(9):
                     # edit this if redshift is changed!!
-                    new_file = names + '_Projection_x_O_p' + str(j) + '_number_density.png'
+                    new_file = names[z] + '_Projection_x_O_p' + str(j) + '_number_density.png'
                     if(os.path.exists(new_file)):
                         os.remove(new_file)
                 current_time = datetime.datetime.now(pytz.timezone('America/Los_Angeles'))
