@@ -22,7 +22,7 @@ def run_functions():
         print("Starting redshift = " + str(redshifts[z]))
         for i in range(len(simulations)):
             # edit this if redshift is changed!!
-            files.append("/global/cfs/cdirs/mp363/SIP_INTERNS_2020/" + simulations[i] + names[i])
+            files.append("/global/cfs/cdirs/mp363/SIP_INTERNS_2020/" + simulations[i] + names[z])
             file_exists.append(path.exists(files[i]))
             # edit this if redshift is changed!!
             filename = "ion_state_ytanalysis/" + simulations[i] + "_" + str(redshifts[z]) + "/o_ion_fraction_plot.png"
