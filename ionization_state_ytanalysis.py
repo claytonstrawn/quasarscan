@@ -143,7 +143,7 @@ def rahuls_function(simulation,filename,redshift):
 
     labels = ['3','4','5','6','7','8','9','10','11','12','13','14','15','16','17', 'none']
 
-    OI_graph = plt.plot(labels, OI_plot, label = 'OI')
+    plt.plot(labels, OI_plot, label = 'OI')
     plt.legend()
     plt.savefig('O_distribution_plots/OI.png')
     
@@ -178,7 +178,7 @@ def rahuls_function(simulation,filename,redshift):
     plt.plot(labels, OIX_plot, label = 'OIX')
     plt.legend()
     plt.savefig('O_distribution_plots/OIX.png')
-  
+
 #extracting colors from saved images
 def extract_colors_to_file(img_path, file, oxygen_state):
     im = Image.open(img_path)   
