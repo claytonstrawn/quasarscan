@@ -526,6 +526,7 @@ def sallys_function(simulation, filename, redshift):
     print("Mvir = " + str(Mvir))
     
     # plotting the fraction of ion levels logarithmic
+    plt.clf()
     plt.plot(x, np.log10(O_PI_nogal_fraction), label="PI oxygen mass",color='b',linewidth=1,marker='o',linestyle='-')
     plt.plot(x, np.log10(O_CI_nogal_fraction), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
     plt.plot(x, np.log10(O_nogal_fraction), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
