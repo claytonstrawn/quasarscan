@@ -326,7 +326,7 @@ def extract_colors_to_return(img_path):
 def sallys_function(simulation, filename, ds, redshift, Rvir, Mvir, center):
     # print("loading file, calculating Rvir and Mvir")
     # loading the file, calculate Rvir and Mvir
-#     ds = yt.load(filename)
+    # ds = yt.load(filename)
 #     redshift = float(redshift)
 #     Rvir = parse_metadata.get_value('Rvir',simulation, redshift = redshift)
 #     Mvir = '%e'%parse_metadata.get_value('Mvir',simulation, redshift = redshift)
@@ -339,15 +339,15 @@ def sallys_function(simulation, filename, ds, redshift, Rvir, Mvir, center):
                                              ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
                                              add_pi_fracs = True)
     # print("adding ion fields")
-#     trident.add_ion_fields(ds,['O I'])
-#     trident.add_ion_fields(ds,['O II'])
-#     trident.add_ion_fields(ds,['O III'])
-#     trident.add_ion_fields(ds,['O IV'])
-#     trident.add_ion_fields(ds,['O V'])
-#     trident.add_ion_fields(ds,['O VI'])
-#     trident.add_ion_fields(ds,['O VII'])
-#     trident.add_ion_fields(ds,['O VIII'])
-#     trident.add_ion_fields(ds,['O IX'])
+    trident.add_ion_fields(ds,['O I'])
+    trident.add_ion_fields(ds,['O II'])
+    trident.add_ion_fields(ds,['O III'])
+    trident.add_ion_fields(ds,['O IV'])
+    trident.add_ion_fields(ds,['O V'])
+    trident.add_ion_fields(ds,['O VI'])
+    trident.add_ion_fields(ds,['O VII'])
+    trident.add_ion_fields(ds,['O VIII'])
+    trident.add_ion_fields(ds,['O IX'])
     
     # adding fields for PI and CI O_mass
     # print("defining and adding new fields for PI CI mass")
