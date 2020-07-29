@@ -27,10 +27,6 @@ def setup(simulation,filename,redshift):
     trident.add_ion_fields(ds, ['O VII'])
     trident.add_ion_fields(ds, ['O VIII'])
     trident.add_ion_fields(ds, ['O IX'])
-    import code_specific_setup
-    ds,_ = code_specific_setup.load_and_setup(filename,'art',
-                                             ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
-                                             add_pi_fracs = True)
     dir_0 = 'ion_state_ytanalysis'
     if os.path.exists(dir_0) == False: 
         os.makedirs(dir_0)
@@ -338,10 +334,10 @@ def sallys_function(simulation, filename, ds, redshift, Rvir, Mvir, center):
     # print("Mvir" + str(Mvir))
     # add all the oxygen ion fields
     # from quasarscan import code_specific_setup
-#     import code_specific_setup
-#     ds,_ = code_specific_setup.load_and_setup(filename,'art',
-#                                              ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
-#                                              add_pi_fracs = True)
+    import code_specific_setup
+    ds,_ = code_specific_setup.load_and_setup(filename,'art',
+                                             ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
+                                             add_pi_fracs = True)
     # print("adding ion fields")
 #     trident.add_ion_fields(ds,['O I'])
 #     trident.add_ion_fields(ds,['O II'])
