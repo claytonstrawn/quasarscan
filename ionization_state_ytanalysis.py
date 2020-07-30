@@ -53,7 +53,6 @@ def setup(simulation,filename,redshift):
     return ds, redshift, Rvir, Mvir, center
     
 def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
-
     #labels
     labels = ['3','4','5','6','7','8','9','10','11','12','13','14','15','16','17', 'none']
 
@@ -303,41 +302,45 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     OVIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OVIII.png')
     OIX_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OIX.png')
 
-    plt.plot(labels, OI_plot, label = 'OI')
-    plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/OI.png')
+    fig,axes = plt.subplots(3,3,sharex=True,sharey=True)
+
+    ax = axes[0][0]
+    ax.plot(labels, OI_plot, label = 'OI')
+    ax.legend()
     
+    ax = axes[0][1]
     plt.plot(labels, OII_plot, label = 'OII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/OII.png')
 
+    ax = axes[0][2]
     plt.plot(labels, OIII_plot, label = 'OIII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/OIII.png')
     
+    ax = axes[1][0]
     plt.plot(labels, OIV_plot, label = 'OIV')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/OIV.png')
     
+    ax = axes[1][1]
     plt.plot(labels, OV_plot, label = 'OV')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/OV.png')
     
+    ax = axes[1][2]
     plt.plot(labels, OVI_plot, label = 'OVI')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/OVI.png')
     
+    ax = axes[2][0]
     plt.plot(labels, OVII_plot, label = 'OVII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/OVII.png')
     
+    ax = axes[2][1]
     plt.plot(labels, OVIII_plot, label = 'OVIII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/OVIII.png')
     
+    ax = axes[2][2]
     plt.plot(labels, OIX_plot, label = 'OIX')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/OIX.png')
+
+    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/Oxygen.png')
 
     #Create plots for PI 
     proj_PI_OI = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
@@ -414,41 +417,45 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     PI_OVIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OVIII.png')
     PI_OIX_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OIX.png')
 
-    plt.plot(labels, PI_OI_plot, label = 'PI_OI')
-    plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_OI.png')
-    
-    plt.plot(labels, PI_OII_plot, label = 'PI_OII')
-    plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_OII.png')
+    fig,axes = plt.subplots(3,3,sharex=True,sharey=True)
 
-    plt.plot(labels, PI_OIII_plot, label = 'PI_OIII')
-    plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_OIII.png')
+    ax = axes[0][0]
+    ax.plot(labels, PI_OI_plot, label = 'OI')
+    ax.legend()
     
-    plt.plot(labels, PI_OIV_plot, label = 'PI_OIV')
+    ax = axes[0][1]
+    plt.plot(labels, PI_OII_plot, label = 'OII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_OIV.png')
+
+    ax = axes[0][2]
+    plt.plot(labels, PI_OIII_plot, label = 'OIII')
+    plt.legend()
     
-    plt.plot(labels, PI_OV_plot, label = 'PI_OV')
+    ax = axes[1][0]
+    plt.plot(labels, PI_OIV_plot, label = 'OIV')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_OV.png')
     
-    plt.plot(labels, PI_OVI_plot, label = 'PI_OVI')
+    ax = axes[1][1]
+    plt.plot(labels, PI_OV_plot, label = 'OV')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_OVI.png')
     
-    plt.plot(labels, PI_OVII_plot, label = 'PI_OVII')
+    ax = axes[1][2]
+    plt.plot(labels, PI_OVI_plot, label = 'OVI')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_OVII.png')
     
-    plt.plot(labels, PI_OVIII_plot, label = 'PI_OVIII')
+    ax = axes[2][0]
+    plt.plot(labels, PI_OVII_plot, label = 'OVII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_OVIII.png')
     
-    plt.plot(labels, PI_OIX_plot, label = 'PI_OIX')
+    ax = axes[2][1]
+    plt.plot(labels, PI_OVIII_plot, label = 'OVIII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_OIX.png')
+    
+    ax = axes[2][2]
+    plt.plot(labels, PI_OIX_plot, label = 'OIX')
+    plt.legend()
+
+    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_Oxygen.png')
 
 
     #Create Plots for CI
@@ -526,41 +533,43 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     CI_OVIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OVIII.png')
     CI_OIX_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OIX.png')
 
-    plt.plot(labels, CI_OI_plot, label = 'CI_OI')
-    plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_OI.png')
+    ax = axes[0][0]
+    ax.plot(labels, CI_OI_plot, label = 'OI')
+    ax.legend()
     
-    plt.plot(labels, CI_OII_plot, label = 'CI_OII')
+    ax = axes[0][1]
+    plt.plot(labels, CI_OII_plot, label = 'OII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_OII.png')
 
-    plt.plot(labels, CI_OIII_plot, label = 'CI_OIII')
+    ax = axes[0][2]
+    plt.plot(labels, CI_OIII_plot, label = 'OIII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_OIII.png')
     
-    plt.plot(labels, CI_OIV_plot, label = 'CI_OIV')
+    ax = axes[1][0]
+    plt.plot(labels, CI_OIV_plot, label = 'OIV')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_OIV.png')
     
-    plt.plot(labels, CI_OV_plot, label = 'CI_OV')
+    ax = axes[1][1]
+    plt.plot(labels, CI_OV_plot, label = 'OV')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_OV.png')
     
-    plt.plot(labels, CI_OVI_plot, label = 'CI_OVI')
+    ax = axes[1][2]
+    plt.plot(labels, CI_OVI_plot, label = 'OVI')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_OVI.png')
     
-    plt.plot(labels, CI_OVII_plot, label = 'CI_OVII')
+    ax = axes[2][0]
+    plt.plot(labels, CI_OVII_plot, label = 'OVII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_OVII.png')
     
-    plt.plot(labels, CI_OVIII_plot, label = 'CI_OVIII')
+    ax = axes[2][1]
+    plt.plot(labels, CI_OVIII_plot, label = 'OVIII')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_OVIII.png')
     
-    plt.plot(labels, CI_OIX_plot, label = 'CI_OIX')
+    ax = axes[2][2]
+    plt.plot(labels, CI_OIX_plot, label = 'OIX')
     plt.legend()
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_OIX.png')
+
+    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_Oxygen.png')
 
 #extracting colors from saved images
 def extract_colors_to_file(img_path, file, oxygen_state):
