@@ -309,36 +309,36 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     ax.legend()
     
     ax = axes[0][1]
-    plt.plot(labels, OII_plot, label = 'OII')
-    plt.legend()
+    ax.plot(labels, OII_plot, label = 'OII')
+    ax.legend()
 
     ax = axes[0][2]
-    plt.plot(labels, OIII_plot, label = 'OIII')
-    plt.legend()
+    ax.plot(labels, OIII_plot, label = 'OIII')
+    ax.legend()
     
     ax = axes[1][0]
-    plt.plot(labels, OIV_plot, label = 'OIV')
-    plt.legend()
+    ax.plot(labels, OIV_plot, label = 'OIV')
+    ax.legend()
     
     ax = axes[1][1]
-    plt.plot(labels, OV_plot, label = 'OV')
-    plt.legend()
+    ax.plot(labels, OV_plot, label = 'OV')
+    ax.legend()
     
     ax = axes[1][2]
-    plt.plot(labels, OVI_plot, label = 'OVI')
-    plt.legend()
+    ax.plot(labels, OVI_plot, label = 'OVI')
+    ax.legend()
     
     ax = axes[2][0]
-    plt.plot(labels, OVII_plot, label = 'OVII')
-    plt.legend()
+    ax.plot(labels, OVII_plot, label = 'OVII')
+    ax.legend()
     
     ax = axes[2][1]
-    plt.plot(labels, OVIII_plot, label = 'OVIII')
-    plt.legend()
+    ax.plot(labels, OVIII_plot, label = 'OVIII')
+    ax.legend()
     
     ax = axes[2][2]
-    plt.plot(labels, OIX_plot, label = 'OIX')
-    plt.legend()
+    ax.plot(labels, OIX_plot, label = 'OIX')
+    ax.legend()
 
     plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/Oxygen.png')
 
@@ -424,36 +424,36 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     ax.legend()
     
     ax = axes[0][1]
-    plt.plot(labels, PI_OII_plot, label = 'OII')
-    plt.legend()
+    ax.plot(labels, PI_OII_plot, label = 'OII')
+    ax.legend()
 
     ax = axes[0][2]
-    plt.plot(labels, PI_OIII_plot, label = 'OIII')
-    plt.legend()
+    ax.plot(labels, PI_OIII_plot, label = 'OIII')
+    ax.legend()
     
     ax = axes[1][0]
-    plt.plot(labels, PI_OIV_plot, label = 'OIV')
-    plt.legend()
+    ax.plot(labels, PI_OIV_plot, label = 'OIV')
+    ax.legend()
     
     ax = axes[1][1]
-    plt.plot(labels, PI_OV_plot, label = 'OV')
-    plt.legend()
+    ax.plot(labels, PI_OV_plot, label = 'OV')
+    ax.legend()
     
     ax = axes[1][2]
-    plt.plot(labels, PI_OVI_plot, label = 'OVI')
-    plt.legend()
+    ax.plot(labels, PI_OVI_plot, label = 'OVI')
+    ax.legend()
     
     ax = axes[2][0]
-    plt.plot(labels, PI_OVII_plot, label = 'OVII')
-    plt.legend()
+    ax.plot(labels, PI_OVII_plot, label = 'OVII')
+    ax.legend()
     
     ax = axes[2][1]
-    plt.plot(labels, PI_OVIII_plot, label = 'OVIII')
-    plt.legend()
+    ax.plot(labels, PI_OVIII_plot, label = 'OVIII')
+    ax.legend()
     
     ax = axes[2][2]
-    plt.plot(labels, PI_OIX_plot, label = 'OIX')
-    plt.legend()
+    ax.plot(labels, PI_OIX_plot, label = 'OIX')
+    ax.legend()
 
     plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_Oxygen.png')
 
@@ -538,36 +538,36 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     ax.legend()
     
     ax = axes[0][1]
-    plt.plot(labels, CI_OII_plot, label = 'OII')
-    plt.legend()
+    ax.plot(labels, CI_OII_plot, label = 'OII')
+    ax.legend()
 
     ax = axes[0][2]
-    plt.plot(labels, CI_OIII_plot, label = 'OIII')
-    plt.legend()
+    ax.plot(labels, CI_OIII_plot, label = 'OIII')
+    ax.legend()
     
     ax = axes[1][0]
-    plt.plot(labels, CI_OIV_plot, label = 'OIV')
-    plt.legend()
+    ax.plot(labels, CI_OIV_plot, label = 'OIV')
+    ax.legend()
     
     ax = axes[1][1]
-    plt.plot(labels, CI_OV_plot, label = 'OV')
-    plt.legend()
+    ax.plot(labels, CI_OV_plot, label = 'OV')
+    ax.legend()
     
     ax = axes[1][2]
-    plt.plot(labels, CI_OVI_plot, label = 'OVI')
-    plt.legend()
+    ax.plot(labels, CI_OVI_plot, label = 'OVI')
+    ax.legend()
     
     ax = axes[2][0]
-    plt.plot(labels, CI_OVII_plot, label = 'OVII')
-    plt.legend()
+    ax.plot(labels, CI_OVII_plot, label = 'OVII')
+    ax.legend()
     
     ax = axes[2][1]
-    plt.plot(labels, CI_OVIII_plot, label = 'OVIII')
-    plt.legend()
+    ax.plot(labels, CI_OVIII_plot, label = 'OVIII')
+    ax.legend()
     
     ax = axes[2][2]
-    plt.plot(labels, CI_OIX_plot, label = 'OIX')
-    plt.legend()
+    ax.plot(labels, CI_OIX_plot, label = 'OIX')
+    ax.legend()
 
     plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_Oxygen.png')
 
