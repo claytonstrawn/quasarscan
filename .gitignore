@@ -1,6 +1,4 @@
 *.pyc
 *.DS_Store
-*.png
-!/plots/*.png
 *.ipynb_checkpoints/
 *.ipynb
