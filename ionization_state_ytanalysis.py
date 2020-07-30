@@ -34,21 +34,21 @@ def setup(simulation,filename,redshift):
     trident.add_ion_fields(ds, ['O VIII'])
     trident.add_ion_fields(ds, ['O IX'])
 
-    dir_0 = 'ion_state_ytanalysis'
+    dir_0 = 'quasarscan/ion_state_ytanalysis'
     if os.path.exists(dir_0) == False: 
         os.makedirs(dir_0)
     
-    dir_1 = 'ion_state_ytanalysis/O_num_density_plots'
+    dir_1 = 'quasarscan/ion_state_ytanalysis/O_num_density_plots'
     if os.path.exists(dir_1):
       shutil.rmtree(dir_1)
     os.makedirs(dir_1) 
     
-    dir_2 = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift)
+    dir_2 = 'quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift)
     if os.path.exists(dir_2):
       shutil.rmtree(dir_2)
     os.makedirs(dir_2) 
 
-    dir_3 = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots'
+    dir_3 = 'quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots'
     if os.path.exists(dir_3):
       shutil.rmtree(dir_3)
     os.makedirs(dir_3)
@@ -59,7 +59,7 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     labels = ['3','4','5','6','7','8','9','10','11','12','13','14','15','16','17', 'none']
 
     #initialize file
-    new_file_name = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_number_density_data.txt"
+    new_file_name = 'quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_number_density_data.txt"
     f = open(new_file_name, "x")
     f.close()
 
@@ -234,76 +234,77 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     proj_OI.set_cmap(('gas', 'O_p0_number_density'), ('15'))
     proj_OI.set_zlim(('gas', 'O_p0_number_density'),10**3, 10**18)
     proj_OI = remove_extraneous(proj_OI)
-    proj_OI.save('ion_state_ytanalysis/O_num_density_plots/OI.png')
+    proj_OI.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/OI.png')
 
     proj_OII = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OII.set_cmap(('gas', 'O_p1_number_density'), ('15'))
     proj_OII.set_zlim(('gas', 'O_p1_number_density'),10**3, 10**18)
     proj_OII = remove_extraneous(proj_OII)
-    proj_OII.save('ion_state_ytanalysis/O_num_density_plots/OII.png')
+    proj_OII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/OII.png')
 
     proj_OIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p2_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIII.set_cmap(('gas', 'O_p2_number_density'), ('15'))
     proj_OIII.set_zlim(('gas', 'O_p2_number_density'),10**3, 10**18)
     proj_OIII = remove_extraneous(proj_OIII)
-    proj_OIII.save('ion_state_ytanalysis/O_num_density_plots/OIII.png')
+    proj_OIII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIII.png')
 
     proj_OIV = yt.ProjectionPlot(ds,'x',('gas', 'O_p3_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIV.set_cmap(('gas', 'O_p3_number_density'), ('15'))
     proj_OIV.set_zlim(('gas', 'O_p3_number_density'),10**3, 10**18)
     proj_OIV = remove_extraneous(proj_OIV)
-    proj_OIV.save('ion_state_ytanalysis/O_num_density_plots/OIV.png')
+    proj_OIV.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIV.png')
 
     proj_OV = yt.ProjectionPlot(ds,'x',('gas', 'O_p4_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OV.set_cmap(('gas', 'O_p4_number_density'), ('15'))
     proj_OV.set_zlim(('gas', 'O_p4_number_density'),10**3, 10**18)
     proj_OV = remove_extraneous(proj_OV)
-    proj_OV.save('ion_state_ytanalysis/O_num_density_plots/OV.png')
+    proj_OV.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/OV.png')
 
     proj_OVI = yt.ProjectionPlot(ds,'x',('gas', 'O_p5_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVI.set_cmap(('gas', 'O_p5_number_density'), ('15'))
     proj_OVI.set_zlim(('gas', 'O_p5_number_density'),10**3, 10**18)
     proj_OVI = remove_extraneous(proj_OVI)
-    proj_OVI.save('ion_state_ytanalysis/O_num_density_plots/OVI.png')
+    proj_OVI.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVI.png')
 
     proj_OVII = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVII.set_cmap(('gas', 'O_p6_number_density'), ('15'))
     proj_OVII.set_zlim(('gas', 'O_p6_number_density'),10**3, 10**18)
     proj_OVII = remove_extraneous(proj_OVII)
-    proj_OVII.save('ion_state_ytanalysis/O_num_density_plots/OVII.png')
+    proj_OVII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVII.png')
 
     proj_OVIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p7_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OVIII.set_cmap(('gas', 'O_p7_number_density'), ('15'))
     proj_OVIII.set_zlim(('gas', 'O_p7_number_density'),10**3, 10**18)
     proj_OVIII = remove_extraneous(proj_OVIII)
-    proj_OVIII.save('ion_state_ytanalysis/O_num_density_plots/OVIII.png')
+    proj_OVIII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVIII.png')
 
     proj_OIX = yt.ProjectionPlot(ds,'x',('gas', 'O_p8_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_OIX.set_cmap(('gas', 'O_p8_number_density'), ('15'))
     proj_OIX.set_zlim(('gas', 'O_p8_number_density'),10**3, 10**18)
     proj_OIX = remove_extraneous(proj_OIX)
-    proj_OIX.save('ion_state_ytanalysis/O_num_density_plots/OIX.png')
+    proj_OIX.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIX.png')
 
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/OI.png', new_file_name, 'OI')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/OII.png', new_file_name, 'OII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/OIII.png', new_file_name, 'OIII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/OIV.png', new_file_name, 'OIV')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/OV.png', new_file_name, 'OV')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/OVI.png', new_file_name, 'OVI')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/OVII.png', new_file_name, 'OVII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/OVIII.png', new_file_name, 'OVIII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/OIX.png', new_file_name, 'OIX')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/OI.png', new_file_name, 'OI')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/OII.png', new_file_name, 'OII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIII.png', new_file_name, 'OIII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIV.png', new_file_name, 'OIV')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/OV.png', new_file_name, 'OV')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVI.png', new_file_name, 'OVI')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVII.png', new_file_name, 'OVII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVIII.png', new_file_name, 'OVIII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIX.png', new_file_name, 'OIX')
 
-    OI_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OI.png')
-    OII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OII.png')
-    OIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OIII.png')
-    OIV_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OIV.png')
-    OV_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OV.png')
-    OVI_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OVI.png')
-    OVII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OVII.png')
-    OVIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OVIII.png')
-    OIX_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/OIX.png')
+    OI_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OI.png')
+    OII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OII.png')
+    OIII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIII.png')
+    OIV_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIV.png')
+    OV_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OV.png')
+    OVI_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVI.png')
+    OVII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVII.png')
+    OVIII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVIII.png')
+    OIX_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIX.png')
 
+    plt.clf()
     fig,axes = plt.subplots(3,3,sharex=True,sharey=True)
 
     ax = axes[0][0]
@@ -342,82 +343,82 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     ax.plot(labels, OIX_plot, label = 'OIX')
     ax.legend()
 
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/Oxygen.png')
+    plt.savefig('quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/Oxygen.png')
 
     #Create plots for PI 
     proj_PI_OI = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_PI_OI.set_cmap(('gas', 'O_p0_PI_number_density'), ('15'))
     proj_PI_OI.set_zlim(('gas', 'O_p0_PI_number_density'),10**3, 10**18)
     proj_PI_OI = remove_extraneous(proj_PI_OI)
-    proj_PI_OI.save('ion_state_ytanalysis/O_num_density_plots/PI_OI.png')
+    proj_PI_OI.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OI.png')
 
     proj_PI_OII = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_PI_OII.set_cmap(('gas', 'O_p1_PI_number_density'), ('15'))
     proj_PI_OII.set_zlim(('gas', 'O_p1_PI_number_density'),10**3, 10**18)
     proj_PI_OII = remove_extraneous(proj_PI_OII)
-    proj_PI_OII.save('ion_state_ytanalysis/O_num_density_plots/PI_OII.png')
+    proj_PI_OII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OII.png')
 
     proj_PI_OIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p2_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_PI_OIII.set_cmap(('gas', 'O_p2_PI_number_density'), ('15'))
     proj_PI_OIII.set_zlim(('gas', 'O_p2_PI_number_density'),10**3, 10**18)
     proj_PI_OIII = remove_extraneous(proj_PI_OIII)
-    proj_PI_OIII.save('ion_state_ytanalysis/O_num_density_plots/PI_OIII.png')
+    proj_PI_OIII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIII.png')
 
     proj_PI_OIV = yt.ProjectionPlot(ds,'x',('gas', 'O_p3_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_PI_OIV.set_cmap(('gas', 'O_p3_PI_number_density'), ('15'))
     proj_PI_OIV.set_zlim(('gas', 'O_p3_PI_number_density'),10**3, 10**18)
     proj_PI_OIV = remove_extraneous(proj_PI_OIV)
-    proj_PI_OIV.save('ion_state_ytanalysis/O_num_density_plots/PI_OIV.png')
+    proj_PI_OIV.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIV.png')
 
     proj_PI_OV = yt.ProjectionPlot(ds,'x',('gas', 'O_p4_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_PI_OV.set_cmap(('gas', 'O_p4_PI_number_density'), ('15'))
     proj_PI_OV.set_zlim(('gas', 'O_p4_PI_number_density'),10**3, 10**18)
     proj_PI_OV = remove_extraneous(proj_PI_OV)
-    proj_PI_OV.save('ion_state_ytanalysis/O_num_density_plots/PI_OV.png')
+    proj_PI_OV.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OV.png')
 
     proj_PI_OVI = yt.ProjectionPlot(ds,'x',('gas', 'O_p5_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_PI_OVI.set_cmap(('gas', 'O_p5_PI_number_density'), ('15'))
     proj_PI_OVI.set_zlim(('gas', 'O_p5_PI_number_density'),10**3, 10**18)
     proj_PI_OVI = remove_extraneous(proj_PI_OVI)
-    proj_PI_OVI.save('ion_state_ytanalysis/O_num_density_plots/PI_OVI.png')
+    proj_PI_OVI.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVI.png')
 
     proj_PI_OVII = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_PI_OVII.set_cmap(('gas', 'O_p6_PI_number_density'), ('15'))
     proj_PI_OVII.set_zlim(('gas', 'O_p6_PI_number_density'),10**3, 10**18)
     proj_PI_OVII = remove_extraneous(proj_PI_OVII)
-    proj_PI_OVII.save('ion_state_ytanalysis/O_num_density_plots/PI_OVII.png')
+    proj_PI_OVII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVII.png')
 
     proj_PI_OVIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p7_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_PI_OVIII.set_cmap(('gas', 'O_p7_PI_number_density'), ('15'))
     proj_PI_OVIII.set_zlim(('gas', 'O_p7_PI_number_density'),10**3, 10**18)
     proj_PI_OVIII = remove_extraneous(proj_PI_OVIII)
-    proj_PI_OVIII.save('ion_state_ytanalysis/O_num_density_plots/PI_OVIII.png')
+    proj_PI_OVIII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVIII.png')
 
     proj_PI_OIX = yt.ProjectionPlot(ds,'x',('gas', 'O_p8_PI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_PI_OIX.set_cmap(('gas', 'O_p8_PI_number_density'), ('15'))
     proj_PI_OIX.set_zlim(('gas', 'O_p8_PI_number_density'),10**3, 10**18)
     proj_PI_OIX = remove_extraneous(proj_PI_OIX)
-    proj_PI_OIX.save('ion_state_ytanalysis/O_num_density_plots/PI_OIX.png')
+    proj_PI_OIX.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIX.png')
 
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/PI_OI.png', new_file_name, 'PI_OI')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/PI_OII.png', new_file_name, 'PI_OII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/PI_OIII.png', new_file_name, 'PI_OIII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/PI_OIV.png', new_file_name, 'PI_OIV')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/PI_OV.png', new_file_name, 'PI_OV')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/PI_OVI.png', new_file_name, 'PI_OVI')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/PI_OVII.png', new_file_name, 'PI_OVII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/PI_OVIII.png', new_file_name, 'PI_OVIII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/PI_OIX.png', new_file_name, 'PI_OIX')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OI.png', new_file_name, 'PI_OI')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OII.png', new_file_name, 'PI_OII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIII.png', new_file_name, 'PI_OIII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIV.png', new_file_name, 'PI_OIV')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OV.png', new_file_name, 'PI_OV')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVI.png', new_file_name, 'PI_OVI')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVII.png', new_file_name, 'PI_OVII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVIII.png', new_file_name, 'PI_OVIII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIX.png', new_file_name, 'PI_OIX')
 
-    PI_OI_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OI.png')
-    PI_OII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OII.png')
-    PI_OIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OIII.png')
-    PI_OIV_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OIV.png')
-    PI_OV_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OV.png')
-    PI_OVI_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OVI.png')
-    PI_OVII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OVII.png')
-    PI_OVIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OVIII.png')
-    PI_OIX_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/PI_OIX.png')
+    PI_OI_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OI.png')
+    PI_OII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OII.png')
+    PI_OIII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIII.png')
+    PI_OIV_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIV.png')
+    PI_OV_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OV.png')
+    PI_OVI_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVI.png')
+    PI_OVII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVII.png')
+    PI_OVIII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVIII.png')
+    PI_OIX_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIX.png')
 
     fig,axes = plt.subplots(3,3,sharex=True,sharey=True)
 
@@ -457,7 +458,7 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     ax.plot(labels, PI_OIX_plot, label = 'OIX')
     ax.legend()
 
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_Oxygen.png')
+    plt.savefig('quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_Oxygen.png')
 
 
     #Create Plots for CI
@@ -465,75 +466,75 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     proj_CI_OI.set_cmap(('gas', 'O_p0_CI_number_density'), ('15'))
     proj_CI_OI.set_zlim(('gas', 'O_p0_CI_number_density'),10**3, 10**18)
     proj_CI_OI = remove_extraneous(proj_CI_OI)
-    proj_CI_OI.save('ion_state_ytanalysis/O_num_density_plots/CI_OI.png')
+    proj_CI_OI.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OI.png')
 
     proj_CI_OII = yt.ProjectionPlot(ds,'x',('gas', 'O_p1_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_CI_OII.set_cmap(('gas', 'O_p1_CI_number_density'), ('15'))
     proj_CI_OII.set_zlim(('gas', 'O_p1_CI_number_density'),10**3, 10**18)
     proj_CI_OII = remove_extraneous(proj_CI_OII)
-    proj_CI_OII.save('ion_state_ytanalysis/O_num_density_plots/CI_OII.png')
+    proj_CI_OII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OII.png')
 
     proj_CI_OIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p2_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_CI_OIII.set_cmap(('gas', 'O_p2_CI_number_density'), ('15'))
     proj_CI_OIII.set_zlim(('gas', 'O_p2_CI_number_density'),10**3, 10**18)
     proj_CI_OIII = remove_extraneous(proj_CI_OIII)
-    proj_CI_OIII.save('ion_state_ytanalysis/O_num_density_plots/CI_OIII.png')
+    proj_CI_OIII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIII.png')
 
     proj_CI_OIV = yt.ProjectionPlot(ds,'x',('gas', 'O_p3_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_CI_OIV.set_cmap(('gas', 'O_p3_CI_number_density'), ('15'))
     proj_CI_OIV.set_zlim(('gas', 'O_p3_CI_number_density'),10**3, 10**18)
     proj_CI_OIV = remove_extraneous(proj_CI_OIV)
-    proj_CI_OIV.save('ion_state_ytanalysis/O_num_density_plots/CI_OIV.png')
+    proj_CI_OIV.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIV.png')
 
     proj_CI_OV = yt.ProjectionPlot(ds,'x',('gas', 'O_p4_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_CI_OV.set_cmap(('gas', 'O_p4_CI_number_density'), ('15'))
     proj_CI_OV.set_zlim(('gas', 'O_p4_CI_number_density'),10**3, 10**18)
     proj_CI_OV = remove_extraneous(proj_CI_OV)
-    proj_CI_OV.save('ion_state_ytanalysis/O_num_density_plots/CI_OV.png')
+    proj_CI_OV.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OV.png')
 
     proj_CI_OVI = yt.ProjectionPlot(ds,'x',('gas', 'O_p5_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_CI_OVI.set_cmap(('gas', 'O_p5_CI_number_density'), ('15'))
     proj_CI_OVI.set_zlim(('gas', 'O_p5_CI_number_density'),10**3, 10**18)
     proj_CI_OVI = remove_extraneous(proj_CI_OVI)
-    proj_CI_OVI.save('ion_state_ytanalysis/O_num_density_plots/CI_OVI.png')
+    proj_CI_OVI.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVI.png')
 
     proj_CI_OVII = yt.ProjectionPlot(ds,'x',('gas', 'O_p6_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_CI_OVII.set_cmap(('gas', 'O_p6_CI_number_density'), ('15'))
     proj_CI_OVII.set_zlim(('gas', 'O_p6_CI_number_density'),10**3, 10**18)
     proj_CI_OVII = remove_extraneous(proj_CI_OVII)
-    proj_CI_OVII.save('ion_state_ytanalysis/O_num_density_plots/CI_OVII.png')
+    proj_CI_OVII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVII.png')
 
     proj_CI_OVIII = yt.ProjectionPlot(ds,'x',('gas', 'O_p7_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_CI_OVIII.set_cmap(('gas', 'O_p7_CI_number_density'), ('15'))
     proj_CI_OVIII.set_zlim(('gas', 'O_p7_CI_number_density'),10**3, 10**18)
     proj_CI_OVIII = remove_extraneous(proj_CI_OVIII)
-    proj_CI_OVIII.save('ion_state_ytanalysis/O_num_density_plots/CI_OVIII.png')
+    proj_CI_OVIII.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVIII.png')
 
     proj_CI_OIX = yt.ProjectionPlot(ds,'x',('gas', 'O_p8_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
     proj_CI_OIX.set_cmap(('gas', 'O_p8_CI_number_density'), ('15'))
     proj_CI_OIX.set_zlim(('gas', 'O_p8_CI_number_density'),10**3, 10**18)
     proj_CI_OIX = remove_extraneous(proj_CI_OIX)
-    proj_CI_OIX.save('ion_state_ytanalysis/O_num_density_plots/CI_OIX.png')
+    proj_CI_OIX.save('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIX.png')
 
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/CI_OI.png', new_file_name, 'CI_OI')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/CI_OII.png', new_file_name, 'CI_OII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/CI_OIII.png', new_file_name, 'CI_OIII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/CI_OIV.png', new_file_name, 'CI_OIV')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/CI_OV.png', new_file_name, 'CI_OV')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/CI_OVI.png', new_file_name, 'CI_OVI')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/CI_OVII.png', new_file_name, 'CI_OVII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/CI_OVIII.png', new_file_name, 'CI_OVIII')
-    extract_colors_to_file('ion_state_ytanalysis/O_num_density_plots/CI_OIX.png', new_file_name, 'CI_OIX')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OI.png', new_file_name, 'CI_OI')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OII.png', new_file_name, 'CI_OII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIII.png', new_file_name, 'CI_OIII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIV.png', new_file_name, 'CI_OIV')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OV.png', new_file_name, 'CI_OV')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVI.png', new_file_name, 'CI_OVI')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVII.png', new_file_name, 'CI_OVII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVIII.png', new_file_name, 'CI_OVIII')
+    extract_colors_to_file('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIX.png', new_file_name, 'CI_OIX')
 
-    CI_OI_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OI.png')
-    CI_OII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OII.png')
-    CI_OIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OIII.png')
-    CI_OIV_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OIV.png')
-    CI_OV_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OV.png')
-    CI_OVI_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OVI.png')
-    CI_OVII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OVII.png')
-    CI_OVIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OVIII.png')
-    CI_OIX_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OIX.png')
+    CI_OI_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OI.png')
+    CI_OII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OII.png')
+    CI_OIII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIII.png')
+    CI_OIV_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIV.png')
+    CI_OV_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OV.png')
+    CI_OVI_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVI.png')
+    CI_OVII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVII.png')
+    CI_OVIII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVIII.png')
+    CI_OIX_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIX.png')
 
     fig,axes = plt.subplots(3,3,sharex=True,sharey=True)
     
@@ -573,7 +574,7 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     ax.plot(labels, CI_OIX_plot, label = 'OIX')
     ax.legend()
 
-    plt.savefig('ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_Oxygen.png')
+    plt.savefig('quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_Oxygen.png')
 
 #extracting colors from saved images
 def extract_colors_to_file(img_path, file, oxygen_state):
@@ -927,10 +928,10 @@ def sallys_function(simulation, filename, ds, redshift, Rvir, Mvir, center):
     plt.ylabel("ion fraction of total oxygen mass in log10")
     plt.title(simulation + " z = " + str(redshift) + " Rvir = " + str(Rvir) + " Mvir = " + str(Mvir))
     #plt.show()
-    figname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_fraction_plot.png"
+    figname = 'quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_fraction_plot.png"
     plt.savefig(figname)
     plt.clf()
-    dataname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_fraction_data.txt"
+    dataname = 'quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_fraction_data.txt"
     f = open(dataname, "x")
     f.close()
     f = open(dataname, "a")
@@ -953,9 +954,9 @@ def sallys_function(simulation, filename, ds, redshift, Rvir, Mvir, center):
     plt.ylabel("total mass of oxygen ion")
     plt.title(simulation + " z = " + str(redshift) + " Rvir = " + str(Rvir) + " Mvir = " + str(Mvir))
     #plt.show()
-    plotname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_mass_plot.png"
+    plotname = 'quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_mass_plot.png"
     plt.savefig(plotname)
-    textname = 'ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_mass_data.txt"
+    textname = 'quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + "/o_ion_mass_data.txt"
     f1 = open(textname, "x")
     f1.close()
     f1 = open(textname, "a")
