@@ -969,13 +969,6 @@ def sallys_function(simulation, filename, ds, redshift, Rvir, Mvir, center):
     f1.write("\n \n Mvir: ")
     f1.write(str(Mvir))
     f1.close()
-    
-
-def sallys_function(galaxy_name,galaxy_file_loc):
-	#do other things
-	#save some images and 
-	# save some raw data values
-	print("hello")
 
 if __name__ == '__main__':
 	# if you're running this from terminal like "python ionization_state_ytanalysis.py galname file_loc"

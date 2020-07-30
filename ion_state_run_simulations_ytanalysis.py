@@ -35,11 +35,12 @@ def run_functions():
                 ds, redshift, Rvir, Mvir, center = setup(simulations[i],files[i],redshifts[z])
                 # edit this if red shift is changed!!
                 rahuls_function(simulations[i],files[i], ds, redshift, Rvir, Mvir, center)
-                for j in range(9):
-                    # edit this if redshift is changed!!
-                    new_file = names[z] + '_Projection_x_O_p' + str(j) + '_number_density.png'
-                    if(os.path.exists(new_file)):
-                        os.remove(new_file)
+                for num in range(3):
+                    for j in range(9):
+                        # edit this if redshift is changed!!
+                        new_file = names[z] + '_Projection_x_O_p' + str(j) + '_number_density.png'
+                        if(os.path.exists(new_file)):
+                            os.remove(new_file)
                 current_time = datetime.datetime.now(pytz.timezone('America/Los_Angeles'))
                 print("Time for simulation " + simulations[i] + " after Rahul's function: " + str(current_time))
                 # edit this if redshift is changed!!
