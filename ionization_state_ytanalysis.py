@@ -22,8 +22,6 @@ def setup(simulation,filename,redshift):
     ds,_ = code_specific_setup.load_and_setup(filename,'art',
                                              ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX'], 
                                              add_pi_fracs = True)
-    center = ds.find_max('density')
-
     trident.add_ion_fields(ds, ['O I'])
     trident.add_ion_fields(ds, ['O II'])
     trident.add_ion_fields(ds, ['O III'])
