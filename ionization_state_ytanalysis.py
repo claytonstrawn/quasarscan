@@ -535,6 +535,8 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     CI_OVIII_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OVIII.png')
     CI_OIX_plot = extract_colors_to_return('ion_state_ytanalysis/O_num_density_plots/CI_OIX.png')
 
+    fig,axes = plt.subplots(3,3,sharex=True,sharey=True)
+    
     ax = axes[0][0]
     ax.plot(labels, CI_OI_plot, label = 'OI')
     ax.legend()
