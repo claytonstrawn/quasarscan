@@ -20,6 +20,9 @@ def run_functions():
 
     for z in range(len(redshifts)):
         print("Starting redshift = " + str(redshifts[z]))
+        files = []
+        file_exists = []
+        already_done = []
         for i in range(len(simulations)):
             # edit this if redshift is changed!!
             files.append("/global/cfs/cdirs/mp363/SIP_INTERNS_2020/" + simulations[i] + '/' + names[z])
