@@ -61,5 +61,5 @@ if __name__ == '__main__':
 	# this one doesn't really make sense as a script
     # I'd probably just import these functions from a 
     # jupyter notebook or something instead
-    read_ion_masses("VELA_v2_art_01_1.0", "VELA_v2_art_01_2.0")
+    read_ion_masses(["VELA_v2_art_01_1.0", "VELA_v2_art_01_2.0"])
 	print('no script, just for imports')
