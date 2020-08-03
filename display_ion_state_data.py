@@ -74,4 +74,4 @@ if __name__ == '__main__':
     array = ["VELA_v2_art_01_1.0", "VELA_v2_art_01_2.0"]
     data_array = read_ion_masses(array)
     combined_mass_plots(array,data_array)
-	print('no script, just for imports')
+    print('no script, just for imports')
