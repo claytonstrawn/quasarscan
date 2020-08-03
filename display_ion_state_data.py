@@ -13,7 +13,7 @@ def get_sorted_array(criteria):
     
 def read_ion_masses(list_of_galaxies):
     array = numpy.empty((len(list_of_galaxies),27)
-    for i in range(len(list_of_galaxies)):
+    for i in range(len(list_of_galaxies)): 
         filename = 'ion_state_ytanalysis/' + list_of_galaxies[i] + '/o_ion_fraction_data.txt'
         f = open(filename, "r")
         contents = f.readline()
@@ -61,5 +61,6 @@ if __name__ == '__main__':
 	# this one doesn't really make sense as a script
     # I'd probably just import these functions from a 
     # jupyter notebook or something instead
-    read_ion_masses(np.array(["VELA_v2_art_01_1.0", "VELA_v2_art_01_2.0"])
+    array = np.array(["VELA_v2_art_01_1.0", "VELA_v2_art_01_2.0"])
+    read_ion_masses(array)
 	print('no script, just for imports')
