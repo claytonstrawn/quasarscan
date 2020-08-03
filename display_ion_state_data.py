@@ -12,6 +12,31 @@ def get_sorted_array(criteria):
     pass
     
 def read_ion_masses(list_of_galaxies):
+    array = numpy.empty((len(list_of_galaxies),27)
+    for i in range(len(list_of_galaxies)):
+        filename = 'ion_state_ytanalysis/' + list_of_galaxies[i] + '/o_ion_fraction_data.txt'
+        f = open(filename, "r")
+        contents = f.readline()
+        curindex = 9
+        for j in range(8):
+            array[i,j] = int(contents[curindex:contents.index(', ',curindex)])
+            curindex = contents.index(',',curindex + 1) + 2
+        array[i,8] = int(contents[curindex:contents.index(']',curindex)])
+        f.readline()
+        contents = f.readline()
+        curindex = 10
+        for j in range(8):
+            array[i,j+9] = int(contents[curindex:contents.index(', ',curindex)])
+            curindex = contents.index(',',curindex + 1) + 2
+        array[i,17] = int(contents[curindex:contents.index(']',curindex)])
+        f.readline()
+        contents = f.readline()
+        curindex = 13
+        for j in range(8):
+            array[i,j+18] = int(contents[curindex:contents.index(', ',curindex)])
+            curindex = contents.index(',',curindex + 1) + 2
+        array[i,26] = int(contents[curindex:contents.index(']',curindex)])
+    print(array)
     return array
 
 def read_ion_number_densities(list_of_galaxies):
@@ -36,4 +61,5 @@ if __name__ == '__main__':
 	# this one doesn't really make sense as a script
     # I'd probably just import these functions from a 
     # jupyter notebook or something instead
+    read_ion_masses("VELA_v2_art_01_1.0", "VELA_v2_art_01_2.0")
 	print('no script, just for imports')
