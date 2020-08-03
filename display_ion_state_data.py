@@ -13,7 +13,8 @@ def get_sorted_array(criteria):
     
 def read_ion_masses(list_of_galaxies):
     array = numpy.empty((len(list_of_galaxies),27)
-    for i in range(len(list_of_galaxies)): 
+    num = list_of_galaxies.size
+    for i in range(num): 
         filename = 'ion_state_ytanalysis/' + list_of_galaxies[i] + '/o_ion_fraction_data.txt'
         f = open(filename, "r")
         contents = f.readline()
