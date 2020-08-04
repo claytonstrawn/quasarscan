@@ -51,6 +51,11 @@ def setup(simulation,filename,redshift):
       shutil.rmtree(dir_3)
     os.makedirs(dir_3)
     return ds, redshift, Rvir, Mvir, center
+
+    dir_4 = 'quasarscan/ion_state_ytanalysis/covering_fractions'
+    if os.path.exists(dir_4):
+      shutil.rmtree(dir_4)
+    os.makedirs(dir_4)
     
 def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     #labels
@@ -302,6 +307,10 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     OVIII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OVIII.png')
     OIX_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/OIX.png')
 
+    cov_fraction_total_O_13 = [OI_plot[11],OII_plot[11],OIII_plot[11],OIV_plot[11],OV_plot[11],OVI_plot[11],OVII_plot[11],OVIII_plot[11],OIX_plot[11]]
+    cov_fraction_total_O_14 = [OI_plot[12],OII_plot[12],OIII_plot[12],OIV_plot[12],OV_plot[12],OVI_plot[12],OVII_plot[12],OVIII_plot[12],OIX_plot[12]]
+    cov_fraction_total_O_15 = [OI_plot[13],OII_plot[13],OIII_plot[13],OIV_plot[13],OV_plot[13],OVI_plot[13],OVII_plot[13],OVIII_plot[13],OIX_plot[13]]
+
     plt.clf()
     fig,axes = plt.subplots(3,3,sharex=True,sharey=True)
 
@@ -418,6 +427,10 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     PI_OVIII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OVIII.png')
     PI_OIX_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/PI_OIX.png')
 
+    cov_fraction_PI_O_13 = [PI_OI_plot[11],PI_OII_plot[11],PI_OIII_plot[11],PI_OIV_plot[11],PI_OV_plot[11],PI_OVI_plot[11],PI_OVII_plot[11],PI_OVIII_plot[11],PI_OIX_plot[11]]
+    cov_fraction_PI_O_14 = [PI_OI_plot[12],PI_OII_plot[12],PI_OIII_plot[12],PI_OIV_plot[12],PI_OV_plot[12],PI_OVI_plot[12],PI_OVII_plot[12],PI_OVIII_plot[12],PI_OIX_plot[12]]
+    cov_fraction_PI_O_15 = [PI_OI_plot[13],PI_OII_plot[13],PI_OIII_plot[13],PI_OIV_plot[13],PI_OV_plot[13],PI_OVI_plot[13],PI_OVII_plot[13],PI_OVIII_plot[13],PI_OIX_plot[13]]
+
     fig,axes = plt.subplots(3,3,sharex=True,sharey=True)
 
     ax = axes[0][0]
@@ -456,8 +469,7 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     ax.plot(labels, PI_OIX_plot, label = 'OIX')
     ax.legend()
 
-    plt.savefig('quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI_Oxygen.png')
-
+    plt.savefig('quasarscan/ion_state_ytanalysis/covering_fractions' + simulation + str(redshift))
 
     #Create Plots for CI
     proj_CI_OI = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
@@ -534,6 +546,10 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     CI_OVIII_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OVIII.png')
     CI_OIX_plot = extract_colors_to_return('quasarscan/ion_state_ytanalysis/O_num_density_plots/CI_OIX.png')
 
+    cov_fraction_CI_O_13 = [CI_OI_plot[11],CI_OII_plot[11],CI_OIII_plot[11],CI_OIV_plot[11],CI_OV_plot[11],CI_OVI_plot[11],CI_OVII_plot[11],CI_OVIII_plot[11],CI_OIX_plot[11]]
+    cov_fraction_CI_O_14 = [CI_OI_plot[12],CI_OII_plot[12],CI_OIII_plot[12],CI_OIV_plot[12],CI_OV_plot[12],CI_OVI_plot[12],CI_OVII_plot[12],CI_OVIII_plot[12],CI_OIX_plot[12]]
+    cov_fraction_CI_O_15 = [CI_OI_plot[13],CI_OII_plot[13],CI_OIII_plot[13],CI_OIV_plot[13],CI_OV_plot[13],CI_OVI_plot[13],CI_OVII_plot[13],CI_OVIII_plot[13],CI_OIX_plot[13]]
+
     fig,axes = plt.subplots(3,3,sharex=True,sharey=True)
     
     ax = axes[0][0]
@@ -573,6 +589,49 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     ax.legend()
 
     plt.savefig('quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/CI_Oxygen.png')
+
+    #covering fraction
+    plt.figure(figsize=(20,20))
+
+    plt.plot(labels, cov_fraction_total_O_13, linestyle = 'solid', color = 'blue', linewidth = 3, label='Total Oxygen')
+    plt.scatter(labels,cov_fraction_total_O_13, color = 'blue')
+
+    plt.plot(labels, cov_fraction_total_O_14,linestyle = 'solid', color = 'red', linewidth = 3)
+    plt.scatter(labels,cov_fraction_total_O_14, color = 'red')
+
+    plt.plot(labels, cov_fraction_total_O_15, linestyle = 'solid', color = 'green', linewidth = 3)
+    plt.scatter(labels,cov_fraction_total_O_15, color = 'green')
+
+    plt.plot(labels, cov_fraction_CI_O_13, linestyle = '--', color = 'blue', linewidth = 4, label='CI Fraction')
+    plt.scatter(labels,cov_fraction_CI_O_13, color = 'blue')
+
+    plt.plot(labels, cov_fraction_CI_O_14, linestyle = '--', color = 'red', linewidth = 4)
+    plt.scatter(labels,cov_fraction_CI_O_14, color = 'red')
+
+    plt.plot(labels, cov_fraction_CI_O_15, linestyle = '--', color = 'green', linewidth = 4)
+    plt.scatter(labels,cov_fraction_CI_O_15, color = 'green')
+
+    plt.plot(labels, cov_fraction_PI_O_13, linestyle = ':', color = 'blue', linewidth = 5, label='PI Fraction')
+    plt.scatter(labels,cov_fraction_PI_O_13, color = 'blue')
+
+    plt.plot(labels, cov_fraction_PI_O_14, linestyle = ':', color = 'red', linewidth = 5)
+    plt.scatter(labels,cov_fraction_PI_O_14, color = 'red')
+
+    plt.plot(labels, cov_fraction_PI_O_15, linestyle = ':', color = 'green', linewidth = 5)
+    plt.scatter(labels,cov_fraction_PI_O_15, color = 'green')
+
+    plt.xlabel('Oxygen States', fontsize=15)
+    plt.ylabel('Covering Fraction', fontsize=15)
+
+    blue_patch = mpatches.Patch(color='blue', label='10^13')
+    red_patch = mpatches.Patch(color='red', label='10^14')
+    green_patch = mpatches.Patch(color='green', label='10^15')
+
+    leg1 = plt.legend(handles=[blue_patch, red_patch, green_patch], prop={'size':20}, loc='upper left')
+    plt.gca().add_artist(leg1)
+    leg2 = plt.legend(prop={'size':20}, loc=(0.007,0.8))
+    plt.gca().add_artist(leg2)
+    plt.savefig('quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/covering_fractions')
 
 #extracting colors from saved images
 def extract_colors_to_file(img_path, file, oxygen_state):
