@@ -13,7 +13,33 @@ def get_sorted_array(criteria):
     
 def read_ion_masses(list_of_galaxies):
     #list_of_galaxies = [('VELA_v2_art_10',1.0),('VELA_v2_art_10',2.0),('VELA_v2_art_11',1.0),('VELA_v2_art_11',2.0)]
-    return array
+    PI = np.empty((len(list_of_galaxies),9))
+    CI = np.empty((len(list_of_galaxies),9))
+    total = np.empty((len(list_of_galaxies),9))
+    mass = np.empty(len(list_of_galaxies))
+    for i in range(len(list_of_galaxies)):
+        filename = 'quasarscan/ion_state_ytanalysis/' + list_of_galaxies[i] + '/o_ion_mass_data.txt'
+        f = open(filename, "r")
+        contents = f.readline()
+        arr = np.fromstring(contents[9:-1],dtype=float,sep=', ')
+        for j in range(9): 
+            PI[i,j] = arr[j]
+        f.readline()
+        contents = f.readline()
+        arr = np.fromstring(contents[10:-1],dtype=float,sep=', ')
+        for j in range(9): 
+            CI[i,j] = arr[j]
+        f.readline()
+        contents = f.readline()
+        arr = np.fromstring(contents[13:-1],dtype=float,sep=', ')
+        for j in range(9): 
+            total[i,j] = arr[j]
+        f.readline()
+        f.readline()
+        f.readline()
+        contents = f.readline()
+        mass[i] = float(contents[7:])
+    return PI, CI, total, mass
 
 
 def combined_mass_plots(list_of_galaxies,data_array,weighting = 'mass',logy=True, plot_data = 'all'):
@@ -22,12 +48,28 @@ def combined_mass_plots(list_of_galaxies,data_array,weighting = 'mass',logy=True
     #possible plot_datas = 'all' (plot PI, CI, and total)
     #and 'PI', 'CI', or 'total' if you just want one 
     #processing of the data array (list_of_galaxies should generate captions or something)
-    avg = np.average(data_array,axis=0)
+    PI, CI, total, mass = read_ion_masses(list_of_galaxies)
     x=['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX']
+    PI_avg = np.empty(9)
+    CI_avg = np.empty(9)
+    total_avg = np.empty(9)
+    if (weighting == 'mass'):
+        for i in range(len(list_of_galaxies)):
+            for j in range(9):
+                PI_avg[j] += PI[i,j]*mass[i] / np.sum(mass)
+                CI_avg[j] += CI[i,j]*mass[i] / np.sum(mass)
+                total_avg[j] += total[i,j]*mass[i] / np.sum(mass)
+    elif (weighting == 'snapshot'):
+        PI_vg = np.average(PI, axis=0)
+        CI_avg = np.average(CI, axis=0)
+        total_avg = np.average(total, axis=0)
     plt.clf()
-    plt.plot(x, np.log10(avg[:9]), label="PI oxygen mass",color='b',linewidth=1,marker='o',linestyle='-')
-    plt.plot(x, np.log10(avg[9:18]), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
-    plt.plot(x, np.log10(avg[18:]), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
+    if (plot_data == 'all' or plot_data == 'CI'):
+        plt.plot(x, np.log10(CI_avg), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
+    if (plot_data == 'all' or plot_data == 'PI'):
+        plt.plot(x[1:], np.log10(PI_avg[1:]), label="PI oxygen mass",color='b',linewidth=1,marker='o',linestyle='-')
+    if (plot_data == 'all' or plot_data == 'total'):
+        plt.plot(x, np.log10(total_avg), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
     plt.xlabel("Oxygen ion")
     plt.ylabel("ion fraction of total oxygen mass in log10")
