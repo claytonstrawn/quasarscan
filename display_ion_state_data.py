@@ -12,10 +12,9 @@ def get_sorted_array(criteria):
     pass
     
 def read_ion_masses(list_of_galaxies):
+    #list_of_galaxies = [('VELA_v2_art_10',1.0),('VELA_v2_art_10',2.0),('VELA_v2_art_11',1.0),('VELA_v2_art_11',2.0)]
     return array
 
-def read_ion_number_densities(list_of_galaxies):
-    return array
 
 def combined_mass_plots(list_of_galaxies,data_array,weighting = 'mass',logy=True, plot_data = 'all'):
     #possible weightings = 'mass' (add all the stacked masses) 
@@ -34,6 +33,9 @@ def combined_mass_plots(list_of_galaxies,data_array,weighting = 'mass',logy=True
     plt.ylabel("ion fraction of total oxygen mass in log10")
     plt.plot()
     plt.show()
+
+def read_ion_number_densities(list_of_galaxies):
+    return array
 
 def covering_fraction_plots(list_of_galaxies,data_array,thresholds = [13,14,15],logy=False, plot_data = 'all'):
     #possible plot_datas = 'all' (plot PI, CI, and total)
