@@ -12,31 +12,6 @@ def get_sorted_array(criteria):
     pass
     
 def read_ion_masses(list_of_galaxies):
-    array = np.empty((len(list_of_galaxies),27))
-    for i in range(len(list_of_galaxies)):
-        filename = 'quasarscan/ion_state_ytanalysis/' + list_of_galaxies[i] + '/o_ion_mass_data.txt'
-        f = open(filename, "r")
-        contents = f.readline()
-        curindex = contents.index('[') + 1
-        for j in range(8):
-            array[i,j] = float(contents[curindex:contents.index(', ',curindex)])
-            curindex = contents.index(',',curindex + 1) + 2
-        array[i,8] = float(contents[curindex:contents.index(']',curindex)])
-        f.readline()
-        contents = f.readline()
-        curindex = contents.index('[') + 1
-        for j in range(8):
-            array[i,j+9] = float(contents[curindex:contents.index(', ',curindex)])
-            curindex = contents.index(',',curindex + 1) + 2
-        array[i,17] = float(contents[curindex:contents.index(']',curindex)])
-        f.readline()
-        contents = f.readline()
-        curindex = contents.index('[') + 1
-        for j in range(8):
-            array[i,j+18] = float(contents[curindex:contents.index(', ',curindex)])
-            curindex = contents.index(',',curindex + 1) + 2
-        array[i,26] = float(contents[curindex:contents.index(']',curindex)])
-    print(array)
     return array
 
 def read_ion_number_densities(list_of_galaxies):
