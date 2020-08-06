@@ -127,9 +127,10 @@ def read_ion_number_densities(list_of_galaxies):
     all_data = all_data / 100
     return all_data
 
-def covering_fraction_plots(list_of_galaxies,data_array,thresholds = [13,14,15],logy=False, plot_data = 'all'):
-    #possible plot_datas = 'all' (plot PI, CI, and total)
-    #and 'PI', 'CI', or 'total' if you just want one 
+def covering_fraction_plots(list_of_galaxies,thresholds,plot_data):
+    #list_of_galaxies in form (ex) ['VELA_v2_art_10_1.0','VELA_v2_art_1_1.0',...]
+    #thresholds ex) [13,14,15]
+    #possible plot_data = 'all' (plot PI, CI, and total) and 'PI', 'CI', or 'total' if you just want one 
     #and 'snapshot' (average all the fractions for individual galaxies)
     #processing of the data array (list_of_galaxies should generate captions or something)
 
