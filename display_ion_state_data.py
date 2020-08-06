@@ -155,13 +155,13 @@ def covering_fraction_plots(list_of_galaxies,thresholds,plot_data):
     for i in range(len(thresholds)):
         if plot_data == "all" or plot_data == "total":
             plt.plot(labels, output[i][0], linestyle = 'solid', color = colors[i], linewidth = 3, label='Total Oxygen_'+str(thresholds[i]))
-            plt.scatter(labels,output[i][0], color = 'blue')
+            plt.scatter(labels,output[i][0], color = colors[i])
         if plot_data == "all" or plot_data == "PI":
             plt.plot(labels, output[i][1], linestyle = 'dashed', color = colors[i], linewidth = 3, label='PI_'+str(thresholds[i]))
-            plt.scatter(labels,output[i][1], color = 'blue')
+            plt.scatter(labels,output[i][1], color = colors[i])
         if plot_data == "all" or plot_data == "CI":
             plt.plot(labels, output[i][2], linestyle = 'dotted', color = colors[i], linewidth = 3, label='CI_'+str(thresholds[i]))
-            plt.scatter(labels,output[i][2], color = 'blue')
+            plt.scatter(labels,output[i][2], color = colors[i])
 
     plt.legend(prop={'size': 25})
     plt.xlabel('Oxygen States', fontsize=15)
