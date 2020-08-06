@@ -94,14 +94,78 @@ def combined_mass_plots(list_of_galaxies,weighting = 'mass',logy=True, plot_data
     plt.show()
 
 def read_ion_number_densities(list_of_galaxies):
-    return array
+    for galaxy in range(len(list_of_galaxies)):
+        filename = 'quasarscan/ion_state_ytanalysis/' + list_of_galaxies[i] + '/o_number_density_data.txt'
+        f = open(filename, "r")
+        lines = f.readlines()
+        current_ion_state = None
+        all_data = np.zeros((3,9,16))
+        for line in lines:
+            if line == ' \n':
+                continue
+            if 'O' in line:
+                current_ion_state = line.strip('\n')
+                continue
+            arys = line.split('], ')
+
+            for k,ary in enumerate(arys):
+                stripped_array = ary.replace('\n', '').replace('[','').replace(']', '')
+                key = stripped_array.split(', ')[0]
+                value = float(stripped_array.split(', ')[1])
+                if current_ion_state.startswith('O'):
+                    i = 0
+                elif current_ion_state.startswith('P'):
+                    i = 1
+                else:
+                    i = 2
+                
+                numbers = {'I': 0, 'II':1, 'III':2, 'IV':3, 'V':4, 'VI':5, 'VII':6, 'VIII':7, 'IX':8}
+                j = numbers[current_ion_state.split('O')[1]]
+                
+                all_data[i,j,k] = (all_data[i,j,k]*galaxy+value)/(galaxy+1)
+
+    all_data = all_data / 100
+    return all_data
 
 def covering_fraction_plots(list_of_galaxies,data_array,thresholds = [13,14,15],logy=False, plot_data = 'all'):
     #possible plot_datas = 'all' (plot PI, CI, and total)
     #and 'PI', 'CI', or 'total' if you just want one 
     #and 'snapshot' (average all the fractions for individual galaxies)
     #processing of the data array (list_of_galaxies should generate captions or something)
-    plt.plot()
+
+    # 1st dimension: types of oxygen
+    # 2nd dimension: oxygen state (ionization)
+    # 3rd dimension: density value
+
+    all_data = read_ion_number_densities(list_of_galaxies)
+    labels = ['OI','OII','OIII','OIV','OV','OVI','OVII','OVIII','OIX']
+    output = []
+    for threshold in thresholds:
+        values = []
+        for i in range(all_data.shape[0]):
+            oxygen_type = []
+            for j in range(all_data.shape[1]):
+                oxygen_type.append(all_data[i][j][threshold-3])
+            values.append(oxygen_type)
+        output.append(values)
+
+    plt.figure(figsize=(20,20))
+    colors = ['blue','red','green','black','purple','gray','yellow','cyan','magenta']
+    for i in range(len(thresholds)):
+        if plot_data == "all" or plot_data == "total":
+            plt.plot(labels, output[i][0], linestyle = 'solid', color = colors[i], linewidth = 3, label='Total Oxygen_'+str(thresholds[i]))
+            plt.scatter(labels,output[i][0], color = 'blue')
+        if plot_data == "all" or plot_data == "PI":
+            plt.plot(labels, output[i][1], linestyle = 'dashed', color = colors[i], linewidth = 3, label='PI_'+str(thresholds[i]))
+            plt.scatter(labels,output[i][1], color = 'blue')
+        if plot_data == "all" or plot_data == "CI":
+            plt.plot(labels, output[i][2], linestyle = 'dotted', color = colors[i], linewidth = 3, label='CI_'+str(thresholds[i]))
+            plt.scatter(labels,output[i][2], color = 'blue')
+
+    plt.legend(prop={'size': 25})
+    plt.xlabel('Oxygen States', fontsize=15)
+    plt.ylabel('Covering Fraction', fontsize=15)
+    plt.show() 
 
 if __name__ == '__main__':
 	# this one doesn't really make sense as a script
