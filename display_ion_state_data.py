@@ -146,7 +146,7 @@ def covering_fraction_plots(list_of_galaxies,thresholds,plot_data):
         for i in range(all_data.shape[0]):
             oxygen_type = []
             for j in range(all_data.shape[1]):
-                oxygen_type.append(all_data[i][j][threshold-3])
+                oxygen_type.append(sum(all_data[i][j][threshold-3:all_data.shape[2]-1]))
             values.append(oxygen_type)
         output.append(values)
 
