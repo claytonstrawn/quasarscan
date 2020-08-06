@@ -7,7 +7,7 @@ def read_table(filename = "CI_PI_cutoff_tables.txt"):
         f=open(filename,'r')
     except:
         f=open('quasarscan/'+filename)
-    lines = f.readlines()
+    lines = f.readlines()[6:]
     f.close()
     ions = []
     redshifts = []

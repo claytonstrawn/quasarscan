@@ -162,6 +162,21 @@ class MultiQuasarSpherePlotter():
         self.avgfn = np.mean
         self.setPlots(plots)
         self.quasarArray = []
+        if loadonly == 'empty':
+            allVELAnames=[]
+            allsimnums = range(1,36)
+            for i in allsimnums:
+                 allVELAnames += ['VELA_v2_art_%02d'%i]
+            redshifts = [1,2]
+            for name in allVELAnames:
+                for redshift in redshifts:
+                    try:
+                        q = quasar_sphere.QuasarSphere(make_empty = (name,redshift))
+                    except:
+                        print('error for %s,%f'%(name,redshift))
+                    self.quasarArray.append(q)
+            textfiles = []
+            observations = []
         if textfiles is None:
             textfiles = get_all_textfiles(level,loadonly = loadonly)
             observations = get_all_observations(level,loadonly = loadobs)

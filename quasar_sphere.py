@@ -134,9 +134,17 @@ class GeneralizedQuasarSphere(object):
 
 class QuasarSphere(GeneralizedQuasarSphere):
     def __init__(self,ions=None,data = None,\
-                 simparams = None,scanparams = None,gasbins = None,readvalsoutput = None):
+                 simparams = None,scanparams = None,gasbins = None,readvalsoutput = None,make_empty = None):
         self.number = 1
         self.type = "Simulation"
+        if make_empty is not None:
+            simname    = make_empty[0]
+            redshift   = make_empty[1]
+            simparams  = [simname,redshift]+[0]*10
+            scanparams = [0]*7
+            ions       = []
+            data       = []
+            gasbins    = []
         if readvalsoutput:
             simparams  = readvalsoutput[0]
             scanparams = readvalsoutput[1]
@@ -169,8 +177,8 @@ class QuasarSphere(GeneralizedQuasarSphere):
         self.redshift = self.simparams[1]
         self.rounded_redshift = round_redshift(self.redshift)
         self.center = np.array([self.simparams[2], self.simparams[3], self.simparams[4]])
-        self.Rvir = self.simparams[5]
-        self.Rvir_is_real = str(parse_metadata.get_value("Rvir",self.name,redshift = self.redshift)==self.Rvir)
+        self.Rvir = parse_metadata.get_value("Rvir",self.name,redshift = self.redshift)
+        self.Rvir_is_real = str(self.simparams[5]==self.Rvir)
         self.dspath = self.simparams[6]
         self.a0 = 1./(1+self.redshift)
         self.L = np.array([self.simparams[7], self.simparams[8], self.simparams[9]])

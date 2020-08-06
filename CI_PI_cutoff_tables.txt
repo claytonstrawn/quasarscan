@@ -1,3 +1,9 @@
+#Format is: 
+#ion
+#Redshift, rho: [<density transition points>] 
+#Redshift, T:   [<Temperature transition points]
+# densities of 10**(plus or minus 15) is a stand-in for plus or minus infinity)
+# neutral atoms (e.g. C I) are included here, but are always empty
 C I
 0.0, rho: []
 0.0,   t: []
