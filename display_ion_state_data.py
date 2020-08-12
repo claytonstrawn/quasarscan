@@ -113,12 +113,13 @@ def combined_mass_plots(list_of_galaxies,weighting = 'mass',logy=True, plot_data
     print(mass_sum)
 
 def read_ion_number_densities(list_of_galaxies):
+    all_data = np.zeros((3,9,16))
     for galaxy in range(len(list_of_galaxies)):
         filename = 'quasarscan/ion_state_ytanalysis/' + list_of_galaxies[i] + '/o_number_density_data.txt'
         f = open(filename, "r")
         lines = f.readlines()
         current_ion_state = None
-        all_data = np.zeros((3,9,16))
+
         for line in lines:
             if line == ' \n':
                 continue
@@ -174,12 +175,15 @@ def covering_fraction_plots(list_of_galaxies,thresholds,plot_data):
     for i in range(len(thresholds)):
         if plot_data == "all" or plot_data == "total":
             plt.plot(labels, output[i][0], linestyle = 'solid', color = colors[i], linewidth = 3, label='Total Oxygen_'+str(thresholds[i]))
+            plt.ylim(0.0,1.0)
             plt.scatter(labels,output[i][0], color = colors[i])
         if plot_data == "all" or plot_data == "PI":
             plt.plot(labels, output[i][1], linestyle = 'dashed', color = colors[i], linewidth = 3, label='PI_'+str(thresholds[i]))
+            plt.ylim(0.0,1.0)
             plt.scatter(labels,output[i][1], color = colors[i])
         if plot_data == "all" or plot_data == "CI":
             plt.plot(labels, output[i][2], linestyle = 'dotted', color = colors[i], linewidth = 3, label='CI_'+str(thresholds[i]))
+            plt.ylim(0.0,1.0)
             plt.scatter(labels,output[i][2], color = colors[i])
 
     plt.legend(prop={'size': 25})
