@@ -22,8 +22,8 @@ def read_ion_masses(list_of_galaxies):
         filename = 'quasarscan/ion_state_ytanalysis/' + gal[i] + '/o_ion_mass_data.txt'
         if (path.exists(filename)):
             list_of_galaxies.append(gal[i])
-        #else: 
-            #print(gal[i] + " file did not exist")
+        else: 
+            print(gal[i] + " file did not exist")
     PI = np.empty((len(list_of_galaxies),9))
     CI = np.empty((len(list_of_galaxies),9))
     total = np.empty((len(list_of_galaxies),9))
@@ -53,7 +53,7 @@ def read_ion_masses(list_of_galaxies):
     return PI, CI, total, mass
 
 
-def combined_mass_plots(list_of_galaxies,weighting = 'mass',logy=True, plot_data = 'all'):
+def combined_mass_plots(list_of_galaxies,weighting = 'mass',logy=True, plot_data = 'all',figname="do_not_save.png"):
     #possible weightings = 'mass' (add all the stacked masses) 
     #and 'snapshot' (average all the fractions for individual galaxies)
     #possible plot_datas = 'all' (plot PI, CI, and total)
@@ -75,14 +75,11 @@ def combined_mass_plots(list_of_galaxies,weighting = 'mass',logy=True, plot_data
                 PI_avg[j] += PI[i,j]*mass[i] / mass_sum
                 CI_avg[j] += CI[i,j]*mass[i] / mass_sum
                 total_avg[j] += total[i,j]*mass[i] / mass_sum
-        x1 = x1[1:]
         total_sum = np.sum(total_avg)
         for j in range(9):
             PI_frac[j] = PI_avg[j] / total_sum
             CI_frac[j] = CI_avg[j] / total_sum
             total_frac[j] = total_avg[j] / total_sum
-        PI_avg = PI_avg[1:]
-        PI_frac = PI_frac[1:]
     elif (weighting == 'snapshot'):
         PI_avg = np.average(PI, axis=0)
         CI_avg = np.average(CI, axis=0)
@@ -93,15 +90,20 @@ def combined_mass_plots(list_of_galaxies,weighting = 'mass',logy=True, plot_data
             CI_frac[j] = CI_avg[j] / total_sum
             total_frac[j] = total_avg[j] / total_sum
     plt.clf()
-    if (plot_data == 'all' or plot_data == 'CI'):
-        #plt.plot(x, np.log10(CI_avg), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
-        plt.plot(x, np.log10(CI_frac), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
-    if (plot_data == 'all' or plot_data == 'PI'):
-        #plt.plot(x1, np.log10(PI_avg), label="PI oxygen mass",color='b',linewidth=1,marker='o',linestyle='-')
-        plt.plot(x1, np.log10(PI_frac), label="PI oxygen mass",color='b',linewidth=1,marker='o',linestyle='-')
+    PI_avg = PI_avg[1:]
+    PI_frac = PI_frac[1:]
+    x1 = x1[1:]
+    CI_avg = CI_avg[1:]
+    CI_frac = CI_frac[1:]
     if (plot_data == 'all' or plot_data == 'total'):
         #plt.plot(x, np.log10(total_avg), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
         plt.plot(x, np.log10(total_frac), label="total oxygen mass",color='g',linewidth=1,marker='o',linestyle='-')
+    if (plot_data == 'all' or plot_data == 'CI'):
+        #plt.plot(x, np.log10(CI_avg), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
+        plt.plot(x1, np.log10(CI_frac), label="CI oxygen mass",color='r',linewidth=1,marker='o',linestyle='-')
+    if (plot_data == 'all' or plot_data == 'PI'):
+        #plt.plot(x1, np.log10(PI_avg), label="PI oxygen mass",color='b',linewidth=1,marker='o',linestyle='-')
+        plt.plot(x1, np.log10(PI_frac), label="PI oxygen mass",color='b',linewidth=1,marker='o',linestyle='-')
     plt.legend(loc=0, fontsize=10)
     plt.xlabel("Oxygen ion")
     plt.ylabel("ion fraction of total oxygen mass in log10")
@@ -109,6 +111,8 @@ def combined_mass_plots(list_of_galaxies,weighting = 'mass',logy=True, plot_data
 #     axes.set_ylim([36.75, 39])
     plt.ylim(-2.60, -0.50)
     plt.plot()
+    if(figname != 'do_not_save.png'):
+        plt.savefig(figname)
     plt.show()
     print(mass_sum)
 
