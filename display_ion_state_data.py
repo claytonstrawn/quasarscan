@@ -119,19 +119,21 @@ def combined_mass_plots(list_of_galaxies,weighting = 'mass',logy=True, plot_data
 def read_ion_number_densities(list_of_galaxies):
     all_data = np.zeros((3,9,16))
     for galaxy in range(len(list_of_galaxies)):
-        filename = 'quasarscan/ion_state_ytanalysis/' + list_of_galaxies[i] + '/o_number_density_data.txt'
+        filename = 'quasarscan/ion_state_ytanalysis/' + list_of_galaxies[galaxy] + '/o_number_density_data.txt'
         f = open(filename, "r")
         lines = f.readlines()
         current_ion_state = None
-
+        
         for line in lines:
+            #skip the empty lines
             if line == ' \n':
                 continue
+            #this will let you pick out the header line
             if 'O' in line:
                 current_ion_state = line.strip('\n')
                 continue
             arys = line.split('], ')
-
+            #this will let you pull out the values
             for k,ary in enumerate(arys):
                 stripped_array = ary.replace('\n', '').replace('[','').replace(']', '')
                 key = stripped_array.split(', ')[0]
@@ -152,16 +154,6 @@ def read_ion_number_densities(list_of_galaxies):
     return all_data
 
 def covering_fraction_plots(list_of_galaxies,thresholds,plot_data):
-    #list_of_galaxies in form (ex) ['VELA_v2_art_10_1.0','VELA_v2_art_1_1.0',...]
-    #thresholds ex) [13,14,15]
-    #possible plot_data = 'all' (plot PI, CI, and total) and 'PI', 'CI', or 'total' if you just want one 
-    #and 'snapshot' (average all the fractions for individual galaxies)
-    #processing of the data array (list_of_galaxies should generate captions or something)
-
-    # 1st dimension: types of oxygen
-    # 2nd dimension: oxygen state (ionization)
-    # 3rd dimension: density value
-
     all_data = read_ion_number_densities(list_of_galaxies)
     labels = ['OI','OII','OIII','OIV','OV','OVI','OVII','OVIII','OIX']
     output = []
@@ -173,28 +165,27 @@ def covering_fraction_plots(list_of_galaxies,thresholds,plot_data):
                 oxygen_type.append(sum(all_data[i][j][threshold-3:all_data.shape[2]-1]))
             values.append(oxygen_type)
         output.append(values)
-
-    plt.figure(figsize=(20,20))
+    
+    plt.figure(figsize=(10,10))
     colors = ['blue','red','green','black','purple','gray','yellow','cyan','magenta']
     for i in range(len(thresholds)):
         if plot_data == "all" or plot_data == "total":
             plt.plot(labels, output[i][0], linestyle = 'solid', color = colors[i], linewidth = 3, label='Total Oxygen_'+str(thresholds[i]))
-            plt.ylim(0.0,1.0)
+            plt.ylim(-0.1,1.1)
             plt.scatter(labels,output[i][0], color = colors[i])
         if plot_data == "all" or plot_data == "PI":
             plt.plot(labels, output[i][1], linestyle = 'dashed', color = colors[i], linewidth = 3, label='PI_'+str(thresholds[i]))
-            plt.ylim(0.0,1.0)
+            plt.ylim(-0.1,1.1)
             plt.scatter(labels,output[i][1], color = colors[i])
         if plot_data == "all" or plot_data == "CI":
             plt.plot(labels, output[i][2], linestyle = 'dotted', color = colors[i], linewidth = 3, label='CI_'+str(thresholds[i]))
-            plt.ylim(0.0,1.0)
+            plt.ylim(-0.1,1.1)
             plt.scatter(labels,output[i][2], color = colors[i])
-
-    plt.legend(prop={'size': 25})
-    plt.xlabel('Oxygen States', fontsize=15)
-    plt.ylabel('Covering Fraction', fontsize=15)
-    plt.show() 
-
+    plt.legend(prop={'size': 10})
+    plt.xlabel('Oxygen States', fontsize=20)
+    plt.ylabel('Covering Fraction', fontsize=20)
+    plt.show()
+    
 if __name__ == '__main__':
 	# this one doesn't really make sense as a script
     # I'd probably just import these functions from a 
