@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from quasarscan import parse_metadata
-import parse_metadata
+# import parse_metadata
 import os.path
 from os import path
 
