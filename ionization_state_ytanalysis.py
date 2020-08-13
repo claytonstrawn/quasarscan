@@ -456,7 +456,7 @@ def rahuls_function(simulation,filename, ds, redshift, Rvir, Mvir, center):
     ax.plot(labels, PI_OIX_plot, label = 'OIX')
     ax.legend()
 
-    plt.savefig('quasarscan/ion_state_ytanalysis/covering_fractions' + simulation + str(redshift))
+    plt.savefig('quasarscan/ion_state_ytanalysis/' + simulation + "_" + str(redshift) + '/O_distribution_plots/PI.png')
 
     #Create Plots for CI
     proj_CI_OI = yt.ProjectionPlot(ds,'x',('gas', 'O_p0_CI_number_density'),center=center, width = (2* Rvir, 'kpc'))
