@@ -153,7 +153,7 @@ def read_ion_number_densities(list_of_galaxies):
     all_data = all_data / 100
     return all_data
 
-def covering_fraction_plots(list_of_galaxies,thresholds,plot_data):
+def covering_fraction_plots(list_of_galaxies,thresholds):
     all_data = read_ion_number_densities(list_of_galaxies)
     labels = ['OI','OII','OIII','OIV','OV','OVI','OVII','OVIII','OIX']
     output = []
@@ -168,24 +168,25 @@ def covering_fraction_plots(list_of_galaxies,thresholds,plot_data):
     
     plt.figure(figsize=(10,10))
     colors = ['blue','red','green','black','purple','gray','yellow','cyan','magenta']
+
     for i in range(len(thresholds)):
-        if plot_data == "all" or plot_data == "total":
             plt.plot(labels, output[i][0], linestyle = 'solid', color = colors[i], linewidth = 3, label='Total Oxygen_'+str(thresholds[i]))
             plt.ylim(-0.1,1.1)
             plt.scatter(labels,output[i][0], color = colors[i])
-        if plot_data == "all" or plot_data == "PI":
+        
             plt.plot(labels, output[i][1], linestyle = 'dashed', color = colors[i], linewidth = 3, label='PI_'+str(thresholds[i]))
             plt.ylim(-0.1,1.1)
             plt.scatter(labels,output[i][1], color = colors[i])
-        if plot_data == "all" or plot_data == "CI":
+        
             plt.plot(labels, output[i][2], linestyle = 'dotted', color = colors[i], linewidth = 3, label='CI_'+str(thresholds[i]))
             plt.ylim(-0.1,1.1)
             plt.scatter(labels,output[i][2], color = colors[i])
+
     plt.legend(prop={'size': 10})
     plt.xlabel('Oxygen States', fontsize=20)
     plt.ylabel('Covering Fraction', fontsize=20)
     plt.show()
-    
+
 if __name__ == '__main__':
 	# this one doesn't really make sense as a script
     # I'd probably just import these functions from a 
