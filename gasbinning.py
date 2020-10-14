@@ -4,6 +4,7 @@ try:
 except:
     import PI_field_defs
 
+#read a dictionary of a string and return a dictionary object
 def parse_string_for_dict(s):
     s = s.strip('{}')
     toreturn = {}
@@ -15,8 +16,19 @@ def parse_string_for_dict(s):
         toreturn[key] = (value0,value1)
     return toreturn
 
+# GasBin object contains a field, units, and edges for several 
+# bins to put data in
 class GasBin(object):
-
+    #summary: creates GasBin object
+    #
+    #inputs: name: how the gasbin is referred to
+    #        binnames: what the bins are "called" (cold, cool, PI, etc)
+    #        binvalstr: what the bin edges are (numerically), in 'units'
+    #        field: the yt field you will check against the binval. Default 
+    #               is 'name'
+    #        units: the units of the field. Defaults to whatever yt outputs as default.
+    #
+    #outputs: GasBin object
     def __init__(self,name,binnames,binvalstr,field = None,units = None):
         self.name = name
         self.units = units
@@ -57,6 +69,7 @@ class GasBin(object):
             newlist.append(self.name+":"+val)
         return newlist
 
+# below are all the known gasbins. Morecould easily be made
 density_bin = GasBin("density",["low","between6_4","between4_2","between2_0","selfshielding","starforming"],["0.0",'1.674e-30','1.674e-28','1.674e-26',"1.6737e-25","1.6737e-23","np.inf"],units = 'g/cm**3')#[0,1e-6,1e-4,1e-2,1e-1,1e1,inf]*mh
 temperature_bin = GasBin("temperature",["cold","cool","warm_hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"],units = "K")
 radial_velocity_bin = GasBin("radial_velocity",["inflow",'inflow_slow',"tangential",'outflow_slow',"outflow"],['-np.inf','-500','-10','10','500','np.inf'],units = "km/s")
@@ -68,9 +81,9 @@ for ion in all_ions_w_known_PI_defs:
 pi_bin = GasBin('ionization_mechanism',['PI'],['0.9','1.1'], field = allionizationfields)
 possible_bin_types = ["density","temperature","radial_velocity","resolution","ionization_mechanism"]
 
-
+# GasBinsHolder object contains multiple GasBin objects
+# and can query them
 class GasBinsHolder(object):
-
     def __init__(self,bins = None,string = None):
         self.bin_types = []
         if string:

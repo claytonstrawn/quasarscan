@@ -18,15 +18,22 @@ except:
     import gasbinning
     import code_specific_setup
 
+#summary: change 3D spherical coordinates to cartesian
+#
+#inputs: r, theta, phi: radial distance, polar angle, azimuthal angle
+#
+#outputs: x,y,z in a single array
 def convert_to_xyz(r, theta, phi):
     return np.array([r*np.sin(theta)*np.cos(phi),r*np.sin(theta)*np.sin(phi),r*np.cos(theta)])
 
-
+#summary: Return the rotation matrix associated with counterclockwise rotation about
+#         the given axis by theta radians. (taken from stack exchange question)
+#
+#inputs: axis: 3d vector for the axis around which to rotate
+#        theta: angle in radians to rotate around this axis
+#
+#outputs: rotation matrix to rotate all vectors by this angle around this axis
 def rotation_matrix(axis, theta):
-    """
-    Return the rotation matrix associated with counterclockwise rotation about
-    the given axis by theta radians. (taken from stack exchange question)
-    """
     axis = np.asarray(axis)
     axis = axis/np.sqrt(np.dot(axis, axis))
     a = np.cos(theta/2.0)
@@ -37,6 +44,14 @@ def rotation_matrix(axis, theta):
                      [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)],
                      [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]])
 
+#summary: Return the rotation matrix which identifies the z axis
+#         with the angular momentum of the simulation L
+#
+#inputs: L: 3d vector for the angular momentum of simulation
+#
+#outputs: rotation matrix to rotate all vectors by to make them 
+#         'face-on' = theta<pi/2 or theta>3pi/2
+#         'edge-on' = pi/2<theta<3pi/2
 def get_rotation_matrix(L):
     zhat = np.array([0,0,1])
     if np.array_equal(L,zhat):
@@ -45,7 +60,28 @@ def get_rotation_matrix(L):
     axis = np.cross(zhat,L)
     return rotation_matrix(axis,theta)
         
-
+#summary: given the position in terms of 5 parameters (and a 
+#         optional requirement to end the sightline on the sphere 
+#         on the other side), return the xyz coordinates of the two
+#         endpoints
+#
+#inputs: R: "outer" radius to use, the origin of the sightline. If 
+#           too far, resolution will be bad (dep. on simulation). 
+#           If too close, geometry will be bad. In Strawn et al. 2020
+#           this was 6Rvir
+#        r: impact parameter of sightline compared to galaxy center
+#        theta: polar angle of starting point
+#        phi: azimuthal angle of starting point
+#        alpha: angle of rotation along a circle of radius r. (circle 
+#               is defined with x' direction horizontal w.r.t. angular momentum
+#               y' at a right angle to x' and at right angle to the line from
+#               galaxy center to starting point
+#        endonsph: If True, require the sightlines to stop when they hit the sphere.
+#                  if False, require the sightlines to have a length of 2x the
+#                  distance from starting point to midpoint
+#
+#outputs: array: 2 3-d arrays of the xyz coordinates of the starting and ending
+#                points of the sightline
 def ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph):
     start = convert_to_xyz(R,theta,phi)
     xhat = convert_to_xyz(1,np.pi/2,np.pi/2+phi)
@@ -59,6 +95,17 @@ def ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph):
     end = start*(1-t)+mid*t
     return np.array([start,end])
 
+#summary: to evenly distribute startpoints on surface of outer sphere, and 
+#         midpoints in 3D sphere of radius "max-r" a weighting will be 
+#         added to random choice. NOTE: since this will naively reject all chance
+#         of selection of "0" in both cases, both probabilities are adjusted to be
+#         nonzero to allow theta=0 and r=0 a chance of selection
+#
+#inputs: array: list of possible points to be chosen
+#        function: if "sin" assign probabilities according to sin of array [theta]
+#                  if "lin" assign probabilities linearly (later in list = more likely) [r]
+#
+#outputs: probs: probability of selection of each point.
 def weights(array,function):
     if function == "sin":
         probs = np.sin(array)/2
@@ -68,6 +115,35 @@ def weights(array,function):
     probs /= np.sum(probs)
     return probs
 
+#summary: Create the raw data array for this simulation, each sightline is one 
+#         line of the array
+# 
+#inputs: sphere: tuple of (R,n_th,n_phi,n_r,rmax, and length), where R is 
+#                outer sphere radius, n_th is number of possible polar angle 
+#                values between 0 and pi, n_phi is the number of possible 
+#                azimuthal angle values between 0 and 2pi, n_r is the number
+#                of possible impact parameters between 0 and rmax, rmax is the 
+#                maximum impact parameter probed by sightline, length is the 
+#                number of such sightlines to generate
+#        ions: which ions will be tracked
+#        code_unit: if the requires a special unit (i.e. "code_length") which 
+#                   needs to be understood in advance, add it
+#        gasbins: what extra information will be stored in addition to column 
+#                 densities of the different ions (see quasarscan.gasbinning)
+#        include_0: whether to allow for 0 impact parameters. Default True
+#        L: angular momentum axis of galaxy. if None assume L = z axis
+#        center: center of galaxy. if None assume center = 0,0,0
+#        endonsph: If True, require the sightlines to stop when they hit the sphere.
+#                  if False, require the sightlines to have a length of 2x the
+#                  distance from starting point to midpoint
+#        dsbounds: furthest allowed distance from center in any direction (otherwise 
+#                  you would leave the simulaton)
+#
+#outputs: scanparams: a bunch of information about the simulation (mostly the 
+#                     arguments to this function)
+#         info: 2d array of one line = one sightline, each line is 11 setup numbers
+#               and len(ions)*len(gasbins) '-1's, which will be filled in in 
+#               'get_coldens.py'
 def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,include_0 = True,\
                          L = None, center=None, endonsph = False, dsbounds = None):
     R=sphere[0]
@@ -118,6 +194,11 @@ def create_QSO_endpoints(sphere, ions,code_unit=None,gasbins=None,include_0 = Tr
         info[i][8:11] = (yt.YTArray(np.matmul(rot_matrix, ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)[1]),'kpc') + center).in_units(code_unit).value
     return scanparams,info
 
+#when running this as a script, it will use the simulation name 
+#and path to the simulation snapshot to load it. It reads some information
+#(redshift, center) from yt's snapshot and gets other information (Rvir,L)
+#from pre-loaded data tables through 'parse-metadata'. Everything else is 
+#simply a default, change if you want to collect different information
 if __name__ == "__main__":
     name = sys.argv[1]
     path = sys.argv[2]

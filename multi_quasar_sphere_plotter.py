@@ -157,7 +157,8 @@ class MultiQuasarSpherePlotter():
     #        safetycheck: if False, skip safetychecks and just use whatever you load
     #
     #outputs: MultiQuasarSpherePlotter object, usually called 'mq'
-    def __init__(self, loadonly = "all",loadobs = 'all',textfiles = None, cleanup = False,plots = "mean",throwErrors = False,safetycheck = True):
+    def __init__(self, loadonly = "all",loadobs = 'all',textfiles = None, cleanup = False,\
+                 plots = "mean",throwErrors = False,safetycheck = True):
         self.plots = "mean"
         self.avgfn = np.mean
         self.setPlots(plots)

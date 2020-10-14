@@ -188,7 +188,7 @@ def covering_fraction_plots(list_of_galaxies,thresholds):
     plt.show()
 
 if __name__ == '__main__':
-	# this one doesn't really make sense as a script
+    # this one doesn't really make sense as a script
     # I'd probably just import these functions from a 
     # jupyter notebook or something instead
     array = ["VELA_v2_art_01_1.0", "VELA_v2_art_01_2.0"]

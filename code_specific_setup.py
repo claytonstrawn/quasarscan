@@ -15,6 +15,13 @@ atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
 
 all_ions_w_known_PI_defs = PI_field_defs.make_funcs()[0]
 
+#summary: ART does not store all of the data in a single snapshot file, 
+#         but several files with similar names. At least some of these are
+#         required in order to know it is a cosmological simulation
+#
+#inputs: dspath: file location of main ('.d') simulation file
+#
+#outputs: tuple of names of all other necessary files
 def get_aux_files_art(dspath):
     projectdir = dspath.split("10MpcBox")[0]
     a0 = dspath.split("a0.")[1][:3]
@@ -23,12 +30,25 @@ def get_aux_files_art(dspath):
     file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
     return file_particle_header,file_particle_data,file_particle_stars   
 
+#summary: SPH codes do not have a simple "resolution" so for now we need to 
+#         not use that information
+#
+#inputs: code: which kind of AGORA code is under analysis here
+#
+#outputs: 'noresolution' if code is SPH, 'all' if code is AMR
 def get_gasbins_arg(code):
     if code in sphcodes:
         return 'noresolution'
     else:
         return 'all'
 
+#summary: wrapper for yt.load that will make sure to put in ART
+#         filenames correctly
+#
+#inputs: path: file location of main file, can be passed to yt.load
+#        code: which kind of AGORA code is under analysis here
+#
+#outputs: ds: yt DataSet object
 def ytload(path,code):
     if code == 'art':
         h,d,s = get_aux_files_art(path)
@@ -40,6 +60,18 @@ def ytload(path,code):
         ds = yt.load(path)
     return ds
 
+#summary: goes through each nonnative field necessary for quasarscan
+#         analysis and adds it to the dataset. This includes
+#         X_nuclei_density for several atoms X and a general
+#         metal_density (as opposed to metallicity)
+#
+#inputs: code: which kind of AGORA code is under analysis here
+#        ds: yt DataSet object
+#        add_pi_fracs: whether we want to add PI/CI field definitions 
+#                     as defined in Strawn et al. (2020) as binary 
+#                     fields (1 if PI/CI, 0 otherwise). Default False
+#
+#outputs: None
 def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
     dstype_name = ds.dataset_type
     if dstype_name not in yt_dstype_names.values():
@@ -122,6 +154,17 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=False):
         except:
             pass
 
+#summary: get list of fields which need to be passed to TRIDENT
+#         and told to forward to the sightlines created by 
+#         trident.make_simple_ray
+#
+#inputs: code: which kind of AGORA code is under analysis here
+#        ions: which ions we will attempt to track
+#        add_pi_fracs: whether we want to add PI/CI field definitions 
+#                     as defined in Strawn et al. (2020) as binary 
+#                     fields (1 if PI/CI, 0 otherwise). Default False
+#
+#outputs: fields_to_keep: list of yt field names.
 def fields_to_keep_in_sightline(code,ions,add_pi_fracs=False):
     fields_to_keep = [('gas',"density"),('gas',"mass"),('gas',"temperature"),('gas',"radial_velocity")]
     def atoms_from_ions(ions):
@@ -169,6 +212,17 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=False):
             fields_to_keep.append(('gas',"O_nuclei_mass_density"))
     return fields_to_keep
 
+#summary: wrapper for ytload which also sets up all necessary fields
+#         
+#inputs: path: file location of main file, can be passed to yt.load
+#        code: which kind of AGORA code is under analysis here
+#        ions: which ions we will attempt to track
+#        add_pi_fracs: whether we want to add PI/CI field definitions 
+#                     as defined in Strawn et al. (2020) as binary 
+#                     fields (1 if PI/CI, 0 otherwise). Default False
+#
+#outputs: ds: yt DataSet object of simulation
+#         fields_to_keep: list of yt field names.
 def load_and_setup(path,code,ions,add_pi_fracs=False):
     if "_" in code:
         code = code.split("_")[2]

@@ -14,6 +14,7 @@ def read_table(filename = "CI_PI_cutoff_tables.txt"):
     rhos = {}
     ts = {}
     for line in lines:
+        print(line)
         if len(line.split())==2:
             current_ion = line.replace('\n','')
             ions.append(current_ion)
