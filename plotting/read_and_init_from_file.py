@@ -1,7 +1,7 @@
-from quasarscan3.data_objects import observation_quasar_sphere,\
+from quasarscan.data_objects import observation_quasar_sphere,\
                                      quasar_sphere,\
                                      simulation_quasar_sphere
-from quasarscan3.preprocessing import parse_metadata
+from quasarscan.preprocessing import parse_metadata
 import os
 import numpy as np
 

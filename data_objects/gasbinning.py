@@ -1,5 +1,5 @@
 import numpy as np
-from quasarscan3.utils import PI_field_defs
+from quasarscan.utils import PI_field_defs
 
 class BadBinNameError(Exception):    
     def __init__(self, message):

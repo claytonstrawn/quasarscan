@@ -1,6 +1,6 @@
 import numpy as np
 
-from quasarscan3.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
+from quasarscan.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
                                             intensivespositions,sightline_xVars,param_xVars,\
                                             sightline_unit_labels,param_unit_labels,\
                                             all_known_variables

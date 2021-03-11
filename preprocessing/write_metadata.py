@@ -1,7 +1,7 @@
 from yt_astro_analysis.halo_analysis.api  import HaloCatalog
 from yt.utilities.cosmology import Cosmology
-from quasarscan3.utils.utils import sphcodes
-from quasarscan3.preprocessing import code_specific_setup
+from quasarscan.utils.utils import sphcodes
+from quasarscan.preprocessing import code_specific_setup
 import numpy as np
 
 class NotEnoughHalosError(Exception):

@@ -1,4 +1,4 @@
-from quasarscan3.utils import roman
+from quasarscan.utils import roman
 from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 

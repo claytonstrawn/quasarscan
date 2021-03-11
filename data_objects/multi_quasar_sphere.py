@@ -1,6 +1,6 @@
 import numpy as np
-from quasarscan3.data_objects.quasar_sphere import QuasarSphere
-from quasarscan3.data_objects.gasbinning import GasBinsHolder
+from quasarscan.data_objects.quasar_sphere import QuasarSphere
+from quasarscan.data_objects.gasbinning import GasBinsHolder
 from functools import reduce
 
 class NoRvirError(Exception):

@@ -9,9 +9,9 @@
 
 import numpy as np
 import sys
-from quasarscan3.preprocessing import parse_metadata
-from quasarscan3.data_objects import quasar_sphere,simulation_quasar_sphere,gasbinning
-from quasarscan3.utils import ion_lists,utils
+from quasarscan.preprocessing import parse_metadata
+from quasarscan.data_objects import quasar_sphere,simulation_quasar_sphere,gasbinning
+from quasarscan.utils import ion_lists,utils
 
 class BadMetadataError(Exception):
     def __init__(self, message):

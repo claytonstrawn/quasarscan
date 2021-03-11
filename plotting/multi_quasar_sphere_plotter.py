@@ -5,18 +5,18 @@ import matplotlib.pyplot as plt
 import datetime
 from functools import reduce
 
-from quasarscan3.preprocessing import parse_metadata
-from quasarscan3.utils import roman,ion_lists
-from quasarscan3.utils.utils import sort_ions,reversearray
-from quasarscan3.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
+from quasarscan.preprocessing import parse_metadata
+from quasarscan.utils import roman,ion_lists
+from quasarscan.utils.utils import sort_ions,reversearray
+from quasarscan.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
                                             intensivespositions,sightline_xVars,param_xVars,\
                                             sightline_unit_labels,param_unit_labels,\
                                             all_known_variables
-from quasarscan3.plotting.quasar_array_handler import QuasarArrayHandler
-from quasarscan3.plotting import var_labels_interpreter
-from quasarscan3.plotting import plot_data_processor
-from quasarscan3.plotting import errorbar_processor
-from quasarscan3.plotting import matplotlib_interfacer
+from quasarscan.plotting.quasar_array_handler import QuasarArrayHandler
+from quasarscan.plotting import var_labels_interpreter
+from quasarscan.plotting import plot_data_processor
+from quasarscan.plotting import errorbar_processor
+from quasarscan.plotting import matplotlib_interfacer
 
 #these are a number of global lists and dictionaries which are checkedvariable_lists against in various places
 

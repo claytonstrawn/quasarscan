@@ -5,18 +5,18 @@ import matplotlib.pyplot as plt
 import datetime
 from functools import reduce
 
-from quasarscan3.preprocessing import parse_metadata
-from quasarscan3.utils import roman,ion_lists
-from quasarscan3.utils.utils import sort_ions,reversearray,split_by_ops
-from quasarscan3.plotting.sorter import MultiSphereSorter
-from quasarscan3.plotting.read_and_init_from_file import read_and_init
-from quasarscan3.plotting.var_labels_interpreter import decide_plot_type
-from quasarscan3.data_objects import gasbinning,\
+from quasarscan.preprocessing import parse_metadata
+from quasarscan.utils import roman,ion_lists
+from quasarscan.utils.utils import sort_ions,reversearray,split_by_ops
+from quasarscan.plotting.sorter import MultiSphereSorter
+from quasarscan.plotting.read_and_init_from_file import read_and_init
+from quasarscan.plotting.var_labels_interpreter import decide_plot_type
+from quasarscan.data_objects import gasbinning,\
                                      observation_quasar_sphere,\
                                      quasar_sphere,\
                                      simulation_quasar_sphere,\
                                      multi_quasar_sphere
-from quasarscan3.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
+from quasarscan.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
                                             intensivespositions,sightline_xVars,param_xVars,\
                                             sightline_unit_labels,param_unit_labels,\
                                             all_known_variables

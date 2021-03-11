@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 matplotlib_default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 import numpy as np
-from quasarscan3.utils.utils import definecolorbar
+from quasarscan.utils.utils import definecolorbar
 matplotlib_default_symbols = np.array(['s', 'v', '^', '<', '>', '1', '2', '3', '4', '8', 'p', 'P', '*', 'h', 'H', '+', 'x', 'X', 'D', 'd', '|', '_'])
 import logging
 logging.getLogger().setLevel(logging.CRITICAL)

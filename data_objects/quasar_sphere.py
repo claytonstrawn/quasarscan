@@ -1,7 +1,7 @@
 import numpy as np
-from quasarscan3.preprocessing.parse_metadata import get_value,get_last_a_for_sim
-from quasarscan3.utils.utils import string_represents_ion,round_redshift
-from quasarscan3.data_objects.gasbinning import GasBinsHolder
+from quasarscan.preprocessing.parse_metadata import get_value,get_last_a_for_sim
+from quasarscan.utils.utils import string_represents_ion,round_redshift
+from quasarscan.data_objects.gasbinning import GasBinsHolder
 
 class NoTypeError(Exception):
     def __init__(self, message):

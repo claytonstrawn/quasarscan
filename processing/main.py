@@ -2,9 +2,9 @@ import yt
 from yt.utilities.physical_constants import mh
 import numpy as np
 import trident
-from quasarscan3.data_objects import simulation_quasar_sphere
-from quasarscan3.preprocessing import code_specific_setup
-from quasarscan3.utils import roman
+from quasarscan.data_objects import simulation_quasar_sphere
+from quasarscan.preprocessing import code_specific_setup
+from quasarscan.utils import roman
 import sys
 import os
 import datetime

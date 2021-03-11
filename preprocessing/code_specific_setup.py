@@ -1,5 +1,5 @@
 import yt
-from quasarscan3.utils import PI_field_defs
+from quasarscan.utils import PI_field_defs
 from yt.utilities.physical_constants import mh
 
 codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy']

@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Creating Sightlines in yt &#8212; quasarscan 3.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Plotting Your Data" href="sortingfiltering.html" />
+    <link rel="prev" title="Getting Started" href="gettingstarted.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="creating-sightlines-in-yt">
+<h1>Creating Sightlines in yt<a class="headerlink" href="#creating-sightlines-in-yt" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="creating-sightline-coordinates">
+<h2>Creating Sightline Coordinates<a class="headerlink" href="#creating-sightline-coordinates" title="Permalink to this headline">¶</a></h2>
+<p>Once we have all the necessary metadata for each simulation snapshot saved to the <code class="docutils literal notranslate"><span class="pre">galaxy_catalogs</span></code> folder, we’re ready to run some sightlines. This is done in two steps. First, we create the endpoints for the sightlines as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quasarscan</span><span class="o">.</span><span class="n">create_qso_endpoints</span><span class="p">(</span><span class="n">fullname</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="n">ions</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">fullname</span></code> is the simulation’s name (which has to be the same as its name in the metadata catalog), <code class="docutils literal notranslate"><span class="pre">redshift</span></code> is the simulation’s current redshift, and <code class="docutils literal notranslate"><span class="pre">ions</span></code> as a list of ions to track, e.g. <code class="docutils literal notranslate"><span class="pre">[&quot;H</span> <span class="pre">I&quot;,&quot;O</span> <span class="pre">VI&quot;,&quot;Ne</span> <span class="pre">VIII&quot;]</span></code></p>
+<p>By default, this creates 384 sightlines (384 = 32 * 12, see below), distributed in impact parameter <code class="docutils literal notranslate"><span class="pre">r</span></code> from 0 to 2 Rvir. The distribution is designed to be area-sampling, so further sightlines are more likely, though a small bias is added so that there is a nonzero chance of an <code class="docutils literal notranslate"><span class="pre">r=0</span></code> line. They are oriented according to discrete <code class="docutils literal notranslate"><span class="pre">theta</span></code> and <code class="docutils literal notranslate"><span class="pre">phi</span></code> spherical coordinates, corresponding to the polar and azimuthal angles relative to the halo’s angular momentum (so <code class="docutils literal notranslate"><span class="pre">theta</span> <span class="pre">=</span> <span class="pre">0</span></code> is face-on from the direction of the angular momentum, and <code class="docutils literal notranslate"><span class="pre">theta</span> <span class="pre">=</span> <span class="pre">pi/2</span></code> is edge-on). Each sightline randomly selects a starting point by sampling <code class="docutils literal notranslate"><span class="pre">theta</span></code> and <code class="docutils literal notranslate"><span class="pre">phi</span></code>, and then identifying the coordinates of that point on a sphere of size <code class="docutils literal notranslate"><span class="pre">6*Rvir</span></code>. Then, a midpoint of the sightline is chosen by creating a circle with the radius a random impact parameter as specified above, and choosing a random point along this circle. The line from the startpoint (on the outer sphere) to the midpoint (in the plane normal to the startpoint which goes through the galaxy center) is extended by a factor of 2 to reach an endpoint. This endpoint is close to but not exactly on the outer sphere (because r&lt;&lt;6Rvir).</p>
+<p>The sightlines are immediately saved to a file called <code class="docutils literal notranslate"><span class="pre">output/&lt;fullname&gt;coldensinfo.txt</span></code>. This is a text file, where each line represents a sightline and all its corresponding data. The first several columns are sightline position info, including the literal start and end in cartesian coordinates, the r, theta, and phi values, and the sightline number. The other columns represent the actual data: each ion’s column density, ion fraction, and the fraction of that ion which falls into a variety of <code class="docutils literal notranslate"><span class="pre">gasbins</span></code>, meaning “bins of different gas properties (temperature, density, PI or CI, etc.)”. The final three columns are the sightline’s overall density, metallicity, and (mass-weighted) temperature. However for now, all the data is filled with simply “-1” values, because we have not yet run the sightlines through the simulation, just determined their position.</p>
+</div>
+<div class="section" id="running-sightlines-through-the-simulation">
+<h2>Running Sightlines Through the Simulation<a class="headerlink" href="#running-sightlines-through-the-simulation" title="Permalink to this headline">¶</a></h2>
+<p>The most computation-intensive step of <code class="docutils literal notranslate"><span class="pre">quasarscan</span></code> is the command:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quasarscan</span><span class="o">.</span><span class="n">run_sightlines</span><span class="p">(</span><span class="n">outputfilename</span><span class="p">,</span><span class="n">save_after_num</span><span class="p">,</span><span class="n">parallel</span><span class="p">,</span><span class="n">simulation_dest</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">outputfilename</span></code> is the file created with <code class="docutils literal notranslate"><span class="pre">create_qso_endpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">output/&lt;fullname&gt;coldensinfo.txt</span></code>, and <code class="docutils literal notranslate"><span class="pre">save_after_num</span></code> and <code class="docutils literal notranslate"><span class="pre">parallel</span></code> are runtime parameters which will depend on the computer you run on. <code class="docutils literal notranslate"><span class="pre">simulation_dest</span></code> is the filepath of the simulation snapshot. If <code class="docutils literal notranslate"><span class="pre">parallel</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, then it will attempt to run in parallel on all processors, and will run <code class="docutils literal notranslate"><span class="pre">save_after_num</span></code> sightlines at once. It is your responsibility, if you have some large number of processors, to give a <code class="docutils literal notranslate"><span class="pre">save_after_num</span></code> value which divides your number of processors, otherwise you will not use all of them at all times. Some example scripts for running these jobs on NERSC are provided at XXXXX, though they will need to be changed to account for your own computers, files, and permissions.</p>
+<p>The filename <code class="docutils literal notranslate"><span class="pre">output/&lt;fullname&gt;coldensinfo.txt</span></code> will be overwritten in this process, and the empty “-1” values will be replaced with the corresponding <code class="docutils literal notranslate"><span class="pre">float</span></code> values from the sightlines. The different ionization species will be filled in according to the defaults in TRIDENT. It’s recommended that code groups test out TRIDENT functionality first, (looking at, for example, column density projection plots) before trying to run QUASARSCAN.</p>
+<p>Current functionality of this does not create images of spectra, though that feature is in production. Current runtime of this is ~ 2-3 min/sightline. This means this finishes in a reasonable amount of time in parallel, but can be tedious to run without parallelization.</p>
+<p>This is the second of two places where access to the simulation snapshots is needed, all further analysis can be done with the .txt files this creates, on home computers without many terabytes of simulation files.</p>
+<p>Now that we have our sightlines, let’s try to analyze them!</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">quasarscan</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Creating Sightlines in yt</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-sightline-coordinates">Creating Sightline Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-sightlines-through-the-simulation">Running Sightlines Through the Simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sortingfiltering.html">Plotting Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plottingdata.html">Plotting Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advancedplotting.html">More Advanced Plotting</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="gettingstarted.html" title="previous chapter">Getting Started</a></li>
+      <li>Next: <a href="sortingfiltering.html" title="next chapter">Plotting Your Data</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Clayton Strawn.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/creatingsightlines.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

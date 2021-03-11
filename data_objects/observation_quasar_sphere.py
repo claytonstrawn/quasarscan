@@ -1,7 +1,7 @@
 import numpy as np
-from quasarscan3.data_objects.quasar_sphere import QuasarSphere
-from quasarscan3.utils.utils import string_represents_ion,round_redshift
-from quasarscan3.data_objects.gasbinning import GasBinsHolder
+from quasarscan.data_objects.quasar_sphere import QuasarSphere
+from quasarscan.utils.utils import string_represents_ion,round_redshift
+from quasarscan.data_objects.gasbinning import GasBinsHolder
 
 
 def get_header_columns_dict(header):

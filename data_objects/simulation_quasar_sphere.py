@@ -1,7 +1,7 @@
 import numpy as np
-from quasarscan3.data_objects.quasar_sphere import QuasarSphere
-from quasarscan3.data_objects.gasbinning import GasBinsHolder
-from quasarscan3.utils import ion_lists
+from quasarscan.data_objects.quasar_sphere import QuasarSphere
+from quasarscan.data_objects.gasbinning import GasBinsHolder
+from quasarscan.utils import ion_lists
 import os
 
 class SimQuasarSphere(QuasarSphere):

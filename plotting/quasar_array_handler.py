@@ -1,12 +1,12 @@
 import numpy as np
-from quasarscan3.plotting.read_and_init_from_file import read_and_init
-from quasarscan3.utils import utils
-from quasarscan3.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
+from quasarscan.plotting.read_and_init_from_file import read_and_init
+from quasarscan.utils import utils
+from quasarscan.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
                                             intensivespositions,sightline_xVars,param_xVars,\
                                             sightline_unit_labels,param_unit_labels,\
                                             all_known_variables
-from quasarscan3.plotting.sorter import MultiSphereSorter
-from quasarscan3.data_objects import gasbinning
+from quasarscan.plotting.sorter import MultiSphereSorter
+from quasarscan.data_objects import gasbinning
 
 class UnknownQTypeError(Exception):
     def __init__(self,message):
