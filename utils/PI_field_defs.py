@@ -4,7 +4,7 @@ def read_table(filename = "CI_PI_cutoff_tables.txt"):
     try:
         f=open('utils/'+filename,'r')
     except:
-        f=open('quasarscan/utils'+filename,'r')
+        f=open('quasarscan/utils/'+filename,'r')
     lines = f.readlines()[6:]
     f.close()
     ions = []
