@@ -2,9 +2,9 @@ import numpy as np
 
 def read_table(filename = "CI_PI_cutoff_tables.txt"):
     try:
-        f=open(filename,'r')
+        f=open('utils/'+filename,'r')
     except:
-        f=open('quasarscan/'+filename)
+        f=open('quasarscan/utils'+filename,'r')
     lines = f.readlines()[6:]
     f.close()
     ions = []
