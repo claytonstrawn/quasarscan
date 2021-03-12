@@ -28,7 +28,7 @@ def get_halo_center(code,ds,hc=None,ith_largest = 1):
     catalog_of_acceptable_halos = []
     for i,h in enumerate(sorted_halos):
         if len(catalog_of_acceptable_halos)==ith_largest:
-            return catalog_of_acceptable_halos[-1]
+            return ds.arr(catalog_of_acceptable_halos[-1],'code_length')
         center = np.array([h['particle_position_x'].in_units('unitary').v,
                             h['particle_position_y'].in_units('unitary').v,
                             h['particle_position_z'].in_units('unitary').v])
