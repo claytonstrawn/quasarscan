@@ -21,10 +21,16 @@ all_ions_w_known_PI_defs = PI_field_defs.make_funcs()[0]
 #outputs: tuple of names of all other necessary files
 def get_aux_files_art(dspath):
     projectdir = dspath.split("10MpcBox")[0]
-    a0 = dspath.split("a0.")[1][:3]
-    file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
-    file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
-    file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
+    if "a0." in dspath:
+        a0 = dspath.split("a0.")[1][:3]
+        file_particle_header = projectdir+"PMcrda0.%s.DAT"%a0
+        file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
+        file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
+    else:
+        timestep = dspath.split("_")[1][:-2]
+        file_particle_header = projectdir+"PMcrd_%s.DAT"%timestep
+        file_particle_data = projectdir+"PMcrs0_%s.DAT"%timestep
+        file_particle_stars = projectdir+"stars_%s.dat"%timestep
     return file_particle_header,file_particle_data,file_particle_stars   
 
 #summary: wrapper for yt.load that will make sure to put in ART
