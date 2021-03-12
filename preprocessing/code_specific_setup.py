@@ -27,10 +27,10 @@ def get_aux_files_art(dspath):
         file_particle_data = projectdir+"PMcrs0a0.%s.DAT"%a0
         file_particle_stars = projectdir+"stars_a0.%s.dat"%a0
     else:
-        timestep = dspath.split("_")[1][:-2]
+        timestep = dspath.split("_")[-1][:-2]
         file_particle_header = projectdir+"PMcrd_%s.DAT"%timestep
         file_particle_data = projectdir+"PMcrs0_%s.DAT"%timestep
-        file_particle_stars = projectdir+"stars_%s.dat"%timestep
+        file_particle_stars = projectdir+"stars_%s.dat"%timesteppre 
     return file_particle_header,file_particle_data,file_particle_stars   
 
 #summary: wrapper for yt.load that will make sure to put in ART
