@@ -12,7 +12,10 @@ To begin analysis, the first step is to instantiate a ``MultiQuasarSpherePlotter
 
 .. code-block:: python
     
-    mq = quasarscan.create_mq(loadsim = "all",loadobs = 'all',loadempty = 'none',average = 'median')
+ mq = quasarscan.create_mq(loadsim = "all",\
+                           loadobs = 'all',\
+                           loadempty = 'none',\
+                           average = 'median')
 
 Where ``loadsim`` and ``loadobs`` refer to which simulations/observations to load (specified by giving any part of the simulation/observation's ``fullname``), ``loadempty`` refers again to simulations, but loads simulations from their existing metadata, rather than because it has existing sightlines (thus it's "empty"). ``average`` refers to the default averaging functon. The options are:
 
@@ -30,35 +33,36 @@ First, you can always see the current loaded QuasarSpheres and metadata. For exa
 
 .. code-block:: python
     
-    mq.list_all_quasar_spheres('SFR','Mstar')
+ mq.list_all_quasar_spheres('SFR','Mstar')
 
 To constrain the data, use the code below:
 
 .. code-block:: python
 
-    mq.constrain_current_quasar_array(constrain_criteria,bins=None,**kwargs)
+ mq.constrain_current_quasar_array(constrain_criteria,
+                                   bins=None,**kwargs)
 
 where ``constrain_criteria`` refers to the metadata in question. For example, to restrict to redshifts between 0.5 and 1.0, use the code:
 
 .. code-block:: python
 
-    mq = quasarscan.create_mq()
-    mq.constrain_current_quasar_array('redshift',[0.5,1.0])
+ mq = quasarscan.create_mq()
+ mq.constrain_current_quasar_array('redshift',[0.5,1.0])
 
 
 You can also restrict by certain kinds of simulations or simulation number. To do this, run with a list of acceptable string values. For example, to restrict to the VELA simulation, number 1,2, and 3, we can run:
 
 .. code-block:: python
 
-    mq = quasarscan.create_mq()
-    mq.constrain_current_quasar_array('simname',['VELA'])
-    mq.constrain_current_quasar_array('simnum',['01','02','03'])
+ mq = quasarscan.create_mq()
+ mq.constrain_current_quasar_array('simname',['VELA'])
+ mq.constrain_current_quasar_array('simnum',['01','02','03'])
 
 After doing this, you can always reset to the full list by running 
 
 .. code-block:: python
 
-    mq.reset_current_quasar_array()
+ mq.reset_current_quasar_array()
 
 The full list of arguments arguments for ``constrain_current_quasar_array`` is below.
 
@@ -77,7 +81,7 @@ After appropriately restricting your data, you will probably want to keep track 
 
 .. code-block:: python
 
-    lq = mq.sort_by('sfr',[0.1,1.0,10.0,np.inf])
+ lq = mq.sort_by('sfr',[0.1,1.0,10.0,np.inf])
 
 Unlike ``constrain_current_quasar_array``, ``sort_by`` does not effect the internal list of quasarspheres, it just distributes the existing list into multiple sublists and returns them. Note that any galaxies which do not fit in any bin, or have a ``nan`` for their ``criteria`` are simply not returned.
 
@@ -85,7 +89,7 @@ One useful keyword argument of ``sort_by`` is ``split_even=n``. This will split 
 
 .. code-block:: python
 
-    lq = mq.sort_by('Mstar',split_even = 3)
+ lq = mq.sort_by('Mstar',split_even = 3)
 
 The full list of arguments arguments for ``sort_by`` is below.
 

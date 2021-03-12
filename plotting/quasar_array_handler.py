@@ -221,7 +221,6 @@ class QuasarArrayHandler(object):
                     default_list[(default_list.index(sort_w_qtype)+2)%3]]
         for i,qtype in enumerate(list_to_do):
             qlist = self.get_qlist(qtype)
-            print(qtype,qlist)
             bins = self.prepare_to_sort(criteria,bins,qtype,at_end,**kwargs)
             sorter = MultiSphereSorter(qlist)
             if split_even and i==0:

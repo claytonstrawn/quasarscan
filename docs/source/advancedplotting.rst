@@ -27,11 +27,15 @@ To plot simulations and observations on a single plot, just use the ``ax`` retur
 
 .. code-block:: python
 
-    mq = quasarscan.create_mq()
-    mq.constrain_current_quasar_array('simname',['VELA'], qtype = 'sim')
-    lq = mq.sort_by('redshift',[0,1.05,2.05])
-    ax = mq.plot_scatter('O VI','H I',lq=lq)
-    mq.plot_scatter('O VI','H I',lq=lq,qtype='obs')
+ mq = quasarscan.create_mq()
+ lq = mq.sort_by('redshift',[0,1.05,2.05])
+ fig,ax = mq.plot_err('O VI','rdivR',lq=lq)
+ mq.plot_err('O VI','rdivR',lq=lq,qtype='obs',ax = ax)
+ fig.savefig('quasarscan/docs/source/_images/OVI_observations')
+
+.. image:: _images/OVI_observations.png
+  :width: 400
+  :alt: O VI column density vs. impact parameter, showing observations.
 
 Plotting "Empty" Data
 ^^^^^^^^^^^^^^^^^^^^^
@@ -40,11 +44,15 @@ You can also plot your snapshots before you've actually created and run sightlin
 
 .. code-block:: python
 
-    mq = quasarscan.create_mq(loadempty='all')
-    mq.constrain_current_quasar_array('simname',['VELA'], qtype = 'sim')
-    lq = mq.sort_by('redshift',[0,1.05,2.05])
-    ax = mq.plot_scatter('O VI','H I',lq=lq)
-    mq.plot_scatter('Mstar','Mvir',lq=lq,qtype='empty')
+ mq = quasarscan.create_mq(loadempty='all')
+ mq.constrain_current_quasar_array('simname',['VELA'], qtype = 'sim')
+ lq = mq.sort_by('redshift',[0,1.05,2.05])
+ ax = mq.plot_scatter('O VI','H I',lq=lq)
+ mq.plot_scatter('Mstar','Mvir',lq=lq,qtype='empty')
+
+.. image:: _images/empty_smhm.png
+  :width: 400
+  :alt: Showing data for all simulation snaphshots even though we haven't yet run sightlines on all simulations.
 
 Faberplots
 ^^^^^^^^^^^
@@ -53,26 +61,33 @@ Sometimes you want to explore data in many variables. One way to add two additio
 
 .. code-block:: python
 
-    lq2 = sort_by_2D(criteria_x,criteria_y, bins_x = [0,np.inf],bins_y = [0,np.inf],\
-                    at_end_x = False,at_end_y = False,split_even_x = False,split_even_y = False,\
-                    reverse_x = False,reverse_y = False)
+ lq2 = sort_by_2D(criteria_x,\
+                  criteria_y,\
+                  bins_x = [0,np.inf],\
+                  bins_y = [0,np.inf],\
+                  at_end_x = False,\
+                  at_end_y = False,\
+                  split_even_x = False,\
+                  split_even_y = False,\
+                  reverse_x = False,\
+                  reverse_y = False)
 
 Where each argument is the same as in ``sort_by`` but with an ``_x`` or ``_y`` appended to the end. Like before, lq2 contains the labels, bins, and a 2D array of QuasarSpheres. The ``faberplot`` is called with:
 
 .. code-block:: python
 
-    faberplot(yVar,
-    			xVar='rdivR',
-    			plot_kind='err',
-    			lq2=None,
-    			qtype='sim',
-    			lq=None,
-    			fig = None,
-    			axes = None,
-    			figsize='guess',
-    			sharex=True,
-    			sharey=True,
-                **kwargs):
+ faberplot(yVar,\
+           xVar='rdivR',\
+           plot_kind='err',\
+           lq2=None,\
+           qtype='sim',\
+           lq=None,\
+           fig = None,\
+           axes = None,\
+           figsize='guess',\
+           sharex=True,\
+           sharey=True,\
+           **kwargs):
 
 By specifying ``plot_kind`` as (``err``, ``scatter``, or ``hist``) you will determine whether each panel is an errorbar, scatter, or histogram plot. ``figsize`` is a tuple of two numbers specifying horizontal and vertical length, with the default attempting to scale with the number of panels. ``sharex`` and ``sharey`` restrict all panels to use the same ``x`` and ``y`` scales, even if they will fill different regions of parameter space. All other keyword args are the same as the respective plot kinds.
 

@@ -121,7 +121,6 @@ class MultiQuasarSpherePlotter():
                 return matplotlib_interfacer.plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,quasar_array,**kwargs)
         elif qtype == 'empty':
             assert plot_type == 3
-            print(xVar_packet,yVar_packet,xarys,yarys)
             xs,ys,empty = errorbar_processor.process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,**kwargs)
             xerrs,yerrs = None,None
             if not empty:

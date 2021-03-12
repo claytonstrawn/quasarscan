@@ -15,10 +15,14 @@ To plot errorbars, you give an x and y variable, as well as an (optional) "lq" o
 
 .. code-block:: python
 
-    mq = quasarscan.create_mq()
-    mq.constrain_current_quasar_array('simname',['VELA'])
-    lq = mq.sort_by('redshift',[0,1.05,2.05])
-    mq.plot_err('O VI','rdivR',lq=lq)
+ mq = quasarscan.create_mq()
+ mq.constrain_current_quasar_array('simname',['VELA'])
+ lq = mq.sort_by('redshift',[0,1.05,2.05])
+ mq.plot_err('O VI','rdivR',lq=lq)
+
+.. image:: _images/OVI_profile.png
+  :width: 400
+  :alt: O VI column density compared against impact parameter, split into two redshift bins.
 
 You can also pass a list of multiple y variables. In that case, you cannot use an lq object because each variable will have a different color.
 
@@ -57,10 +61,14 @@ You can also plot the sightlines individually as points. This is especially usef
 
 .. code-block:: python
 
-    mq = quasarscan.create_mq()
-    mq.constrain_current_quasar_array('simname',['VELA'])
-    lq = mq.sort_by('redshift',[0,1.05,2.05])
-    mq.plot_scatter('O VI','H I',lq=lq)
+ mq = quasarscan.create_mq()
+ mq.constrain_current_quasar_array('simname',['VELA'])
+ lq = mq.sort_by('redshift',[0,1.05,2.05])
+ mq.plot_scatter('O VI','H I',lq=lq)
+
+.. image:: _images/OVI_v_HI.png
+  :width: 400
+  :alt: O VI column density vs. H I column density, split into two redshift bins.
 
 The full list of keyword arguments for ``plot_scatter`` is here:
 
@@ -88,10 +96,14 @@ You can also see how sightlines fill in a 2D histogram. In this case, color repr
 
 .. code-block:: python
 
-    mq = quasarscan.create_mq()
-    mq.constrain_current_quasar_array('simname',['VELA'])
-    lq = mq.sort_by('redshift',[0,1.05,2.05])
-    mq.plot_hist('O VI','rdivR',lq=lq)
+ mq = quasarscan.create_mq()
+ mq.constrain_current_quasar_array('simname',['VELA'])
+ lq = mq.sort_by('redshift',[0,1.05,2.05])
+ mq.plot_hist('O VI','rdivR',lq=lq)
+
+.. image:: _images/OVI_profile_hist.png
+  :width: 400
+  :alt: O VI column density vs. impact parameter, showing distribution.
 
 The full list of keyword arguments for ``plot_hist`` is here:
 

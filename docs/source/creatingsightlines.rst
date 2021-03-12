@@ -8,7 +8,7 @@ Once we have all the necessary metadata for each simulation snapshot saved to th
 
 .. code-block:: python
 
-    quasarscan.create_qso_endpoints(fullname, redshift, ions)
+ quasarscan.create_qso_endpoints(fullname, redshift, ions)
 
 Where ``fullname`` is the simulation's name (which has to be the same as its name in the metadata catalog), ``redshift`` is the simulation's current redshift, and ``ions`` as a list of ions to track, e.g. ``["H I","O VI","Ne VIII"]`` 
 
@@ -23,11 +23,14 @@ The most computation-intensive step of ``quasarscan`` is the command:
 
 .. code-block:: python
 
-	quasarscan.run_sightlines(outputfilename,save_after_num,parallel,simulation_dest)
+ quasarscan.run_sightlines(outputfilename,\
+						   save_after_num,\
+						   parallel,\
+						   simulation_dest)
 
-where ``outputfilename`` is the file created with ``create_qso_endpoints``, ``output/<fullname>coldensinfo.txt``, and ``save_after_num`` and ``parallel`` are runtime parameters which will depend on the computer you run on. ``simulation_dest`` is the filepath of the simulation snapshot. If ``parallel`` is ``True``, then it will attempt to run in parallel on all processors, and will run ``save_after_num`` sightlines at once. It is your responsibility, if you have some large number of processors, to give a ``save_after_num`` value which divides your number of processors, otherwise you will not use all of them at all times. Some example scripts for running these jobs on NERSC are provided at XXXXX, though they will need to be changed to account for your own computers, files, and permissions. 
+where ``outputfilename`` is the file created with ``create_qso_endpoints``, ``output/<fullname>coldensinfo.txt``, and ``save_after_num`` and ``parallel`` are runtime parameters which will depend on the computer you run on. ``simulation_dest`` is the filepath of the simulation snapshot. If ``parallel`` is ``True``, then it will attempt to run in parallel on all processors, and will run ``save_after_num`` sightlines at once. It is your responsibility, if you have some large number of processors, to give a ``save_after_num`` value which divides your number of processors, otherwise you will not use all of them at all times. Some example scripts for running these jobs on NERSC are provided :doc:`Here (not implemented) <../samplescripts>`, though they will need to be changed to account for your own computers, files, and permissions. 
 
-The filename ``output/<fullname>coldensinfo.txt`` will be overwritten in this process, and the empty "-1" values will be replaced with the corresponding ``float`` values from the sightlines. The different ionization species will be filled in according to the defaults in TRIDENT. It's recommended that code groups test out TRIDENT functionality first, (looking at, for example, column density projection plots) before trying to run QUASARSCAN.
+The filename ``output/<fullname>coldensinfo.txt`` will be overwritten in this process, and the empty "-1" values will be replaced with the corresponding ``float`` values from the sightlines. The different ionization species will be filled in according to the defaults in ``trident``. It's recommended that code groups test out ``trident`` functionality first, (looking at, for example, column density projection plots) before trying to run ``quasarscan``.
 
 Current functionality of this does not create images of spectra, though that feature is in production. Current runtime of this is ~ 2-3 min/sightline. This means this finishes in a reasonable amount of time in parallel, but can be tedious to run without parallelization.
 
