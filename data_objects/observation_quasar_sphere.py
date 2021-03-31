@@ -2,7 +2,7 @@ import numpy as np
 from quasarscan.data_objects.quasar_sphere import QuasarSphere
 from quasarscan.utils.utils import string_represents_ion,round_redshift
 from quasarscan.data_objects.gasbinning import GasBinsHolder
-
+from quasarscan.utils.variable_lists import param_xVars
 
 def get_header_columns_dict(header):
     to_return = {}
@@ -63,6 +63,7 @@ def read_obs_textfile(filename):
 class ObsQuasarSphere(QuasarSphere):
     def __init__(self, fullname, header, line_from_file):
         self.type = 'obs'
+        self.code = 'obs'
         self.number = 1
         self.length = 1
         self.length_reached = 1
@@ -101,3 +102,8 @@ class ObsQuasarSphere(QuasarSphere):
 
         super().__init__(fullname,redshift)
         self.author = self.version
+        
+        for param in param_xVars:
+            if param not in self.__dict__.keys():
+                self.__dict__[param] = np.nan
+        

@@ -1,4 +1,6 @@
 import numpy as np
+import yt
+from yt.utilities.physical_constants import mh
 
 def read_table(filename = "CI_PI_cutoff_tables.txt"):
     try:

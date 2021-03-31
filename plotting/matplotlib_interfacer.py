@@ -39,7 +39,7 @@ def transpose_err_array(errs):
 #        elinewidth: thickness of errorbars. Default is linewidth
 #        
 #outputs:  future_colors: list of colors plotted to replicate in other plots if desired
-def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,ax=None,fig=None,
+def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,ax=None,fig=None,
                average='default',dots=False,grid=False,linestyle='',ls='',linewidth = 1.5,
                fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
                alpha = 1.0,elinewidth=None,capsize=3,**kwargs):
@@ -81,7 +81,7 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,ax=Non
                                             zorder = 100)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.set_title(title)
+    ax.set_title(title_final)
     if xlims != 'default':
         ax.set_xlim(xlims)        
     if ylims != 'default':
@@ -92,7 +92,7 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,ax=Non
     return fig,ax
 
 
-def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title,ax=None,fig=None,\
+def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,fig=None,\
                         grid=False,fmt=None,coloration=None,xlims='default',ylims='default',\
                         markersize='default',alpha = 1.0,**kwargs):
     if ax is None:
@@ -114,7 +114,7 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title,ax=None,fig=No
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.set_title(title)
+    ax.set_title(title_final)
     if xlims != 'default':
         ax.set_xlim(xlims)        
     if ylims != 'default':

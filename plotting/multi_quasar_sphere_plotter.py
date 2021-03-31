@@ -13,10 +13,10 @@ from quasarscan.utils.variable_lists import stringcriteria,intensives,intensives
                                             sightline_unit_labels,param_unit_labels,\
                                             all_known_variables
 from quasarscan.plotting.quasar_array_handler import QuasarArrayHandler
-from quasarscan.plotting import var_labels_interpreter
-from quasarscan.plotting import plot_data_processor
-from quasarscan.plotting import errorbar_processor
-from quasarscan.plotting import matplotlib_interfacer
+from quasarscan.plotting import var_labels_interpreter,\
+                                plot_data_processor,\
+                                errorbar_processor,\
+                                matplotlib_interfacer
 
 #these are a number of global lists and dictionaries which are checkedvariable_lists against in various places
 
@@ -50,7 +50,7 @@ class MultiQuasarSpherePlotter():
         return self.quasar_array_handler.length(include_nonsims)
 
     def list_all_quasar_spheres(self,*criteria,qtype='sim',log=False):
-        self.quasar_array_handler.list_all_quasar_spheres(qtype,log,*criteria)
+        self.quasar_array_handler.list_all_quasar_spheres(*criteria,qtype=qtype,log=log)
 
     #summary: cancel all constraints
     #
@@ -107,24 +107,24 @@ class MultiQuasarSpherePlotter():
         average = 'scatter' if qtype == 'obs' and not force_averaging else average
         plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(xVar,yVar,average,**kwargs)
         self.quasar_array_handler.impose_requirements(filter_for)
-        xlabel,ylabel,title = var_labels_interpreter.get_labels_and_titles(plot_type,xVar_packet,yVar_packet,average,**kwargs)
+        xlabel,ylabel,title_final = var_labels_interpreter.get_labels_and_titles(plot_type,xVar_packet,yVar_packet,average,**kwargs)
         quasar_array = var_labels_interpreter.decide_quasar_array(qtype,self.quasar_array_handler.get_qlist(qtype),**kwargs)
         xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
         if qtype == 'sim' or force_averaging:
             xs,ys,xerrs,yerrs,empty = errorbar_processor.get_sim_errs(plot_type,xVar_packet,yVar_packet,xarys,yarys,**kwargs)
             if not empty:
-                return matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,**kwargs)
+                return matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,**kwargs)
         elif qtype == 'obs':
             xs,ys,empty = errorbar_processor.process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,**kwargs)
             xerrs,yerrs = errorbar_processor.handle_scatter_errs(xVar_packet,yVar_packet,quasar_array)
             if not empty:
-                return matplotlib_interfacer.plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,quasar_array,**kwargs)
+                return matplotlib_interfacer.plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,quasar_array,**kwargs)
         elif qtype == 'empty':
             assert plot_type == 3
             xs,ys,empty = errorbar_processor.process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,**kwargs)
             xerrs,yerrs = None,None
             if not empty:
-                return matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,**kwargs)
+                return matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,**kwargs)
 
     def plot_scatter(self,yVar,xVar='rdivR',qtype = 'sim',**kwargs):
         plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(xVar,yVar,'scatter',**kwargs)

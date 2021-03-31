@@ -86,10 +86,20 @@ for ion in all_ions_w_known_PI_defs:
 pi_bin = GasBin('ionization_mechanism',['PI'],['0.9','1.1'], field = allionizationfields)
 possible_bin_types = ["density","temperature","radial_velocity","resolution","ionization_mechanism"]
 
+def ds_has_field(ds,gb):
+    if ds is None:
+        return True
+    if isinstance(gb.field,str):
+        return ('gas',gb.field) in ds.derived_field_list
+    else:
+        key = gb.field.keys()[0]
+        return ('gas',gb.field[key]) in ds.derived_field_list
+
+
 # GasBinsHolder object contains multiple GasBin objects
 # and can query them
 class GasBinsHolder(object):
-    def __init__(self,bins = None,string = None):
+    def __init__(self,bins = None,string = None,ds = None):
         self.bin_types = []
         if string:
             fields_with_data = string.strip("[]").split(", ")
@@ -135,16 +145,16 @@ class GasBinsHolder(object):
             bins.remove('resolution')
         elif bins is None:
             bins = []
-        if "density" in bins:
+        if "density" in bins and ds_has_field(ds,density_bin):
             self.bin_types.append(density_bin)
-        if "temperature" in bins:
+        if "temperature" in bins and ds_has_field(ds,temperature_bin):
             self.bin_types.append(temperature_bin)
-        if "radial_velocity" in bins:
+        if "radial_velocity" in bins and ds_has_field(ds,radial_velocity_bin):
             self.bin_types.append(radial_velocity_bin)
-        if "resolution" in bins:
+        if "resolution" in bins and ds_has_field(ds,resolution_bin):
             self.bin_types.append(resolution_bin)
             #not sure how this works in demeshed
-        if "ionization_mechanism" in bins:
+        if "ionization_mechanism" in bins and ds_has_field(ds,pi_bin):
             self.bin_types.append(pi_bin)
 
     def __contains__(self, key):

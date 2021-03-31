@@ -60,7 +60,10 @@ class QuasarSphere(object):
         self.Mstar = get_value('Mstar',self.fullname,redshift = self.redshift)
         self.Mdm = get_value('Mdm',self.fullname,redshift = self.redshift)
         self.sfr = get_value('sfr',self.fullname,redshift = self.redshift)
-        self.ssfr = self.sfr / self.Mstar
+        try:
+            self.ssfr = self.sfr / self.Mstar
+        except:
+            self.ssfr = np.nan
         self.compaction_stage = get_value('compaction_stage',self.fullname,redshift = self.redshift)
         self.final_a0 = get_last_a_for_sim(self.fullname)
 

@@ -224,7 +224,7 @@ def create_QSO_endpoints(fullname,redshift,ions,gasbins='default',R=(6,'Rvir'),\
             ds = code_specific_setup.ytload(filename,code)
             center = ds.find_max('gas','density')[1].in_units('kpc').value
 
-    gasbins = gasbinning.GasBinsHolder(utils.get_gasbins_arg(code))
+    gasbins = gasbinning.GasBinsHolder(ds,utils.get_gasbins_arg(code))
     scanparams,info = create_QSO_endpoints_helper(R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L, center,Rvir)
     simparams = [fullname,redshift,center[0],center[1],center[2],Rvir,filename,L[0],L[1],L[2]]
     q = simulation_quasar_sphere.SimQuasarSphere((simparams,scanparams,ions,info,gasbins))
