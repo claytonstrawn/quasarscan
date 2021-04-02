@@ -15,7 +15,7 @@ if hasyt:
 else:
     print('yt not found. Cannot create new metadata')
 
-from quasarscan.preprocessing.main import create_QSO_endpoints,get_value
+from quasarscan.preprocessing.main import create_qso_endpoints,get_value
 
 #depends on yt, trident. Needs existing unfilled file
 #in "quasarscan_data/output." Will run in parallel if given option

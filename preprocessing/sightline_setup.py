@@ -12,6 +12,8 @@ import sys
 from quasarscan.preprocessing import parse_metadata
 from quasarscan.data_objects import quasar_sphere,simulation_quasar_sphere,gasbinning
 from quasarscan.utils import ion_lists,utils
+from quasarscan.preprocessing import code_specific_setup
+
 
 class BadMetadataError(Exception):
     def __init__(self, message):
@@ -150,7 +152,7 @@ def weights(array,function):
 #         info: 2d array of one line = one sightline, each line is 11 setup numbers
 #               and len(ions)*len(gasbins) '-1's, which will be filled in in 
 #               'get_coldens.py'
-def create_QSO_endpoints_helper(R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L, center,\
+def create_qso_endpoints_helper(ds,R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L, center,\
                          Rvir,include_0=True,endonsph=False):
     assert isinstance(R,tuple) and isinstance(rmax,tuple) and R[1] in ['Rvir','kpc'] and rmax[1] in ['Rvir','kpc'], \
             "Please provide R and rmax as tuples with float size and unit 'Rvir' or 'kpc'"
@@ -188,45 +190,46 @@ def create_QSO_endpoints_helper(R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L, c
         alpha = 2*np.pi*np.random.random()
         info[i][:5] = np.array([i,theta,phi,r,alpha])
         start_needrotation, end_needrotation = ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)
-        info[i][5:8] = np.matmul(rot_matrix, start_needrotation) + center
-        info[i][8:11] = np.matmul(rot_matrix, end_needrotation) + center
+        start_rotated = ds.arr(np.matmul(rot_matrix, start_needrotation),'kpc')
+        end_rotated = ds.arr(np.matmul(rot_matrix, end_needrotation),'kpc')
+        info[i][5:8] = (start_rotated + center).in_units('unitary').v
+        info[i][8:11] = (end_rotated + center).in_units('unitary').v
     return scanparams,info
 
-def create_QSO_endpoints(fullname,redshift,ions,gasbins='default',R=(6,'Rvir'),\
+def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,'Rvir'),\
                         n_th=12,n_phi=12,n_r=12,rmax=(2,'Rvir'),length=384,\
-                        run='default',filename=None,**kwargs):
+                        run='default',**kwargs):
     code = fullname.split('_')[2]
     if isinstance(ions,str):
         try:
             ions = ion_lists.dict_of_ionlists[ions]
         except KeyError:
             raise BadListError('list nickname not recognized, enter ions as list of strings')
+    ds,_ = code_specific_setup.load_and_setup(filename,code)
+
     Rvir = parse_metadata.get_value("Rvir",fullname,redshift=redshift)
     center_x = parse_metadata.get_value("center_x",fullname,redshift=redshift)
     center_y = parse_metadata.get_value("center_y",fullname,redshift=redshift)
     center_z = parse_metadata.get_value("center_z",fullname,redshift=redshift)
-    center = np.array([center_x,center_y,center_z])
+    center = ds.arr([center_x,center_y,center_z],'unitary')
     L_x = parse_metadata.get_value("L_x",fullname,redshift=redshift)
     L_y = parse_metadata.get_value("L_y",fullname,redshift=redshift)
     L_z = parse_metadata.get_value("L_z",fullname,redshift=redshift)
     L = np.array([L_x,L_y,L_z])
+
     if np.isnan(Rvir) or np.any(np.isnan(center)) or np.any(np.isnan(L)):
         if run != 'force':
             raise BadMetadataError("metadata file for %s is missing one of Rvir, center, L")
         elif run == 'force':
             Rvir = 100 #assume 100 kpc
             L = np.array([0,0,1])
-            assert filename is not None, "Need source file to force center finding"
             # these dependencies are only present if you will be forcing this, 
             # it is recommended that you run 'create_metadata' first
-            import yt
-            from quasarscan3.preprocessing import code_specific_setup
-            ds = code_specific_setup.ytload(filename,code)
-            center = ds.find_max('gas','density')[1].in_units('kpc').value
+            center = ds.find_max('gas','density')[1].in_units('unitary')
 
-    gasbins = gasbinning.GasBinsHolder(ds,utils.get_gasbins_arg(code))
-    scanparams,info = create_QSO_endpoints_helper(R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L, center,Rvir)
-    simparams = [fullname,redshift,center[0],center[1],center[2],Rvir,filename,L[0],L[1],L[2]]
+    gasbins = gasbinning.GasBinsHolder(ds=ds,bins = utils.get_gasbins_arg(code))
+    scanparams,info = create_qso_endpoints_helper(ds,R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L, center,Rvir)
+    simparams = [fullname,redshift,center.v[0],center.v[1],center.v[2],Rvir,filename,L[0],L[1],L[2]]
     q = simulation_quasar_sphere.SimQuasarSphere((simparams,scanparams,ions,info,gasbins))
     if run == 'test':
         return q

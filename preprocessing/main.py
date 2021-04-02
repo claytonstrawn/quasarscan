@@ -2,4 +2,4 @@ from quasarscan.preprocessing.parse_metadata import get_value
 
 from quasarscan.preprocessing.write_metadata import create_metadata_table
 
-from quasarscan.preprocessing.sightline_setup import create_QSO_endpoints
+from quasarscan.preprocessing.sightline_setup import create_qso_endpoints

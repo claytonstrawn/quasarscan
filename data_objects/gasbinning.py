@@ -78,7 +78,8 @@ class GasBin(object):
 density_bin = GasBin("density",["low","between6_4","between4_2","between2_0","selfshielding","starforming"],["0.0",'1.674e-30','1.674e-28','1.674e-26',"1.6737e-25","1.6737e-23","np.inf"],units = 'g/cm**3')#[0,1e-6,1e-4,1e-2,1e-1,1e1,inf]*mh
 temperature_bin = GasBin("temperature",["cold","cool","warm_hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"],units = "K")
 radial_velocity_bin = GasBin("radial_velocity",["inflow",'inflow_slow',"tangential",'outflow_slow',"outflow"],['-np.inf','-500','-10','10','500','np.inf'],units = "km/s")
-resolution_bin = GasBin("resolution",["high","between1_5","between5_15","low"],['0.00e+00', '1e9', '1.250e+11','3.375e+12', 'np.inf'],field = ('gas','cell_volume'),units = "pc**3")# (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
+resolution_bin_amr = GasBin("resolution",["high","between1_5","between5_15","low"],['0.00e+00', '1e9', '1.250e+11','3.375e+12', 'np.inf'],field = ('gas','cell_volume'),units = "pc**3")# (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
+resolution_bin_sph = GasBin("resolution",["high","between1_5","between5_15","low"],['0.00e+00', '1000', '5000','15000', 'np.inf'],field = ('gas','smoothing_length'),units = "pc")# (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
 all_ions_w_known_PI_defs = PI_field_defs.make_funcs()[0]
 allionizationfields = {}
 for ion in all_ions_w_known_PI_defs:
@@ -91,15 +92,19 @@ def ds_has_field(ds,gb):
         return True
     if isinstance(gb.field,str):
         return ('gas',gb.field) in ds.derived_field_list
-    else:
-        key = gb.field.keys()[0]
+    elif isinstance(gb.field,tuple):
+        return gb.field in ds.derived_field_list
+    elif isinstance(gb.field,dict):
+        key = list(gb.field.keys())[0]
         return ('gas',gb.field[key]) in ds.derived_field_list
+    else:
+        return False
 
 
 # GasBinsHolder object contains multiple GasBin objects
 # and can query them
 class GasBinsHolder(object):
-    def __init__(self,bins = None,string = None,ds = None):
+    def __init__(self,ds=None,bins = None,string = None):
         self.bin_types = []
         if string:
             fields_with_data = string.strip("[]").split(", ")
@@ -138,11 +143,12 @@ class GasBinsHolder(object):
                 newBin = GasBin(field_name,current_bins,current_edges+[end],field = current_ytfield,units = current_units)
                 self.bin_types.append(newBin)
             return
-        if bins == "all":
+        if bins == "all_amr":
             bins = possible_bin_types
-        elif bins == "noresolution":
-            bins = list(possible_bin_types)
-            bins.remove('resolution')
+            res_bin = resolution_bin_amr
+        elif bins == "all_sph":
+            bins = possible_bin_types
+            res_bin = resolution_bin_sph
         elif bins is None:
             bins = []
         if "density" in bins and ds_has_field(ds,density_bin):
@@ -151,9 +157,8 @@ class GasBinsHolder(object):
             self.bin_types.append(temperature_bin)
         if "radial_velocity" in bins and ds_has_field(ds,radial_velocity_bin):
             self.bin_types.append(radial_velocity_bin)
-        if "resolution" in bins and ds_has_field(ds,resolution_bin):
-            self.bin_types.append(resolution_bin)
-            #not sure how this works in demeshed
+        if "resolution" in bins and ds_has_field(ds,res_bin):
+            self.bin_types.append(res_bin)
         if "ionization_mechanism" in bins and ds_has_field(ds,pi_bin):
             self.bin_types.append(pi_bin)
 

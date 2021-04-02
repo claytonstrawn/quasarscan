@@ -157,6 +157,13 @@ def set_up_ramses(ds):
                 function = particle_creation_time,
                 units = 's')
     
+    def metal_density(field,data):
+        return data['gas','metal_mass']/data['gas','cell_volume']
+    ds.add_field(('gas','metal_density'),
+                sampling_type = 'cell',
+                function = metal_density,
+                units = 'g/cm**3')
+    
 def set_up_changa(ds):
     def star_mass_rename(field,data):
         return data['Stars','particle_mass']
@@ -177,6 +184,13 @@ def set_up_changa(ds):
                 function = particle_creation_time_rename,
                 units = 's')
         
+    def metal_density(field,data):
+        return data['gas','metallicity']*data['gas','density']
+    ds.add_field(('gas','metal_density'),
+                sampling_type = 'cell',
+                function = metal_density,
+                units = 'g/cm**3')
+    
 def set_up_gear(ds):
     def star_mass_rename(field,data):
         return data['PartType1','particle_mass']
@@ -239,6 +253,14 @@ def set_up_gizmo(ds):
                 function = particle_creation_time_rename,
                 units = 's')
     
+    def metal_density(field,data):
+        return data['gas','metallicity']*data['gas','density']
+    ds.add_field(('gas','metal_density'),
+                sampling_type = 'cell',
+                function = metal_density,
+                units = 'g/cm**3')
+    
+    
 #summary: get list of fields which need to be passed to TRIDENT
 #         and told to forward to the sightlines created by 
 #         trident.make_simple_ray
@@ -264,30 +286,35 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
             PI_field_name = ('gas','PI_%s'%(ion.replace(' ','')))
             CI_field_name = ('gas','CI_%s'%(ion.replace(' ','')))
             fields_to_keep += [PI_field_name,CI_field_name]
-    if code not in codes:
-        print("set_up_fields_for_sims was not prepared for the code %s!"%code)
-        print("please edit that file first.")
-        raise KeyError
-    elif code == 'art':
+    if code == 'art':
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas', 'cell_volume'))
         for atom in atoms:
             if atom in atoms_from_ions(ions):
                 fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
         fields_to_keep.append(('gas',"H_nuclei_density"))
+    elif code == 'enzo':
+        fields_to_keep.append(('gas', 'cell_volume'))
+        fields_to_keep.append(('gas','metal_density'))
+        fields_to_keep.append(('gas','metallicity'))
     elif code == 'ramses':
+        fields_to_keep.append(('gas', 'cell_volume'))
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas','metallicity'))
+    elif code == 'changa':
+        fields_to_keep.append(('gas','smoothing_length'))
+        fields_to_keep.append(('gas','metal_density'))
+        fields_to_keep.append(('gas','metallicity'))
     elif code == 'gizmo':
+        fields_to_keep.append(('gas','smoothing_length'))
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas','metallicity'))
     elif code == 'gadget':
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas','metallicity'))
     elif code == 'gear':
-        fields_to_keep.append(('gas','metallicity'))
-    elif code == 'enzo':
-        fields_to_keep.append(('gas','metal_density'))
+        fields_to_keep.append(('gas','smoothing_length'))
+        fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas','metallicity'))
     elif code == 'tipsy':
         fields_to_keep.append(('gas',"metal_density"))
@@ -295,6 +322,10 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
         fields_to_keep.append(('gas',"H_nuclei_density"))
         if 'O' in atoms_from_ions(ions):
             fields_to_keep.append(('gas',"O_nuclei_mass_density"))
+    else:
+        print("set_up_fields_for_sims was not prepared for the code %s!"%code)
+        print("please edit that file first.")
+        raise KeyError
     return fields_to_keep
 
 #summary: wrapper for ytload which also sets up all necessary fields

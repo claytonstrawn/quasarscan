@@ -27,8 +27,17 @@ def ion_to_field_name(ion,field_type = "number_density"):
     ionization = roman.from_roman(ion.split(" ")[1])-1
     return "%s_p%s_%s"%(atom,ionization,field_type)
 
+def throw_errors_if_allowed(e,throwerrors,message=None):
+    if throwerrors == True:
+        print(message)
+        raise e
+    elif throwerrors == 'warn':
+        print(message)
+        print(e)
+    elif throwerrors == False:
+        return
 
-def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None,run = 'default'):
+def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None,run = 'default',throwerrors = False):
     if run not in ['default','test']:
         print('unknown option for "run" %s. Please restart with "run = default" or "run = test".'%run)
     #do not print out anything from yt
@@ -70,8 +79,8 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             toprint = "line %s, (r = %.0f) densities "%(str(int(index)),vector[3])
             tprint("<line %d, starting process> "%index)
             ident = str(index)
-            start = ds.arr(np.copy(vector[5:8]),'kpc')
-            end = ds.arr(np.copy(vector[8:11]),'kpc')
+            start = ds.arr(np.copy(vector[5:8]),'unitary')
+            end = ds.arr(np.copy(vector[8:11]),'unitary')
             
             try:
                 ray = trident.make_simple_ray(ds,
@@ -81,8 +90,7 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                                             fields = fields_to_keep,
                                             ftype='gas')
             except Exception as e:
-                print("there was a problem in making the ray!")
-                print(e)
+                throw_errors_if_allowed(e,throwerrors,'problem with making ray')
                 continue
             trident.add_ion_fields(ray,q.ions)
             field_data = ray.all_data()
@@ -121,7 +129,7 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                         else:
                             print(str(variable_name)+" not in ray.derived_field_list")
                     except Exception as e:
-                        print("Could not bin into %s with edges %s because of error %s"%(variable_name,edges,e))
+                        throw_errors_if_allowed(e,throwerrors,'Could not bin into %s with edges %s'%(variable_name,edges))
                 toprint+="%s:%e "%(ion,cdens)
             #gets some more information from the general sightline.
             #metallicity, average density (over the whole sightline)
@@ -131,17 +139,17 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                     np.sum(field_data[('gas',"H_nuclei_density")]*mh*dl)
                 vector[-1] = Z
             except Exception as e:
-                print("Could not get average metallicity because of error %s"%(e))
+                throw_errors_if_allowed(e,throwerrors,'problem with average metallicity')
             try:
                 n = np.average(field_data['number_density'],weights=field_data['number_density']*dl)
                 vector[-2] = n
             except Exception as e:
-                print("Could not get average density because of error %s"%(e))
+                throw_errors_if_allowed(e,throwerrors,'problem with average density')
             try:
                 T = np.average(field_data['temperature'],weights=field_data['density']*dl)
                 vector[-3] = T
             except Exception as e:
-                print("Could not get average temperature because of error %s"%(e))
+                throw_errors_if_allowed(e,throwerrors,'problem with average temperature')
             try:
                 os.remove("ray"+ident+".h5")
             except:

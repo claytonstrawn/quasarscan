@@ -8,9 +8,9 @@ Once we have all the necessary metadata for each simulation snapshot saved to th
 
 .. code-block:: python
 
- quasarscan.create_qso_endpoints(fullname, redshift, ions)
+ quasarscan.create_qso_endpoints(fullname, filename, redshift, ions)
 
-Where ``fullname`` is the simulation's name (which has to be the same as its name in the metadata catalog), ``redshift`` is the simulation's current redshift, and ``ions`` as a list of ions to track, e.g. ``["H I","O VI","Ne VIII"]`` 
+Where ``fullname`` is the simulation's name (which has to be the same as its name in the metadata catalog), ``filename`` is the path to the location of the simulation file, ``redshift`` is the simulation's current redshift, and ``ions`` as a list of ions to track, e.g. ``["H I","O VI","Ne VIII"]`` 
 
 By default, this creates 384 sightlines (384 = 32 * 12, see below), distributed in impact parameter ``r`` from 0 to 2 Rvir. The distribution is designed to be area-sampling, so further sightlines are more likely, though a small bias is added so that there is a nonzero chance of an ``r=0`` line. They are oriented according to discrete ``theta`` and ``phi`` spherical coordinates, corresponding to the polar and azimuthal angles relative to the halo's angular momentum (so ``theta = 0`` is face-on from the direction of the angular momentum, and ``theta = pi/2`` is edge-on). Each sightline randomly selects a starting point by sampling ``theta`` and ``phi``, and then identifying the coordinates of that point on a sphere of size ``6*Rvir``. Then, a midpoint of the sightline is chosen by creating a circle with the radius a random impact parameter as specified above, and choosing a random point along this circle. The line from the startpoint (on the outer sphere) to the midpoint (in the plane normal to the startpoint which goes through the galaxy center) is extended by a factor of 2 to reach an endpoint. This endpoint is close to but not exactly on the outer sphere (because r<<6Rvir).
 

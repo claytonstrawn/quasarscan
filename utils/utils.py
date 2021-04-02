@@ -86,18 +86,17 @@ def string_represents_ion(string):
         return False
     return True
 
-#summary: SPH codes do not have a simple "resolution" so for now we need to 
-#         not use that information
+#summary: SPH codes use a "smoothing length" instead of "cell_size"
 #
 #inputs: code: which kind of AGORA code is under analysis here
 #
-#outputs: 'noresolution' if code is SPH, 'all' if code is AMR
-sphcodes = ['gizmo','gadget','gear','tipsy']
+#outputs: whether this is sph or amr code in question
+sphcodes = ['gizmo','gadget','gear','tipsy','changa']
 def get_gasbins_arg(code):
     if code in sphcodes:
-        return 'noresolution'
+        return 'all_sph'
     else:
-        return 'all'
+        return 'all_amr'
 
 def definecolorbar(bar_type = 'HotCustom',**kwargs):
     f= 256.0
