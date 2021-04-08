@@ -1,12 +1,14 @@
 import numpy as np
 import yt
 from yt.utilities.physical_constants import mh
+import os
 
-def read_table(filename = "CI_PI_cutoff_tables.txt"):
-    try:
-        f=open('utils/'+filename,'r')
-    except:
-        f=open('quasarscan/utils/'+filename,'r')
+def read_table(filename = "default"):
+    if filename == 'default':
+        path = os.path.expanduser('~/quasarscan/quasarscan/utils/CI_PI_cutoff_tables.txt')
+        f=open(path,'r')
+    else:
+        f=open(filename,'r')
     lines = f.readlines()[6:]
     f.close()
     ions = []

@@ -1,9 +1,8 @@
 import yt
 import numpy as np
 from quasarscan.utils import PI_field_defs
-from yt.utilities.physical_constants import mh
-from yt.utilities.cosmology import Cosmology
-from yt.data_objects.particle_filters import add_particle_filter
+from quasarscan.preprocessing.add_common_fields import set_up_funcs
+
 
 codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy','changa']
 sphcodes = ['gizmo','gadget','gear','tipsy','changa']
@@ -76,24 +75,8 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=True):
     assert ds.dataset_type == yt_dstype_names[code]
     if add_pi_fracs:
         PI_field_defs.make_funcs(ds=ds,add_fields=True)
-    if code == 'art':
-        set_up_art(ds)
-    elif code == 'ramses':
-        set_up_ramses(ds)
-    elif code == 'gizmo':
-        set_up_gizmo(ds)
-    elif code == 'gadget':
-        pass
-    elif code == 'changa':
-        set_up_changa(ds)
-    elif code == 'gear':
-        set_up_gear(ds)
-    elif code == 'enzo':
-        set_up_enzo(ds)
-    elif code == 'tipsy':
-        pass
+    set_up_funcs[code](ds)
     check_necessary_fields_exist(ds)
-
 
 def add_radial_distance_fields(ds,center):
     for i,ax in enumerate('xyz'):
@@ -113,152 +96,6 @@ def check_necessary_fields_exist(ds):
                  ('gas','x')]
     for f in necessary:
         assert f in ds.derived_field_list
-
-def set_up_art(ds):
-    #art is used as the archetype for all codes
-    #its default field names are what all other codes will
-    #implement
-    pass
-    
-def set_up_enzo(ds):
-    def star_filter(pfilter, data):
-        return ((data[(pfilter.filtered_type, 'creation_time')] > 0))
-    add_particle_filter('stars', function=star_filter, filtered_type='all', requires=['creation_time'])
-    ds.add_particle_filter('stars')
-    def dm_filter(pfilter, data):
-        return ((data[(pfilter.filtered_type, 'creation_time')] == 0))
-    add_particle_filter('darkmatter', function=dm_filter, filtered_type='all', requires=['creation_time'])
-    ds.add_particle_filter('darkmatter')
-    
-    def particle_creation_time(field,data):
-        return data['stars','creation_time']
-    ds.add_field(('stars','particle_creation_time'),
-                sampling_type = 'particle',
-                function = particle_creation_time,
-                units = 's')
-    
-def set_up_ramses(ds):
-    def star_mass_rename(field,data):
-        return data['star','particle_mass']
-    ds.add_field(('stars','particle_mass'),
-                sampling_type = 'particle',
-                function = star_mass_rename,
-                units = 'g')
-    def dm_mass_rename(field,data):
-        return data['DM','mass']
-    ds.add_field(('darkmatter','particle_mass'),
-                sampling_type = 'particle',
-                function = star_mass_rename,
-                units = 'g')
-    def particle_creation_time(field,data):
-        return ds.current_time.in_units('s') - data['star','age'].in_units('s')
-    ds.add_field(('stars','particle_creation_time'),
-                sampling_type = 'particle',
-                function = particle_creation_time,
-                units = 's')
-    
-    def metal_density(field,data):
-        return data['gas','metal_mass']/data['gas','cell_volume']
-    ds.add_field(('gas','metal_density'),
-                sampling_type = 'cell',
-                function = metal_density,
-                units = 'g/cm**3')
-    
-def set_up_changa(ds):
-    def star_mass_rename(field,data):
-        return data['Stars','particle_mass']
-    ds.add_field(('stars','particle_mass'),
-                sampling_type = 'particle',
-                function = star_mass_rename,
-                units = 'g')
-    def dm_mass_rename(field,data):
-        return data['DarkMatter','mass']
-    ds.add_field(('darkmatter','particle_mass'),
-                sampling_type = 'particle',
-                function = star_mass_rename,
-                units = 'g')
-    def particle_creation_time_rename(field,data):
-        return data['Stars','creation_time']
-    ds.add_field(('stars','particle_creation_time'),
-                sampling_type = 'particle',
-                function = particle_creation_time_rename,
-                units = 's')
-        
-    def metal_density(field,data):
-        return data['gas','metallicity']*data['gas','density']
-    ds.add_field(('gas','metal_density'),
-                sampling_type = 'cell',
-                function = metal_density,
-                units = 'g/cm**3')
-    
-def set_up_gear(ds):
-    def star_mass_rename(field,data):
-        return data['PartType1','particle_mass']
-    ds.add_field(('stars','particle_mass'),
-                sampling_type = 'particle',
-                function = star_mass_rename,
-                units = 'g')
-    
-    ad = ds.all_data()
-    m2 = ad['PartType2','Masses']
-    low,high = np.amin(m2),np.amax(m2)
-    m5 = ad['PartType5','Masses']
-    unique_dm5_masses = np.unique(m5)
-    def dm_filter(pfilter, data):
-        abovemin = data[(pfilter.filtered_type, 'Masses')]>=low
-        belowmax = data[(pfilter.filtered_type, 'Masses')]<=high
-        allowed = np.logical_and(abovemin,belowmax)
-        for v in unique_dm5_masses:
-            allowed = np.logical_or(allowed,data[(pfilter.filtered_type, 'Masses')]==v)
-        return allowed
-    add_particle_filter('darkmatter', function=dm_filter, filtered_type='all', requires=['Masses'])
-    ds.add_particle_filter('darkmatter')
-    
-    co = Cosmology(hubble_constant=ds.hubble_constant, omega_matter=ds.omega_matter,
-               omega_lambda=ds.omega_lambda, omega_curvature=0.0)
-    def particle_creation_time_rename(field,data):
-        return co.t_from_a(data['PartType1','StarFormationTime'])
-    ds.add_field(('stars','particle_creation_time'),
-                sampling_type = 'particle',
-                function = particle_creation_time_rename,
-                units = 's')
-    
-def set_up_gizmo(ds):
-    def star_mass_rename(field,data):
-        return data['PartType4','particle_mass']
-    ds.add_field(('stars','particle_mass'),
-                sampling_type = 'particle',
-                function = star_mass_rename,
-                units = 'g')
-    
-    ad = ds.all_data()
-    m1 = ad['PartType1','Masses']
-    unique_dm1_masses = np.unique(m1)
-    m2 = ad['PartType2','Masses']
-    unique_dm2_masses = np.unique(m2)    
-    def dm_filter(pfilter, data):
-        allowed = np.zeros(data[(pfilter.filtered_type, 'Masses')].shape,dtype=bool)
-        for v in ds.arr(np.concatenate([unique_dm1_masses,unique_dm2_masses]).v,m2.units):
-            allowed = np.logical_or(allowed,data[(pfilter.filtered_type, 'Masses')]==v)
-        return allowed
-    add_particle_filter('darkmatter', function=dm_filter, filtered_type='all', requires=['Masses'])
-    ds.add_particle_filter('darkmatter')
-    
-    co = Cosmology(hubble_constant=ds.hubble_constant, omega_matter=ds.omega_matter,
-               omega_lambda=ds.omega_lambda, omega_curvature=0.0)
-    def particle_creation_time_rename(field,data):
-        return co.t_from_a(data['PartType4','StellarFormationTime'])
-    ds.add_field(('stars','particle_creation_time'),
-                sampling_type = 'particle',
-                function = particle_creation_time_rename,
-                units = 's')
-    
-    def metal_density(field,data):
-        return data['gas','metallicity']*data['gas','density']
-    ds.add_field(('gas','metal_density'),
-                sampling_type = 'cell',
-                function = metal_density,
-                units = 'g/cm**3')
     
     
 #summary: get list of fields which need to be passed to TRIDENT

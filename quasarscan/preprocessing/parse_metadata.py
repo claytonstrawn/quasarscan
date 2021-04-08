@@ -93,7 +93,7 @@ def get_value(quantity, fullname, redshift = None,a = None,z=None, check_exists 
         redshift = z if redshift is None else redshift
         a = 1./(redshift+1)
     if check_exists:
-        return not np.isnan(get_value(quantity, name, a = a))
+        return not np.isnan(get_value(quantity, fullname, a = a))
     simname,version,code,simnum = fullname.split("_")
     all_quantities_dict = dict_of_all_info(fullname)
     a0 = get_closest_value_for_a(fullname,a=a,all_quantities_dict=all_quantities_dict)
