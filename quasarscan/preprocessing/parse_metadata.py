@@ -2,7 +2,6 @@ import os
 path_to_dicts = os.path.expanduser('~')
 import sys
 sys.path.append(path_to_dicts)
-from scripts_and_file_running.agora_dests_centers_rvirs import filenames
 import numpy as np
 
 class NoMetadataError(Exception):
