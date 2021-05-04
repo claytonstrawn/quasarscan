@@ -81,7 +81,6 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             ident = str(index)
             start = ds.arr(np.copy(vector[5:8]),'unitary')
             end = ds.arr(np.copy(vector[8:11]),'unitary')
-            
             try:
                 ray = trident.make_simple_ray(ds,
                                             start_position=start,

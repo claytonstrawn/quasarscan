@@ -245,7 +245,6 @@ class QuasarArrayHandler(object):
                                                       at_end = at_end_y,
                                                       split_even = split_even_y,
                                                       reverse = ~reverse_y,**kwargs)
-        print(quasarbins_y)
         labels_x, bins_x, _,_            = self.sort_by(criteria_x, 
                                                       bins_x, 
                                                       at_end = at_end_x,
@@ -288,6 +287,8 @@ class QuasarArrayHandler(object):
                 for gasbintype in gasbintypes:
                     if gasbintype in q.gasbins:
                         to_return.append(q)
+        if len(to_return)==0:
+            print('all quasarspheres removed...')
         self.update_qlist('sim',np.array(to_return))
         
     #summary: helper function for constrain_array_helper
@@ -425,9 +426,9 @@ class QuasarArrayHandler(object):
         self.change_array_name(constrain_criteria,bins,**kwargs)
         return bins
 
-    def impose_requirements(self,filter_for,verbose=False):
+    def impose_requirements(self,filter_for,qtype,verbose=False):
         if verbose and filter_for != []:
-            print('Restricting observations and simulations to ones containing %s'%filter_for)
+            print('Restricting quasars of type "%s" to ones containing %s'%(qtype,filter_for))
         ion_constraints = []
         gasbin_constraints = []
         metadata_constraints = []
@@ -435,6 +436,8 @@ class QuasarArrayHandler(object):
             if ':' in item:
                 ion_name = item.split(':')[0]
                 gasbin_name = item.split(':')[1]
+                if gasbin_name in ['cdens','fraction','eb']:
+                    continue
                 assert utils.string_represents_ion(ion_name)
                 ion_constraints.append(ion_name)
                 gasbin_constraints.append(gasbin_name)
@@ -442,10 +445,10 @@ class QuasarArrayHandler(object):
                 ion_constraints.append(item)
             elif item in param_xVars:
                 metadata_constraints.append(item)
-        self.constrain_current_quasar_array('ions',ion_constraints)
+        self.constrain_current_quasar_array('ions',ion_constraints,qtype=qtype)
         self.constrain_via_gasbins(gasbin_constraints)
         for item in metadata_constraints:
-            self.constrain_current_quasar_array(item,change_array_name=False)
+            self.constrain_current_quasar_array(item,qtype=qtype,change_array_name=False)
 
  
 

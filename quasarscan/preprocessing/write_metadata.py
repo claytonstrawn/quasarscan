@@ -141,7 +141,7 @@ def get_required_quantities(ds,center,Rvir,Mvir,stars_boundary,gal_edge):
 unit_conversion = {'a':'', 'center_x':'unitary', 'center_y':'unitary','center_z':'unitary', 'Rvir':'kpc', 'Mvir':'Msun', 'Mstar':'Msun', 'Mgas':'Msun', 'Mdm':'Msun', 'Lmag':'cm**2*g/s', 'L_x':'', 'L_y':'', 'L_z':'', 'bulk_velocity_x':'km/s', 'bulk_velocity_y':'km/s', 'bulk_velocity_z':'km/s', 'sfr':'Msun/yr'}
     
 def write_quantities_to_file(fullname,dict_of_quantities,tolerance = .001):
-    pathname = './quasarscan_data/galaxy_catalogs/%s'%fullname
+    pathname = os.path.expanduser('~/quasarscan_data/galaxy_catalogs/%s'%fullname)
     if not os.path.exists(pathname):
         os.mkdir(pathname)
     a = dict_of_quantities['a']
@@ -182,7 +182,7 @@ def write_quantities_to_file(fullname,dict_of_quantities,tolerance = .001):
                 continue
         all_lines.append(current_line[:-2])
 
-    with open(pathname+'/'+fullname+'_metadata.txt','w') as f:
+    with open(os.path.join(pathname,fullname+'_metadata.txt'),'w') as f:
         for line in all_lines:
             f.write(line+'\n')
 
@@ -195,6 +195,7 @@ def create_metadata_table(fullname,filepath,hc = None,ith_largest = 1,Rvir=None,
         center = get_halo_center(code,ds,hc=hc,ith_largest = 1)
     else:
         center = ds.arr(center,'unitary')
+    print(center)
     if Rvir is None:
         Rvir,Mvir = find_virial_radius(ds,center)
     else:

@@ -147,6 +147,7 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas','metallicity'))
     elif code == 'gadget':
+        fields_to_keep.append(('gas','smoothing_length'))
         fields_to_keep.append(('gas',"metal_density"))
         fields_to_keep.append(('gas','metallicity'))
     elif code == 'gear':

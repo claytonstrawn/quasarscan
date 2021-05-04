@@ -24,7 +24,7 @@ class MultiQuasarSphere(QuasarSphere):
             q = list_of_quasar_spheres[i]
             self.fullname.append(q.fullname)
             if mytype == 'unknown':
-                mytype == q.type
+                mytype = q.type
             else:
                 assert mytype == q.type, "QuasarSphere types must be the same."
             ions_lists.append(q.ions) 

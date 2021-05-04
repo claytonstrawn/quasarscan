@@ -106,7 +106,7 @@ class MultiQuasarSpherePlotter():
         average = self.defaultaverage if average == 'default' else average
         average = 'scatter' if qtype == 'obs' and not force_averaging else average
         plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(xVar,yVar,average,**kwargs)
-        self.quasar_array_handler.impose_requirements(filter_for)
+        self.quasar_array_handler.impose_requirements(filter_for,qtype)
         xlabel,ylabel,title_final = var_labels_interpreter.get_labels_and_titles(plot_type,xVar_packet,yVar_packet,average,**kwargs)
         quasar_array = var_labels_interpreter.decide_quasar_array(qtype,self.quasar_array_handler.get_qlist(qtype),**kwargs)
         xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
@@ -128,7 +128,7 @@ class MultiQuasarSpherePlotter():
 
     def plot_scatter(self,yVar,xVar='rdivR',qtype = 'sim',**kwargs):
         plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(xVar,yVar,'scatter',**kwargs)
-        self.quasar_array_handler.impose_requirements(filter_for)
+        self.quasar_array_handler.impose_requirements(filter_for,qtype)
         xlabel,ylabel,title = var_labels_interpreter.get_labels_and_titles(plot_type,xVar_packet,yVar_packet,'scatter',**kwargs)
         quasar_array = var_labels_interpreter.decide_quasar_array(qtype,self.quasar_array_handler.get_qlist(qtype),**kwargs)
         xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
@@ -147,7 +147,7 @@ class MultiQuasarSpherePlotter():
             raise BadPlotError('can only plot simulation sightlines for plot_hist')
         plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(xVar,yVar,'scatter',**kwargs)
         assert plot_type in [1,2], "'plot_hist' can only plot one continuous variable against one discrete variable"
-        self.quasar_array_handler.impose_requirements(filter_for)
+        self.quasar_array_handler.impose_requirements(filter_for,qtype)
         xlabel,ylabel,title = var_labels_interpreter.get_labels_and_titles(plot_type,xVar_packet,yVar_packet,'hist',**kwargs)
         quasar_array = var_labels_interpreter.decide_quasar_array('sim',self.quasar_array_handler.get_qlist('sim'),**kwargs)
         xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)

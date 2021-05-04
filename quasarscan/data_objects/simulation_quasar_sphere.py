@@ -35,13 +35,14 @@ class SimQuasarSphere(QuasarSphere):
         linesfinished = self.length_reached
         numlines = self.length
         rounded_redshift = self.rounded_redshift
-        simname = self.fullname
+        fullname = self.fullname
         ionsstr = ion_lists.filename_stringform(self.ions)
         if ionsstr in ion_lists.dict_of_ionstrsfilename.keys():
             ionsstr = ion_lists.dict_of_ionstrsfilename[ionsstr]
-        foldername1 = "quasarscan_data"
-        foldername = foldername1+'/output/'+simname+"coldensinfo"
-        assert os.path.exists(foldername1), 'need a quasarscan_data folder'
+            
+        foldername = os.path.expanduser('~/quasarscan_data')
+        assert os.path.exists(foldername), 'need a quasarscan_data folder in home directory "~".'
+        foldername = os.path.join(foldername,'output',fullname+"coldensinfo")
         if not os.path.exists(foldername):
             os.makedirs(foldername)
         specificfilename = "%s_of_%s-"%(str(linesfinished),str(numlines)) +ionsstr+"_z"+str(rounded_redshift)[:4]+".txt"

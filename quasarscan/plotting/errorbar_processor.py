@@ -261,10 +261,10 @@ def process_errbars_vertandhoriz(xVar_packet,yVar_packet,xarys,yarys,averager,**
 def get_sim_errs(plot_type,xVar_packet,yVar_packet,xarys,yarys,average = 'median',quartiles = None,**kwargs):
     averager = AveragesAndErrors(average,quartiles)
     if plot_type in [0,1,2,3]:
-        xs,ys,yerrs,empty = process_errbars_onlyvertical(xVar_packet,yVar_packet,xarys,yarys,averager)
+        xs,ys,yerrs,empty = process_errbars_onlyvertical(xVar_packet,yVar_packet,xarys,yarys,averager,**kwargs)
         xerrs = None
     elif plot_type in [4]:
-        xs,ys,xerrs,yerrs,empty = process_errbars_vertandhoriz(xVar_packet,yVar_packet,xarys,yarys,averager)
+        xs,ys,xerrs,yerrs,empty = process_errbars_vertandhoriz(xVar_packet,yVar_packet,xarys,yarys,averager,**kwargs)
     return xs,ys,xerrs,yerrs,empty
 
 def get_xVar_err(xVar):

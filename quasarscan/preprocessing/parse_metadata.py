@@ -1,4 +1,8 @@
 import os
+path_to_dicts = os.path.expanduser('~')
+import sys
+sys.path.append(path_to_dicts)
+from scripts_and_file_running.agora_dests_centers_rvirs import filenames
 import numpy as np
 
 class NoMetadataError(Exception):
@@ -22,11 +26,12 @@ def dict_of_all_info(fullname):
         'Rvir','Mvir','Lmag','sfr','Mstar','Mgas','Mgas_galaxy','Mdm']
 
     string_quantities = ['compaction_stage']
-
-    if os.path.isdir("quasarscan_data/galaxy_catalogs"):
-        basepath = "quasarscan_data/galaxy_catalogs/%s"%(fullname)
+        
+    path_to_metadata = os.path.expanduser('~/quasarscan_data/galaxy_catalogs')
+    if os.path.isdir(path_to_metadata):
+        basepath = os.path.join(path_to_metadata,fullname)
     else: 
-        raise NoMetadataError('folder "quasarscan_data/galaxy_catalogs" not found!')
+        raise NoMetadataError('folder "quasarscan_data/galaxy_catalogs" not found! Make sure it exists in your home directory "~".')
 
     filename = os.path.join(basepath,fullname+'_metadata.txt')
     if os.path.exists(filename):

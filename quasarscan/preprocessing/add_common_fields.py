@@ -79,6 +79,43 @@ def set_up_changa(ds):
                 function = metal_density,
                 units = 'g/cm**3')
     
+def set_up_gadget(ds):
+    def star_mass_rename(field,data):
+        return data['PartType4','particle_mass']
+    ds.add_field(('stars','particle_mass'),
+                sampling_type = 'particle',
+                function = star_mass_rename,
+                units = 'g')
+    
+    ad = ds.all_data()
+    m1 = ad['PartType1','Masses']
+    assert np.amin(m1)==np.amax(m1)
+    unique_dm1_mass = np.amin(m1)
+    m5 = ad['PartType5','Masses']
+    unique_dm5_masses = np.unique(m5)
+    def dm_filter(pfilter, data):
+        allowed = data[(pfilter.filtered_type, 'Masses')]==unique_dm1_mass
+        for v in unique_dm5_masses:
+            allowed = np.logical_or(allowed,data[(pfilter.filtered_type, 'Masses')]==v)
+        return allowed
+    add_particle_filter('darkmatter', function=dm_filter, filtered_type='all', requires=['Masses'])
+    ds.add_particle_filter('darkmatter')
+    
+    co = Cosmology(hubble_constant=ds.hubble_constant, omega_matter=ds.omega_matter,
+               omega_lambda=ds.omega_lambda, omega_curvature=0.0)
+    def particle_creation_time_rename(field,data):
+        return co.t_from_a(data['PartType4','StellarFormationTime'])
+    ds.add_field(('stars','particle_creation_time'),
+                sampling_type = 'particle',
+                function = particle_creation_time_rename,
+                units = 's')
+    def metal_density(field,data):
+        return data['gas','metallicity']*data['gas','density']
+    ds.add_field(('gas','metal_density'),
+                sampling_type = 'cell',
+                function = metal_density,
+                units = 'g/cm**3')
+
 def set_up_gear(ds):
     def star_mass_rename(field,data):
         return data['PartType1','particle_mass']
@@ -166,7 +203,7 @@ def set_up_gizmo(ds):
                 function = metal_density,
                 units = 'g/cm**3')
     
-set_up_funcs = {'art':set_up_art,'enzo':set_up_enzo,'ramses':set_up_ramses,'changa':set_up_changa,'gear':set_up_gear,'gizmo':set_up_gizmo}    
+set_up_funcs = {'art':set_up_art,'enzo':set_up_enzo,'ramses':set_up_ramses,'changa':set_up_changa,'gear':set_up_gear,'gizmo':set_up_gizmo,'gadget':set_up_gadget}    
 
 def add_radial_distance_fields(ds,center):
     for i,ax in enumerate('xyz'):

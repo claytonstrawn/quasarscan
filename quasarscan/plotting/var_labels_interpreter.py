@@ -199,10 +199,13 @@ def configure_variables(xVar,yVar,average,logx='guess',logy='guess',labels=None,
 #outputs:  xlabel: label for x axis
 #          ylabel: label for y axis
 #          title: label for top of figure
-def get_labels_and_titles(plot_type,xVar_packet,yVar_packet,average,title=None,**kwargs):
+def get_labels_and_titles(plot_type,xVar_packet,yVar_packet,average,title=None,add_averaging_type=False,**kwargs):
     xVar,xVar_name,logx = xVar_packet
     yVar,yVar_name,logy = yVar_packet
-    add_to_title = title[1] if isinstance(title,tuple) and title[0] == None else ''
+    if add_averaging_type:
+        add_to_title = title[1] if isinstance(title,tuple) and title[0] == None else ''
+    else:
+        add_to_title = ''
     if isinstance(title,str):
         title = title
     else:
