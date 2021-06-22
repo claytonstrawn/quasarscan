@@ -42,7 +42,7 @@ def dict_of_all_info(fullname):
     f.close()
 
     # the following lines including the while loop retrieve the desired property value by iterating through the textfile line by line 
-    firstline = lines[0]
+    firstline = lines[1]
     quantities = firstline.replace('\n','').split(', ')
     column_numbers = {}
     assert firstline[0] == 'a',"Metadata Formatted Incorrectly, \nexpansion factor must be first column"
@@ -53,7 +53,7 @@ def dict_of_all_info(fullname):
         ret_dict[quantity] = {}
         column_numbers[i] = quantity
 
-    for line in lines[1:]:
+    for line in lines[2:]:
         values = line.replace('\n','').split(', ')
         a = float(values[0])
         for i,value in enumerate(values):

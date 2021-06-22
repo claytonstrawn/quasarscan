@@ -1,3 +1,6 @@
+__version__ = "3.0.1"
+
+
 try:
     import yt
     hasyt = True
@@ -9,7 +12,6 @@ try:
 except ImportError:
     hastrident = False
 
-#depends on Sean's code (which does not exist yet, may depend on yt)
 if hasyt:
     from quasarscan.preprocessing.main import create_metadata_table
 else:

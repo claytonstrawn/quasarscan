@@ -1,11 +1,16 @@
-from yt_astro_analysis.halo_analysis.api  import HaloCatalog
+try:
+    from yt_astro_analysis.halo_analysis.api  import HaloCatalog
+except:
+    print('warning: HaloCatalog not found')
 from yt.utilities.cosmology import Cosmology
 from yt import YTArray
 from quasarscan.utils.utils import sphcodes
 from quasarscan.preprocessing import code_specific_setup,parse_metadata,add_common_fields
+from quasarscan import __version__
 
 import numpy as np
 import os
+import datetime
 
 class NotEnoughHalosError(Exception):
     def __init__(self, message):
@@ -140,7 +145,7 @@ def get_required_quantities(ds,center,Rvir,Mvir,stars_boundary,gal_edge):
 
 unit_conversion = {'a':'', 'center_x':'unitary', 'center_y':'unitary','center_z':'unitary', 'Rvir':'kpc', 'Mvir':'Msun', 'Mstar':'Msun', 'Mgas':'Msun', 'Mdm':'Msun', 'Lmag':'cm**2*g/s', 'L_x':'', 'L_y':'', 'L_z':'', 'bulk_velocity_x':'km/s', 'bulk_velocity_y':'km/s', 'bulk_velocity_z':'km/s', 'sfr':'Msun/yr'}
     
-def write_quantities_to_file(fullname,dict_of_quantities,tolerance = .001):
+def write_quantities_to_file(fullname,dspath,dict_of_quantities,tolerance = .001):
     pathname = os.path.expanduser('~/quasarscan_data/galaxy_catalogs/%s'%fullname)
     if not os.path.exists(pathname):
         os.mkdir(pathname)
@@ -161,7 +166,9 @@ def write_quantities_to_file(fullname,dict_of_quantities,tolerance = .001):
     for key in new_keys+existing_keys:
         if key not in all_keys:
             all_keys.append(key)
-    all_lines = [str(all_keys)[1:-1].replace("'","")]
+    all_lines = ["Metadata recorded on file %s with quasarscan version %s on date %s"%\
+                 (dspath,__version__,str(datetime.datetime.now()))]
+    all_lines.append(str(all_keys)[1:-1].replace("'",""))
     for aval in all_avals:
         current_line = ''
 
@@ -205,4 +212,5 @@ def create_metadata_table(fullname,filepath,hc = None,ith_largest = 1,Rvir=None,
         Mvir = cell_mass+particle_mass
     add_common_fields.add_radial_distance_fields(ds,center)
     dict_of_quantities = get_required_quantities(ds,center,Rvir,Mvir,stars_boundary,gal_edge)
-    write_quantities_to_file(fullname,dict_of_quantities)
+    dspath = ds.fullpath
+    write_quantities_to_file(fullname,dspath,dict_of_quantities)

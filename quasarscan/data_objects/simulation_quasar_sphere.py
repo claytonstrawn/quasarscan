@@ -2,6 +2,7 @@ import numpy as np
 from quasarscan.data_objects.quasar_sphere import QuasarSphere
 from quasarscan.data_objects.gasbinning import GasBinsHolder
 from quasarscan.utils import ion_lists
+from quasarscan import __version__
 import os
 
 class SimQuasarSphere(QuasarSphere):
@@ -51,20 +52,22 @@ class SimQuasarSphere(QuasarSphere):
             print(filename)
             return
         f = open(filename,"w+")
-        firstfew = [None]*7
-        firstfew[0] = "Simparams: [dsname, z, center[0], center[1], center[2], Rvir, pathname, L[0], L[1], L[2], convert]\n"
-        firstfew[1] = "Simparams: "+str(self.simparams)+"\n"
-        firstfew[2] = "Scanparams: [R, n_th, n_phi, n_r, r_max, num_lines, line_reached]\n"
-        firstfew[3] = "Scanparams: "+str(self.scanparams)+"\n"
-        firstfew[4] = "Ions: %s\n"%str(self.ions)
-        firstfew[5] = "Bins: [%s]\n"%self.gasbins.get_bin_str()
-        firstfew[6] = "Data: [i, theta, phi, r, alpha, startx, starty, startz, endx, endy, endz, "
+        firstfew = [None]*8
+        firstfew[0] = "This scan recorded with quasarscan version %s on date %s"%\
+                 (__version__,str(datetime.datetime.now()))
+        firstfew[1] = "Simparams: [dsname, z, center[0], center[1], center[2], Rvir, pathname, L[0], L[1], L[2], convert]\n"
+        firstfew[2] = "Simparams: "+str(self.simparams)+"\n"
+        firstfew[3] = "Scanparams: [R, n_th, n_phi, n_r, r_max, num_lines, line_reached]\n"
+        firstfew[4] = "Scanparams: "+str(self.scanparams)+"\n"
+        firstfew[5] = "Ions: %s\n"%str(self.ions)
+        firstfew[6] = "Bins: [%s]\n"%self.gasbins.get_bin_str()
+        firstfew[7] = "Data: [i, theta, phi, r, alpha, startx, starty, startz, endx, endy, endz, "
         for ion in self.ions:
             toAdd = "%s:cdens, %s:fraction, %s, "%(ion,ion,self.gasbins.get_bin_str(numbers = False,append = ion+":"))
-            firstfew[6] += toAdd
-        firstfew[6] += "T, n, Z]\n"
-        for i in range(7):
-	        f.write(firstfew[i])
+            firstfew[7] += toAdd
+        firstfew[7] += "T, n, Z]\n"
+        for i in range(8):
+            f.write(firstfew[i])
         for vector in self.info:
             f.write(str(vector).replace("\n",""))
             f.write("\n")
@@ -77,18 +80,19 @@ class SimQuasarSphere(QuasarSphere):
 
 def read_values(filename):
     f = open(filename)
-    firstfew = [None]*7
+    firstfew = [None]*8
     firstfew[0] = f.readline()
-    firstfew[1] = f.readline()[:-1].split(": ")[1]
-    firstfew[2] = f.readline()
-    firstfew[3] = f.readline()[:-1].split(": ")[1]
+    firstfew[1] = f.readline()
+    firstfew[2] = f.readline()[:-1].split(": ")[1]
+    firstfew[3] = f.readline()
     firstfew[4] = f.readline()[:-1].split(": ")[1]
     firstfew[5] = f.readline()[:-1].split(": ")[1]
     firstfew[6] = f.readline()[:-1].split(": ")[1]
-    simparams = eval(firstfew[1])
-    scanparams = eval(firstfew[3])
-    ions = eval(firstfew[4])
-    gasbins = GasBinsHolder(string = firstfew[5])
+    firstfew[7] = f.readline()[:-1].split(": ")[1]
+    simparams = eval(firstfew[2])
+    scanparams = eval(firstfew[4])
+    ions = eval(firstfew[5])
+    gasbins = GasBinsHolder(string = firstfew[6])
     length = scanparams[5]
     num_extra_columns = gasbins.get_length()
     data = np.zeros((int(length),11+len(ions)*(num_extra_columns+2)+3))
