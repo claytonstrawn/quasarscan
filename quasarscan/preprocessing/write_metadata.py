@@ -1,7 +1,4 @@
-try:
-    from yt_astro_analysis.halo_analysis.api  import HaloCatalog
-except:
-    print('warning: HaloCatalog not found')
+from yt_astro_analysis.halo_analysis import HaloCatalog
 from yt.utilities.cosmology import Cosmology
 from yt import YTArray
 from quasarscan.utils.utils import sphcodes
