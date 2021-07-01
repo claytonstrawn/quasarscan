@@ -31,7 +31,6 @@ class MultiQuasarSphere(QuasarSphere):
             sum_of_lengths += q.length_reached
             self.gasbins.combine_holders(q.gasbins)
         self.type = 'multi_'+mytype
-
         if self.number > 0:
             ions_in_all = list(reduce(set.intersection, map(set, ions_lists)))
         else:

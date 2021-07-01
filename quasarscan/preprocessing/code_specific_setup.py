@@ -181,7 +181,7 @@ def load_and_setup(path,code,ions=None,add_pi_fracs=True):
     if "_" in code:
         code = code.split("_")[2]
     if code not in codes:
-        print("load_and_setup was not prepared for the code %s!"%dstype_name)
+        print("load_and_setup was not prepared for the code %s!"%code)
         print("Please edit that file first.")
         raise NotImplementedError
     ds = ytload(path,code)

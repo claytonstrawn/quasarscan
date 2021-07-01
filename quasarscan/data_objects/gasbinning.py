@@ -56,7 +56,7 @@ class GasBin(object):
 
     def __eq__(self,other):
         if self.name == other.name:
-            if self.binvalstr in other.binvalstr and self.binnames == other.binnames and self.units == other.units:
+            if self.binvalstr == other.binvalstr and self.binnames == other.binnames and self.units == other.units:
                 return True
             else:
                 return False

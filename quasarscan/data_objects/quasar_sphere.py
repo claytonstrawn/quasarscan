@@ -92,7 +92,7 @@ class QuasarSphere(object):
         if ion in self.ion_list_w_bins:
             return self.ion_list_w_bins.index(ion)
         else:
-            raise IonNotFoundError('Ion %s not found in this Sphere, which is %s.'%(ion,self.fullname))
+            raise IonNotFoundError('Ion %s not found in this Sphere, which is %s. Available ions are: %s and sorted into bins: %s'%(ion,self.fullname,self.ions,self.gasbins.get_all_keys()))
 
     def get_ion_values(self,ion):
         if ion == 'zeros':

@@ -1,4 +1,4 @@
-from yt_astro_analysis.halo_analysis import HaloCatalog
+from yt_astro_analysis.halo_analysis.halo_catalog.halo_catalog import HaloCatalog
 from yt.utilities.cosmology import Cosmology
 from yt import YTArray
 from quasarscan.utils.utils import sphcodes
@@ -24,6 +24,10 @@ def initialize_halo_catalog(ds,hc=None):
     if hc is None:
         hc = HaloCatalog(data_ds=ds, finder_method='hop')
         hc.create()
+    elif isinstance(hc,str):
+        hc_str = hc
+        hc = HaloCatalog(data_ds=ds, finder_method='hop')
+        hc.load(hc_str)
     return hc
 
 def get_halo_center(code,ds,hc=None,ith_largest = 1):
