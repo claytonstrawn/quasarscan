@@ -210,7 +210,6 @@ def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,
         ds,_ = code_specific_setup.load_and_setup(filename,code)
     else:
         ds,_ = code_specific_setup.load_and_setup(filename,code,ds=ds)
-    print(redshift)
     Rvir = parse_metadata.get_value("Rvir",fullname,redshift=redshift)
     center_x = parse_metadata.get_value("center_x",fullname,redshift=redshift)
     center_y = parse_metadata.get_value("center_y",fullname,redshift=redshift)
@@ -222,7 +221,6 @@ def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,
     L = np.array([L_x,L_y,L_z])
 
     if np.isnan(Rvir) or np.any(np.isnan(center)) or np.any(np.isnan(L)):
-        print(Rvir,center,L)
         if run != 'force':
             raise BadMetadataError("metadata file for %s is missing one of Rvir, center, L")
         elif run == 'force':

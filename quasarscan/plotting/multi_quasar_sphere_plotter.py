@@ -111,7 +111,7 @@ class MultiQuasarSpherePlotter():
         quasar_array = var_labels_interpreter.decide_quasar_array(qtype,self.quasar_array_handler.get_qlist(qtype),**kwargs)
         xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
         if qtype == 'sim' or force_averaging:
-            xs,ys,xerrs,yerrs,empty = errorbar_processor.get_sim_errs(plot_type,xVar_packet,yVar_packet,xarys,yarys,**kwargs)
+            xs,ys,xerrs,yerrs,empty = errorbar_processor.get_sim_errs(plot_type,xVar_packet,yVar_packet,xarys,yarys,average = average,**kwargs)
             if not empty:
                 return matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,**kwargs)
         elif qtype == 'obs':
