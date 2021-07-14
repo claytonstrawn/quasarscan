@@ -92,7 +92,7 @@ def get_last_a_for_sim(fullname,all_quantities_dict = None):
     return avals[-1]
 
 def get_value(quantity, fullname, redshift = None,a = None,z=None, check_exists = False,loud = False):
-    assert a or z or redshift, 'no timestep specified'
+    assert a is not None or z is not None  or redshift is not None , 'no timestep specified'
     if a is None:
         redshift = z if redshift is None else redshift
         a = 1./(redshift+1)

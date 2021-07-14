@@ -203,7 +203,15 @@ def set_up_gizmo(ds):
                 function = metal_density,
                 units = 'g/cm**3')
     
-set_up_funcs = {'art':set_up_art,'enzo':set_up_enzo,'ramses':set_up_ramses,'changa':set_up_changa,'gear':set_up_gear,'gizmo':set_up_gizmo,'gadget':set_up_gadget}    
+def set_up_mockstreams(ds):
+    def metal_density(field,data):
+        return data['gas','metallicity']*data['gas','density']
+    ds.add_field(('gas','metal_density'),
+                sampling_type = 'cell',
+                function = metal_density,
+                units = 'g/cm**3')
+    
+set_up_funcs = {'art':set_up_art,'enzo':set_up_enzo,'ramses':set_up_ramses,'changa':set_up_changa,'gear':set_up_gear,'gizmo':set_up_gizmo,'gadget':set_up_gadget,'mockstreams':set_up_mockstreams}    
 
 def add_radial_distance_fields(ds,center):
     for i,ax in enumerate('xyz'):

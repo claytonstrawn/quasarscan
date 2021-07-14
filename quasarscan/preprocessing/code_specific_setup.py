@@ -4,9 +4,9 @@ from quasarscan.utils import PI_field_defs
 from quasarscan.preprocessing.add_common_fields import set_up_funcs
 
 
-codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy','changa']
+codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy','changa','mockstreams']
 sphcodes = ['gizmo','gadget','gear','tipsy','changa']
-yt_dstype_names = {'art':'art','ramses':'ramses','gizmo':'gadget_hdf5','gadget':'gadget_hdf5','gear':'gadget_hdf5','enzo':None,'tipsy':'tipsy','changa':'tipsy'}
+yt_dstype_names = {'art':'art','ramses':'ramses','gizmo':'gadget_hdf5','gadget':'gadget_hdf5','gear':'gadget_hdf5','enzo':None,'tipsy':'tipsy','changa':'tipsy','mockstreams':'stream'}
 
 atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
         'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
@@ -49,6 +49,11 @@ def ytload(path,code):
                                   file_particle_data=d,\
                                   file_particle_stars=s)
         ds.length_unit.in_units('unitary')
+    elif code == 'mockstreams':
+        ds = yt.load(path)
+        #TODO: Vayun, load this like it's loaded in mock_streams.main
+        #because I'm running into the same "TypeError: 'NoneType' object is not subscriptable"
+        #error as we were last time
     else:
         ds = yt.load(path)
     return ds
@@ -76,7 +81,7 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=True):
     if add_pi_fracs:
         PI_field_defs.make_funcs(ds=ds,add_fields=True)
     set_up_funcs[code](ds)
-    check_necessary_fields_exist(ds)
+    check_necessary_fields_exist(ds,code)
 
 def add_radial_distance_fields(ds,center):
     for i,ax in enumerate('xyz'):
@@ -87,15 +92,19 @@ def add_radial_distance_fields(ds,center):
                    function=radial_distance_ax,
                    units='cm',force_override = True)
         
-def check_necessary_fields_exist(ds):
+def check_necessary_fields_exist(ds,code):
     necessary = [('stars','particle_mass'),\
                  ('darkmatter','particle_mass'),\
                  ('stars','particle_creation_time'),\
                  ('gas','mass'),\
                  ('gas','velocity_x'),
                  ('gas','x')]
+    if code == 'mockstreams':
+        necessary = [('gas','mass'),\
+                 ('gas','velocity_x'),
+                 ('gas','x')]
     for f in necessary:
-        assert f in ds.derived_field_list
+        assert (f in ds.derived_field_list), "missing field: %s,%s"%f
     
     
 #summary: get list of fields which need to be passed to TRIDENT
@@ -160,8 +169,12 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
         fields_to_keep.append(('gas',"H_nuclei_density"))
         if 'O' in atoms_from_ions(ions):
             fields_to_keep.append(('gas',"O_nuclei_mass_density"))
+    elif code == 'mockstreams':
+        fields_to_keep.append(('gas', 'cell_volume'))
+        fields_to_keep.append(('gas','metal_density'))
+        fields_to_keep.append(('gas','metallicity'))
     else:
-        print("set_up_fields_for_sims was not prepared for the code %s!"%code)
+        print("fields_to_keep_in_sightline was not prepared for the code %s!"%code)
         print("please edit that file first.")
         raise KeyError
     return fields_to_keep
@@ -177,14 +190,16 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
 #
 #outputs: ds: yt DataSet object of simulation
 #         fields_to_keep: list of yt field names.
-def load_and_setup(path,code,ions=None,add_pi_fracs=True):
+def load_and_setup(path,code,ions=None,add_pi_fracs=True,ds = None):
     if "_" in code:
         code = code.split("_")[2]
     if code not in codes:
         print("load_and_setup was not prepared for the code %s!"%code)
         print("Please edit that file first.")
         raise NotImplementedError
-    ds = ytload(path,code)
+    if ds is None:
+        print('testing parameter "ds" should be removed from load_and_setup in code_specific_setup')
+        ds = ytload(path,code)
     try:
         assert yt_dstype_names[code] == ds.dataset_type
     except:

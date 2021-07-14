@@ -198,15 +198,19 @@ def create_qso_endpoints_helper(ds,R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L
 
 def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,'Rvir'),\
                         n_th=12,n_phi=12,n_r=12,rmax=(2,'Rvir'),length=384,\
-                        run='default',**kwargs):
+                        run='default',ds = None,**kwargs):
     code = fullname.split('_')[2]
     if isinstance(ions,str):
         try:
             ions = ion_lists.dict_of_ionlists[ions]
         except KeyError:
             raise BadListError('list nickname not recognized, enter ions as list of strings')
-    ds,_ = code_specific_setup.load_and_setup(filename,code)
-
+    if ds is None:
+        print('testing parameter "ds" should be removed from create_qso_endpoints in sightline_setup')
+        ds,_ = code_specific_setup.load_and_setup(filename,code)
+    else:
+        ds,_ = code_specific_setup.load_and_setup(filename,code,ds=ds)
+    print(redshift)
     Rvir = parse_metadata.get_value("Rvir",fullname,redshift=redshift)
     center_x = parse_metadata.get_value("center_x",fullname,redshift=redshift)
     center_y = parse_metadata.get_value("center_y",fullname,redshift=redshift)
@@ -218,6 +222,7 @@ def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,
     L = np.array([L_x,L_y,L_z])
 
     if np.isnan(Rvir) or np.any(np.isnan(center)) or np.any(np.isnan(L)):
+        print(Rvir,center,L)
         if run != 'force':
             raise BadMetadataError("metadata file for %s is missing one of Rvir, center, L")
         elif run == 'force':

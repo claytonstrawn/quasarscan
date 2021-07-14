@@ -3,6 +3,7 @@ from quasarscan.data_objects.quasar_sphere import QuasarSphere
 from quasarscan.data_objects.gasbinning import GasBinsHolder
 from quasarscan.utils import ion_lists
 from quasarscan import __version__
+import datetime
 import os
 
 class SimQuasarSphere(QuasarSphere):
@@ -53,7 +54,7 @@ class SimQuasarSphere(QuasarSphere):
             return
         f = open(filename,"w+")
         firstfew = [None]*8
-        firstfew[0] = "This scan recorded with quasarscan version %s on date %s"%\
+        firstfew[0] = "This scan recorded with quasarscan version %s on date %s\n"%\
                  (__version__,str(datetime.datetime.now()))
         firstfew[1] = "Simparams: [dsname, z, center[0], center[1], center[2], Rvir, pathname, L[0], L[1], L[2], convert]\n"
         firstfew[2] = "Simparams: "+str(self.simparams)+"\n"
