@@ -4,3 +4,4 @@
 *.sh
 **/build
 *.ipynb_checkpoints*
+*.egg-info*
