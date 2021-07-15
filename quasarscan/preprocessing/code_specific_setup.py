@@ -33,7 +33,7 @@ def get_aux_files_art(dspath):
         file_particle_header = projectdir+"PMcrd_%s.DAT"%timestep
         file_particle_data = projectdir+"PMcrs0_%s.DAT"%timestep
         file_particle_stars = projectdir+"stars_%s.dat"%timestep 
-    return file_particle_header,file_particle_data,file_particle_stars   
+    return file_particle_header,file_particle_data,file_particle_stars  
 
 def load_mockstreams_func(filename):
     
@@ -241,7 +241,7 @@ def load_and_setup(path,code,ions=None,add_pi_fracs=True):
     try:
         assert yt_dstype_names[code] == ds.dataset_type
     except:
-        print("the code stored at: %s is not of type %s, but of type %s"%(path,code,ds.dataset_type))
+        print("the code stored at: %s, as a code of type %s, should be of type %s, but it is of type %s"%(path,code,yt_dstype_names[code],ds.dataset_type))
         raise AssertionError
     add_necessary_fields_to_ds(code,ds,add_pi_fracs=add_pi_fracs)
     if ions is not None:

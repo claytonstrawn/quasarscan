@@ -10,31 +10,36 @@ class BadVariableError(Exception):
         print(self.message)
 
 class AveragesAndErrors(object):
-    def __init__(self,plots,quartiles=None):
-        if isinstance(plots,tuple):
-            if len(plots) == 3:
-                quartiles = (plots[1],plots[2])
-            elif len(plots) == 2:
-                if isinstance(plots[1],tuple):
-                    quartiles = plots[1]
-                elif plots[0] == 'median' or plots[0] == 'med':
-                    quartiles = (50-plots[1],50+plots[1])
-            plots = plots[0]
-        if not quartiles:
-            quartiles = (40,60)
+    def __init__(self,plots,quartiles=None,threshold = None):
+        if not isinstance(plots,str):
+            raise BadVariableError('plots "%s" not recognized! Must be a string'%(plots,))
+        if plots in ["mean","stderr","stddev","med_noquartiles","median_std",'covering_fraction','cvf']:
+            if quartiles is None:
+                quartiles = 1
+            else:
+                assert (isinstance(quartiles,float) or isinstance(quartiles,int))
+        elif plots in ["median","med"]:
+            if quartiles is None:
+                quartiles = (40,60)
+            elif (isinstance(quartiles,float) or isinstance(quartiles,int)):
+                quartiles = (50-quartiles,50+plots[1])
+            else:
+                assert isinstance(quartiles,tuple)
+        elif plots in ['covering_fraction','cvf'] :
+            assert (threshold is not None),'Threshold must be specified if averages = "covering_fraction"'
         def getquartiles(data):
             return np.array([np.nanmedian(data) - np.nanpercentile(data,quartiles[0]),\
                              np.nanpercentile(data,quartiles[1])-np.nanmedian(data)])
         def getstderr(data):
             l = len(data[~np.isnan(data)])
-            return np.array([np.nanstd(data)/np.sqrt(l),np.nanstd(data)/np.sqrt(l)])
+            return quartiles*np.array([np.nanstd(data)/np.sqrt(l),np.nanstd(data)/np.sqrt(l)])
         def getstddev(data):
-            return np.array([np.nanstd(data),np.nanstd(data)])
+            return quartiles*np.array([np.nanstd(data),np.nanstd(data)])
         if plots in ["mean","stderr"]:
             self.plots = "mean"
             self.avgfn = np.nanmean
             self.errfn = getstderr
-        if plots in ["stddev"]:
+        elif plots in ["stddev"]:
             self.plots = "stddev"
             self.avgfn = np.nanmean
             self.errfn = getstddev
@@ -54,6 +59,9 @@ class AveragesAndErrors(object):
             self.plots = "covering_fraction"
             self.avgfn = np.nanmean
             self.errfn = getstderr
+            self.threshold = threshold
+        else:
+            raise BadVariableError('plots "%s" not recognized!'%plots)
 
 
 #summary: helper for combine_xs. Checks if values are within tolerance
@@ -181,6 +189,8 @@ def process_errbars_onlyvertical(xVar_packet,yVar_packet,xarys,yarys,averager,of
         for j in range(len(unique_xs)):
             x_value = unique_xs[j]
             yvals = yarys[i][values_within_tolerance(xarys[i],x_value,tolerance,symmetric=False)]
+            if averager.plots == 'covering_fraction':
+                yvals = (yvals>averager.threshold).astype(float)
             if len(yvals) == 0:
                 mask[j] = False
                 continue
@@ -258,8 +268,8 @@ def process_errbars_vertandhoriz(xVar_packet,yVar_packet,xarys,yarys,averager,**
                 ys[i][j] = np.log10(ys[i][j])
     return xs,ys,xerrs,yerrs,empty
 
-def get_sim_errs(plot_type,xVar_packet,yVar_packet,xarys,yarys,average = 'median',quartiles = None,**kwargs):
-    averager = AveragesAndErrors(average,quartiles)
+def get_sim_errs(plot_type,xVar_packet,yVar_packet,xarys,yarys,average = 'median',quartiles = None,threshold = None,**kwargs):
+    averager = AveragesAndErrors(average,quartiles=quartiles,threshold=threshold)
     if plot_type in [0,1,2,3]:
         xs,ys,yerrs,empty = process_errbars_onlyvertical(xVar_packet,yVar_packet,xarys,yarys,averager,**kwargs)
         xerrs = None
