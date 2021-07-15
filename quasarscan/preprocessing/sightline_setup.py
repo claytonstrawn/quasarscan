@@ -198,18 +198,14 @@ def create_qso_endpoints_helper(ds,R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L
 
 def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,'Rvir'),\
                         n_th=12,n_phi=12,n_r=12,rmax=(2,'Rvir'),length=384,\
-                        run='default',ds = None,**kwargs):
+                        run='default',**kwargs):
     code = fullname.split('_')[2]
     if isinstance(ions,str):
         try:
             ions = ion_lists.dict_of_ionlists[ions]
         except KeyError:
             raise BadListError('list nickname not recognized, enter ions as list of strings')
-    if ds is None:
-        print('testing parameter "ds" should be removed from create_qso_endpoints in sightline_setup')
-        ds,_ = code_specific_setup.load_and_setup(filename,code)
-    else:
-        ds,_ = code_specific_setup.load_and_setup(filename,code,ds=ds)
+    ds,_ = code_specific_setup.load_and_setup(filename,code)
     print(redshift)
     Rvir = parse_metadata.get_value("Rvir",fullname,redshift=redshift)
     center_x = parse_metadata.get_value("center_x",fullname,redshift=redshift)

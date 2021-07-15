@@ -35,6 +35,46 @@ def get_aux_files_art(dspath):
         file_particle_stars = projectdir+"stars_%s.dat"%timestep 
     return file_particle_header,file_particle_data,file_particle_stars   
 
+def load_mockstreams_func(filename):
+    
+    temp_ds = yt.load(filename)
+
+    def density(field, data):
+        return (data['data','density'])
+
+    def temperature(field, data):
+        return (data['data','temperature'])
+
+    def metallicity(field, data):
+        return (data['data','metallicity'])
+    
+    def velocity_x(field, data):
+        return (data['data','velocity_x'])
+    
+    def velocity_y(field, data):
+        return (data['data','velocity_y'])
+    
+    def velocity_z(field, data):
+        return (data['data','velocity_z'])
+
+    temp_ds.add_field(("gas", "density"), function=density, sampling_type="local", units='g/cm**3')
+    temp_ds.add_field(("gas", "temperature"), function=temperature, sampling_type="local", units='K')
+    temp_ds.add_field(("gas", "metallicity"), function=metallicity, sampling_type="local", units='Zsun')
+    temp_ds.add_field(("gas", "velocity_x"), function=velocity_x, sampling_type="local", units='cm/s')
+    temp_ds.add_field(("gas", "velocity_y"), function=velocity_y, sampling_type="local", units='cm/s')
+    temp_ds.add_field(("gas", "velocity_z"), function=velocity_z, sampling_type="local", units='cm/s')    
+
+
+    data = {('gas','density'):(temp_ds.data['gas','density']),('gas','temperature'):(temp_ds.data['gas','temperature']),('gas','metallicity'):(temp_ds.data['gas','metallicity']),
+           ('gas','velocity_x'):(temp_ds.data['gas','velocity_x']),('gas','velocity_y'):(temp_ds.data['gas','velocity_y']),
+           ('gas','velocity_z'):(temp_ds.data['gas','velocity_z'])}
+    bbox = np.array([[np.amin(temp_ds.data['data','x']),np.amax(temp_ds.data['data','x'])],
+                     [np.amin(temp_ds.data['data','y']),np.amax(temp_ds.data['data','y'])],
+                     [np.amin(temp_ds.data['data','z']),np.amax(temp_ds.data['data','z'])]])
+    ds = yt.load_uniform_grid(data, temp_ds.data['gas','density'].shape, length_unit="kpc", bbox=bbox)
+    
+    return ds
+
 #summary: wrapper for yt.load that will make sure to put in ART
 #         filenames correctly
 #
@@ -50,7 +90,7 @@ def ytload(path,code):
                                   file_particle_stars=s)
         ds.length_unit.in_units('unitary')
     elif code == 'mockstreams':
-        ds = yt.load(path)
+        ds = load_mockstreams_func(path)
         #TODO: Vayun, load this like it's loaded in mock_streams.main
         #because I'm running into the same "TypeError: 'NoneType' object is not subscriptable"
         #error as we were last time
@@ -190,16 +230,14 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
 #
 #outputs: ds: yt DataSet object of simulation
 #         fields_to_keep: list of yt field names.
-def load_and_setup(path,code,ions=None,add_pi_fracs=True,ds = None):
+def load_and_setup(path,code,ions=None,add_pi_fracs=True):
     if "_" in code:
         code = code.split("_")[2]
     if code not in codes:
         print("load_and_setup was not prepared for the code %s!"%code)
         print("Please edit that file first.")
         raise NotImplementedError
-    if ds is None:
-        print('testing parameter "ds" should be removed from load_and_setup in code_specific_setup')
-        ds = ytload(path,code)
+    ds = ytload(path,code)
     try:
         assert yt_dstype_names[code] == ds.dataset_type
     except:
