@@ -69,6 +69,8 @@ other_requests = ['C IV','Ne VIII','Mg X']
 
 Strawn20 = hydrogens+alloxygens+Stern16representatives+other_requests
 
+Stern16_plus = Stern16ions+other_requests
+
 def stringform(lst):
     toret = "["
     for item in lst:
@@ -83,6 +85,6 @@ def filename_stringform(lst):
         ionsstr += "_"+ion.replace(" ","")
     return ionsstr
 
-dict_of_ionlists = {"truly_allions":truly_allions, "allions":allions, "joeions":joeions, "alloxygens":alloxygens, "agoraions":agoraions, "hydrogens":hydrogens, "Stern16ions":Stern16ions, "Stern16representatives":Stern16representatives, "other_requests":other_requests, "Strawn20":Strawn20}
-dict_of_ionstrs = {stringform(truly_allions):"truly_allions",stringform(allions):"allions",stringform(joeions):"joeions",stringform(alloxygens):"alloxygens",stringform(agoraions):"agoraions",stringform(hydrogens):"hydrogens",stringform(Stern16ions):"Stern16ions",stringform(Stern16representatives):"Stern16representatives",stringform(other_requests):"other_requests",stringform(Strawn20):"Strawn20"}
-dict_of_ionstrsfilename = {filename_stringform(truly_allions):"truly_allions",filename_stringform(allions):"allions",filename_stringform(joeions):"joeions",filename_stringform(alloxygens):"alloxygens",filename_stringform(agoraions):"agoraions",filename_stringform(hydrogens):"hydrogens",filename_stringform(Stern16ions):"Stern16ions",filename_stringform(Stern16representatives):"Stern16representatives",filename_stringform(other_requests):"other_requests",filename_stringform(Strawn20):"Strawn20"}
+dict_of_ionlists = {"truly_allions":truly_allions, "allions":allions, "joeions":joeions, "alloxygens":alloxygens, "agoraions":agoraions, "hydrogens":hydrogens, "Stern16ions":Stern16ions, "Stern16representatives":Stern16representatives, "other_requests":other_requests, "Strawn20":Strawn20,'Stern16_plus':Stern16_plus}
+dict_of_ionstrs = {stringform(truly_allions):"truly_allions",stringform(allions):"allions",stringform(joeions):"joeions",stringform(alloxygens):"alloxygens",stringform(agoraions):"agoraions",stringform(hydrogens):"hydrogens",stringform(Stern16ions):"Stern16ions",stringform(Stern16representatives):"Stern16representatives",stringform(other_requests):"other_requests",stringform(Strawn20):"Strawn20",stringform(Stern16_plus):'Stern16_plus'}
+dict_of_ionstrsfilename = {filename_stringform(truly_allions):"truly_allions",filename_stringform(allions):"allions",filename_stringform(joeions):"joeions",filename_stringform(alloxygens):"alloxygens",filename_stringform(agoraions):"agoraions",filename_stringform(hydrogens):"hydrogens",filename_stringform(Stern16ions):"Stern16ions",filename_stringform(Stern16representatives):"Stern16representatives",filename_stringform(other_requests):"other_requests",filename_stringform(Strawn20):"Strawn20",filename_stringform(Stern16_plus):'Stern16_plus'}
