@@ -42,10 +42,10 @@ def throw_errors_if_allowed(e,throwerrors,message=None):
     elif throwerrors == False:
         return
 
-def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None,run = 'default',throwerrors = False,ds = None):
+def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None,run = 'default',throwerrors = False):
     if run not in ['default','test']:
         print('unknown option for "run" %s. Please restart with "run = default" or "run = test".'%run)
-    #do not print out anything from yt
+    #do not print out anything from yt (it prints plenty)
     yt.funcs.mylog.setLevel(50)
     if parallel:
         yt.enable_parallelism()
@@ -61,11 +61,7 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             raise NoSimulationError('Simulation file location unknown, run with "simulation_dest" to process')
     else:
         simulation_dest = q.simparams[6]
-    if ds is None:
-        print('remove testing parameter "ds" from processing.main')
-        ds,fields_to_keep = code_specific_setup.load_and_setup(simulation_dest,q.code,q.ions)
-    else:
-        ds,fields_to_keep = code_specific_setup.load_and_setup(simulation_dest,q.code,q.ions,ds=ds)
+    ds,fields_to_keep = code_specific_setup.load_and_setup(simulation_dest,q.code,q.ions)
     num_bin_vars = q.gasbins.get_length()
     #Can start at a position further than 0 if reached
     starting_point = q.length_reached 
