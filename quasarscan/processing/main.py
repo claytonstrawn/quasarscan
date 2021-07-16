@@ -62,6 +62,7 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
     else:
         simulation_dest = q.simparams[6]
     ds,fields_to_keep = code_specific_setup.load_and_setup(simulation_dest,q.code,q.ions)
+    code_specific_setup.check_redshift(ds,outputfilename=outputfilename)
     num_bin_vars = q.gasbins.get_length()
     #Can start at a position further than 0 if reached
     starting_point = q.length_reached 

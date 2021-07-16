@@ -36,43 +36,21 @@ def get_aux_files_art(dspath):
     return file_particle_header,file_particle_data,file_particle_stars  
 
 def load_mockstreams_func(filename):
-    
     temp_ds = yt.load(filename)
+    fields = ['density','temperature','metallicity','velocity_x','velocity_y','velocity_z']
+    units = ['g/cm**3','K','Zsun','cm/s','cm/s','cm/s']
+    data = {}
+    for i,f in enumerate(fields):
+        def func(field,data):
+            return (data['data',f])
 
-    def density(field, data):
-        return (data['data','density'])
+        temp_ds.add_field(("gas", f), function=func, sampling_type="local", units=units[i])
 
-    def temperature(field, data):
-        return (data['data','temperature'])
-
-    def metallicity(field, data):
-        return (data['data','metallicity'])
-    
-    def velocity_x(field, data):
-        return (data['data','velocity_x'])
-    
-    def velocity_y(field, data):
-        return (data['data','velocity_y'])
-    
-    def velocity_z(field, data):
-        return (data['data','velocity_z'])
-
-    temp_ds.add_field(("gas", "density"), function=density, sampling_type="local", units='g/cm**3')
-    temp_ds.add_field(("gas", "temperature"), function=temperature, sampling_type="local", units='K')
-    temp_ds.add_field(("gas", "metallicity"), function=metallicity, sampling_type="local", units='Zsun')
-    temp_ds.add_field(("gas", "velocity_x"), function=velocity_x, sampling_type="local", units='cm/s')
-    temp_ds.add_field(("gas", "velocity_y"), function=velocity_y, sampling_type="local", units='cm/s')
-    temp_ds.add_field(("gas", "velocity_z"), function=velocity_z, sampling_type="local", units='cm/s')    
-
-
-    data = {('gas','density'):(temp_ds.data['gas','density']),('gas','temperature'):(temp_ds.data['gas','temperature']),('gas','metallicity'):(temp_ds.data['gas','metallicity']),
-           ('gas','velocity_x'):(temp_ds.data['gas','velocity_x']),('gas','velocity_y'):(temp_ds.data['gas','velocity_y']),
-           ('gas','velocity_z'):(temp_ds.data['gas','velocity_z'])}
+        data[('gas',f)] = (temp_ds.data['gas',f])
     bbox = np.array([[np.amin(temp_ds.data['data','x']),np.amax(temp_ds.data['data','x'])],
                      [np.amin(temp_ds.data['data','y']),np.amax(temp_ds.data['data','y'])],
                      [np.amin(temp_ds.data['data','z']),np.amax(temp_ds.data['data','z'])]])
     ds = yt.load_uniform_grid(data, temp_ds.data['gas','density'].shape, length_unit="kpc", bbox=bbox)
-    
     return ds
 
 #summary: wrapper for yt.load that will make sure to put in ART
@@ -218,6 +196,17 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
         print("please edit that file first.")
         raise KeyError
     return fields_to_keep
+
+def check_redshift(ds,fullname = None,outputfilename=None,redshift = None):
+    if outputfilename:
+        assert fullname is None and redshift is None
+        redshift = float(outputfilename.split('z')[1].split('.')[0])
+        fullname = outputfilename.split('coldensinfo')[0].split('/')[-1]
+    code = fullname.split('_')[2]
+    if code == 'mockstreams':
+        ds.current_redshift = redshift
+    else:
+        assert ds.current_redshift == redshift
 
 #summary: wrapper for ytload which also sets up all necessary fields
 #         

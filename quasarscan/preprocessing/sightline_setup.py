@@ -206,6 +206,7 @@ def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,
         except KeyError:
             raise BadListError('list nickname not recognized, enter ions as list of strings')
     ds,_ = code_specific_setup.load_and_setup(filename,code)
+    code_specific_setup.check_redshift(ds,fullname=fullname,redshift = redshift)
     Rvir = parse_metadata.get_value("Rvir",fullname,redshift=redshift)
     center_x = parse_metadata.get_value("center_x",fullname,redshift=redshift)
     center_y = parse_metadata.get_value("center_y",fullname,redshift=redshift)
