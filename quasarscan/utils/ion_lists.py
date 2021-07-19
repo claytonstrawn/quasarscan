@@ -61,7 +61,7 @@ agoraions = ['O I', 'O II', 'O III', 'O IV','O V', 'O VI', 'O VII', 'O VIII', 'O
 'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII', 'Ne I','Ne II',\
 'Ne III','Ne IV','Ne V','Ne VI','Ne VII','Ne VIII','Ne IX','C I','C II','C III','C IV','C V','C VI','C VII']
 Stern16ions = ['H I','O I','N I','Mg I','Mg II','Fe II','Si II','C II','N II','Fe III','Si III','C III',\
-             'N III','Si IV','N V','O VI']
+             'N III','Si IV','N V','O VI','S II','S III']
 
 Stern16representatives = ['Mg I','Mg II','N II','Si IV','O VI']
 
