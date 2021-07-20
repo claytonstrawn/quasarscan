@@ -113,7 +113,8 @@ class MultiQuasarSpherePlotter():
         if qtype == 'sim' or force_averaging:
             xs,ys,xerrs,yerrs,empty = errorbar_processor.get_sim_errs(plot_type,xVar_packet,yVar_packet,xarys,yarys,average = average,**kwargs)
             if not empty:
-                return matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,**kwargs)
+                temp= matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,**kwargs)
+                return temp
         elif qtype == 'obs':
             xs,ys,empty = errorbar_processor.process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,**kwargs)
             xerrs,yerrs = errorbar_processor.handle_scatter_errs(xVar_packet,yVar_packet,quasar_array)

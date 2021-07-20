@@ -15,7 +15,6 @@ class MultiSphereSorter(object):
         self.array = my_array
     #param bins the lower parameter is inclusive, the upper parameter is exclusive
     def sort(self, criteria, bins,at_end = False):
-
         labels = self.make_labels(criteria, bins,at_end = at_end)
         if criteria in stringcriteria:
             sortfn = self.sort_by_strparam
@@ -28,15 +27,28 @@ class MultiSphereSorter(object):
             raise IllegalSort('Cannot use at_end with string-based criteria %s'%criteria)
         criteria_array = self.get_criteria_array(criteria)
         result_array = np.empty(len(accepted_values),dtype = 'object')
+        if criteria == 'ions':
+            result_array = [self.constrain_by_ions(accepted_values,criteria_array)]
+            return np.array(result_array,dtype=object)   
         for i,value in enumerate(accepted_values):
             to_add = []
             for j,qs_values in enumerate(criteria_array):
-                if criteria == "ions" and value in qs_values:
-                    to_add.append(self.array[j])
-                elif criteria != 'ions' and value == qs_values:
+                if value == qs_values:
                     to_add.append(self.array[j])
             result_array[i] = np.array(to_add)
         return np.array(result_array,dtype=object)   
+    
+    def constrain_by_ions(self,accepted_values,criteria_array):
+        to_add = []
+        for j,qs_values in enumerate(criteria_array):
+            add = True
+            for i,value in enumerate(accepted_values):
+                if value not in qs_values:
+                    add = False
+            if add:
+                to_add.append(self.array[j])
+        return np.array(to_add)
+        
     
     def sort_by_numparam(self, criteria, bins, at_end = False):
         result_bins = [None] * (len(bins)-1)

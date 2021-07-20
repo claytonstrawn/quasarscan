@@ -354,11 +354,13 @@ class QuasarArrayHandler(object):
                 temp = np.array([temp[take]])
             else:
                 labels, bins, temp = sorters[qtype].sort(constrain_criteria,bins,at_end=at_end)
+            
             if len(temp)>0:
                 update = np.concatenate(temp)
             else:
                 update = np.array([])
             self.update_qlist(qtype,update)
+            
             if set_main_array:
                 self.update_qlist(qtype,update,main_array=True)
         return bins
@@ -417,12 +419,15 @@ class QuasarArrayHandler(object):
         else:
             qtypes = ['sim','obs','empty'] if qtype == 'all' else [qtype]
         sorters = {}
+        
         for qtype in qtypes:
             qlist = self.get_qlist(qtype)
             self.check_criteria_works(constrain_criteria,qtype,**kwargs)
             bins = self.get_bin_values(constrain_criteria,bins,qtype,**kwargs)
             sorters[qtype] = MultiSphereSorter(qlist)
+        
         bins = self.constrain_array_helper(sorters,constrain_criteria,bins,qtypes,**kwargs)
+        
         self.change_array_name(constrain_criteria,bins,**kwargs)
         return bins
 
@@ -445,6 +450,7 @@ class QuasarArrayHandler(object):
                 ion_constraints.append(item)
             elif item in param_xVars:
                 metadata_constraints.append(item)
+        
         self.constrain_current_quasar_array('ions',ion_constraints,qtype=qtype)
         self.constrain_via_gasbins(gasbin_constraints)
         for item in metadata_constraints:

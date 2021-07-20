@@ -56,7 +56,7 @@ def decide_plot_type(xVar,yVar,labels=None,quasar_array=None,lq=None):
 def decide_quasar_array(qtype,default_quasar_array,quasar_array=None,lq=None,**kwargs):
     if quasar_array:
         quasar_array = quasar_array
-    elif not quasar_array and lq:
+    elif (quasar_array is None) and (lq is not None):
         index = {'sim':0,'obs':1,'empty':2}[qtype]
         quasar_array = lq[2][index]
     else:
