@@ -85,8 +85,8 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             toprint = "line %s, (r = %.0f) densities "%(str(int(index)),vector[3])
             tprint("<line %d, starting process> "%index)
             ident = str(index)
-            start = ds.arr(np.copy(vector[5:8]),'unitary')
-            end = ds.arr(np.copy(vector[8:11]),'unitary')
+            start = ds.arr(tuple(vector[5:8]),'unitary')
+            end = ds.arr(tuple(vector[8:11]),'unitary')
             if np.any(start < -.5) or np.any(start > 1) or np.any(end < -.5) or np.any(end > 1):
                 throw_errors_if_allowed(IllegalSightlineError,throwerrors,'"Unitary" units can'+ 
                                         'only take in values between 0 and 1 (or -0.5 to +0.5), your values were'+
