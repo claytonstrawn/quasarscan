@@ -450,11 +450,12 @@ class QuasarArrayHandler(object):
                 ion_constraints.append(item)
             elif item in param_xVars:
                 metadata_constraints.append(item)
-        
+        before_filter = self.get_qlist(qtype)
         self.constrain_current_quasar_array('ions',ion_constraints,qtype=qtype)
         self.constrain_via_gasbins(gasbin_constraints)
         for item in metadata_constraints:
             self.constrain_current_quasar_array(item,qtype=qtype,change_array_name=False)
+        return before_filter
 
  
 

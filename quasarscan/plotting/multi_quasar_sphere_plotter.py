@@ -106,30 +106,33 @@ class MultiQuasarSpherePlotter():
         average = self.defaultaverage if average == 'default' else average
         average = 'scatter' if qtype == 'obs' and not force_averaging else average
         plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(xVar,yVar,average,**kwargs)
-        self.quasar_array_handler.impose_requirements(filter_for,qtype)
+        unfiltered_qlist = self.quasar_array_handler.impose_requirements(filter_for,qtype)
         xlabel,ylabel,title_final = var_labels_interpreter.get_labels_and_titles(plot_type,xVar_packet,yVar_packet,average,**kwargs)
         quasar_array = var_labels_interpreter.decide_quasar_array(qtype,self.quasar_array_handler.get_qlist(qtype),**kwargs)
         xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
         if qtype == 'sim' or force_averaging:
             xs,ys,xerrs,yerrs,empty = errorbar_processor.get_sim_errs(plot_type,xVar_packet,yVar_packet,xarys,yarys,average = average,**kwargs)
             if not empty:
-                temp= matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,**kwargs)
-                return temp
+                to_return = matplotlib_interfacer.plot_sim_on_ax(plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title_final, **kwargs)        
         elif qtype == 'obs':
             xs,ys,empty = errorbar_processor.process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,**kwargs)
             xerrs,yerrs = errorbar_processor.handle_scatter_errs(xVar_packet,yVar_packet,quasar_array)
             if not empty:
-                return matplotlib_interfacer.plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,quasar_array,**kwargs)
+                to_return = matplotlib_interfacer.plot_obs_on_ax(plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title_final, quasar_array, **kwargs)
         elif qtype == 'empty':
             assert plot_type == 3
             xs,ys,empty = errorbar_processor.process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,**kwargs)
             xerrs,yerrs = None,None
             if not empty:
-                return matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,**kwargs)
+                to_return = matplotlib_interfacer.plot_sim_on_ax(plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title_final, **kwargs)
+        if empty:
+            to_return = None,None
+        self.quasar_array_handler.update_qlist(qtype,unfiltered_qlist)
+        return to_return
 
     def plot_scatter(self,yVar,xVar='rdivR',qtype = 'sim',**kwargs):
         plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(xVar,yVar,'scatter',**kwargs)
-        self.quasar_array_handler.impose_requirements(filter_for,qtype)
+        unfiltered_qlist = self.quasar_array_handler.impose_requirements(filter_for,qtype)
         xlabel,ylabel,title = var_labels_interpreter.get_labels_and_titles(plot_type,xVar_packet,yVar_packet,'scatter',**kwargs)
         quasar_array = var_labels_interpreter.decide_quasar_array(qtype,self.quasar_array_handler.get_qlist(qtype),**kwargs)
         xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
@@ -137,24 +140,32 @@ class MultiQuasarSpherePlotter():
         if qtype == 'obs':
             xerrs,yerrs = errorbar_processor.handle_scatter_errs(xVar_packet,yVar_packet,quasar_array)
             if not empty:
-                return matplotlib_interfacer.plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,quasar_array,**kwargs)
-        else:
+                to_return = matplotlib_interfacer.plot_obs_on_ax(plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title, quasar_array, **kwargs)
+        elif qtype in ['sim','empty']:
             xerrs,yerrs = None,None
             if not empty:
-                return matplotlib_interfacer.plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,**kwargs)
+                to_return = matplotlib_interfacer.plot_sim_on_ax(plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title, **kwargs)
+        if empty:
+            to_return = None,None
+        self.quasar_array_handler.update_qlist(qtype,unfiltered_qlist)
+        return to_return
 
     def plot_hist(self,yVar,xVar='rdivR',qtype = 'sim',**kwargs):
         if qtype != 'sim':
             raise BadPlotError('can only plot simulation sightlines for plot_hist')
         plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(xVar,yVar,'scatter',**kwargs)
         assert plot_type in [1,2], "'plot_hist' can only plot one continuous variable against one discrete variable"
-        self.quasar_array_handler.impose_requirements(filter_for,qtype)
+        unfiltered_qlist = self.quasar_array_handler.impose_requirements(filter_for,qtype)
         xlabel,ylabel,title = var_labels_interpreter.get_labels_and_titles(plot_type,xVar_packet,yVar_packet,'hist',**kwargs)
         quasar_array = var_labels_interpreter.decide_quasar_array('sim',self.quasar_array_handler.get_qlist('sim'),**kwargs)
         xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
         xs,ys,weight,cbarlabel,empty = errorbar_processor.process_xy_vals_hist(xVar_packet,yVar_packet,xarys,yarys,**kwargs)
         if not empty:
-            return matplotlib_interfacer.plot_hist_on_ax(plot_type,xs,ys,xlabel,ylabel,title,weight,cbarlabel,**kwargs)
+            to_return = matplotlib_interfacer.plot_hist_on_ax(plot_type, xs, ys, xlabel, ylabel, title, weight, cbarlabel, **kwargs)
+        else:
+            to_return = None,None
+        self.quasar_array_handler.update_qlist(qtype,unfiltered_qlist)
+        return to_return
 
     def faberplot(self,yVar,xVar='rdivR',plot_kind='err',lq2=None,qtype='sim',lq=None,fig = None, axes = None,figsize='guess',sharex=True,sharey=True,\
                   **kwargs):
