@@ -42,7 +42,7 @@ def transpose_err_array(errs):
 def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,ax=None,fig=None,
                average='default',dots=False,grid=False,linestyle='',ls='',linewidth = 1.5,
                fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
-               alpha = 1.0,elinewidth=None,capsize=3,**kwargs):
+               alpha = 1.0,elinewidth=None,capsize=3,zorder = 100,**kwargs):
     if ax is None:
         assert fig is None
         fig,ax = plt.subplots(1)
@@ -60,7 +60,7 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
             fmt=fmt or 'o'
             if markersize=='default':
                 markersize=6
-            ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],zorder = 100,
+            ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],zorder = zorder,
                                   color=coloration[i],markersize=markersize,alpha = alpha,linewidth=linewidth)
     else:
         fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',"stddev":'.',"median":".",'default':'.'}
@@ -71,14 +71,14 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
                     ax.plot(xs[i],ys[i],label=labels[i],ls=linestyle,zorder = 100,\
                                  color = coloration[i],marker = fmtdict[average],alpha = alpha, linewidth=linewidth)
                     ax.fill_between(xs[i],ys[i]-yerrs[i][0,:],ys[i]+yerrs[i][1,:],color = future_colors[-1],\
-                                    alpha = alpha/2,linewidth = linewidth/2,zorder = 50)
+                                    alpha = alpha/2,linewidth = linewidth/2,zorder = zorder/2)
         else:
             for i in range(len(xs)):
                     ax.errorbar(xs[i],ys[i],xerr=transpose_err_array(xerrs[i]),\
                                             yerr=transpose_err_array(yerrs[i]),label=labels[i],\
                                             ls=linestyle,color = coloration[i],fmt = fmt,capsize = capsize,\
                                             alpha = alpha, linewidth=linewidth, elinewidth=elinewidth,\
-                                            zorder = 100)
+                                            zorder = zorder)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title_final)
@@ -94,7 +94,7 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
 
 def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,fig=None,\
                         grid=False,fmt=None,coloration=None,xlims='default',ylims='default',\
-                        markersize='default',alpha = 1.0,**kwargs):
+                        markersize='default',alpha = 1.0,zorder = -100,**kwargs):
     if ax is None:
         assert fig is None
         fig,ax = plt.subplots(1)
@@ -110,7 +110,7 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,
 
     for i in range(len(xs)):
         ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=markersize,
-                                alpha = alpha,zorder=-100)
+                                alpha = alpha,zorder=zorder)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
