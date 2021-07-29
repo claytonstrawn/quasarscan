@@ -1,5 +1,5 @@
 import numpy as np
-from quasarscan.preprocessing.parse_metadata import get_value,get_last_a_for_sim
+from quasarscan.preprocessing.parse_metadata import get_value,get_last_a_for_sim,dict_of_all_info
 from quasarscan.utils.utils import string_represents_ion,round_redshift
 from quasarscan.data_objects.gasbinning import GasBinsHolder
 
@@ -22,6 +22,7 @@ class QuasarSphere(object):
         self.fullname = fullname
         self.redshift = redshift
         self.add_id_variables()
+        self.add_metadata_dict()
         self.lookup_fields_by_name()
         self.create_ion_list_w_bins()
 
@@ -37,35 +38,40 @@ class QuasarSphere(object):
         self.simnum   = name_fields[3]
         self.rounded_redshift = round_redshift(self.redshift)
         self.a = 1./(1+self.redshift)
+        
+    def add_metadata_dict(self):
+        if 'multi' in self.type or 'obs' in self.type:
+            return
+        self.metadata_dict = dict_of_all_info(self.fullname)
 
     def lookup_fields_by_name(self):
         if 'multi' in self.type or 'obs' in self.type:
             return
         #look for this info in metadata files
         #any not found will be nan
-        L_x = get_value('L_x',self.fullname,redshift = self.redshift)
-        L_y = get_value('L_y',self.fullname,redshift = self.redshift)
-        L_z = get_value('L_z',self.fullname,redshift = self.redshift)
-        self.L = np.array([L_x,L_y,L_z])
-        center_x = get_value("center_x",self.fullname,redshift=self.redshift)
-        center_y = get_value("center_y",self.fullname,redshift=self.redshift)
-        center_z = get_value("center_z",self.fullname,redshift=self.redshift)
-        self.center = np.array([center_x,center_y,center_z])
-        self.Lmag = get_value('Lmag',self.fullname,redshift = self.redshift)
-        self.Rvir = get_value('Rvir',self.fullname,redshift = self.redshift)
-        self.Mvir = get_value('Mvir',self.fullname,redshift = self.redshift)
-        self.Mgas = get_value('Mgas',self.fullname,redshift = self.redshift)
-        self.Mgas_galaxy = get_value('Mgas_galaxy',self.fullname,redshift = self.redshift)
-        self.Mgas_CGM = self.Mgas - self.Mgas_galaxy
-        self.Mstar = get_value('Mstar',self.fullname,redshift = self.redshift)
-        self.Mdm = get_value('Mdm',self.fullname,redshift = self.redshift)
-        self.sfr = get_value('sfr',self.fullname,redshift = self.redshift)
-        try:
-            self.ssfr = self.sfr / self.Mstar
-        except:
-            self.ssfr = np.nan
-        self.compaction_stage = get_value('compaction_stage',self.fullname,redshift = self.redshift)
-        self.final_a0 = get_last_a_for_sim(self.fullname)
+        for key in self.metadata_dict.keys():
+            if key[-2:] == '_x':
+                x = get_value(key,self.fullname,redshift = self.redshift,\
+                              all_quantities_dict = self.metadata_dict)
+                y = get_value(key.replace('_x','_y'),self.fullname,redshift = self.redshift,\
+                              all_quantities_dict = self.metadata_dict)
+                z = get_value(key.replace('_x','_z'),self.fullname,redshift = self.redshift,\
+                              all_quantities_dict = self.metadata_dict)
+                self.__setattr__(key.replace('_x',''),np.array([x,y,z]))
+            elif key[-2:] in ['_y','_z']:
+                continue
+            else:
+                v = get_value(key,self.fullname,redshift = self.redshift,\
+                              all_quantities_dict = self.metadata_dict)
+                self.__setattr__(key,v)
+        if 'Mgas' in self.__dict__ and 'Mgas_galaxy' in self.__dict__:
+            self.Mgas_CGM = self.Mgas - self.Mgas_galaxy
+        if 'sfr' in self.__dict__ and 'Mstar' in self.__dict__:
+            try:
+                self.ssfr = self.sfr / self.Mstar
+            except:
+                self.ssfr = np.nan
+        self.final_a0 = get_last_a_for_sim(self.fullname,all_quantities_dict = self.metadata_dict)
 
     def create_ion_list_w_bins(self):
         if 'empty' in self.type:

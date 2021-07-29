@@ -88,7 +88,7 @@ class QuasarArrayHandler(object):
         for q in sorted(qlist, key=lambda x: (x.fullname,x.rounded_redshift)):
             s += q.fullname +" at z=%s ("%q.rounded_redshift
             for c in criteria:
-                v = eval('q.%s'%c)
+                v = q.__getattribute__(c)
                 if isinstance(v,str) or isinstance(v,list):
                     s+="%s = %s, "%(c,v)
                 elif log:
@@ -275,7 +275,7 @@ class QuasarArrayHandler(object):
     def constrain_via_gasbins(self,gasbintypes=None):
         if gasbintypes == []:
             return gasbintypes
-        if gasbintypes == None:
+        if gasbintypes == None or isinstance(gasbintypes,str):
             gasbintypes = input("Available bins are: %s. Please enter one."%gasbinning.possible_bin_types)
         if isinstance(gasbintypes,str):
             gasbintypes = [gasbintypes]

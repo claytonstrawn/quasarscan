@@ -88,7 +88,7 @@ class MultiSphereSorter(object):
         if not at_end:
             res = []
             for q in self.array:
-                criteria_vals = eval("q." + criteria)
+                criteria_vals = q.__getattribute__(criteria)
                 res.append(criteria_vals)
             return np.array(res,dtype=object)
         else:
