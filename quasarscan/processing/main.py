@@ -8,6 +8,7 @@ from quasarscan.utils import roman
 import sys
 import os
 import datetime
+import time
 
 class NoSimulationError(Exception):
     def __init__(self, message):
@@ -94,6 +95,11 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                                             data_filename="ray"+ident+".h5",
                                             fields = fields_to_keep,
                                             ftype='gas')
+            except KeyboardInterrupt:
+                print('skipping sightline %s ...'%index)
+                print('Interrupt again within 5 seconds to *actually* end')
+                time.sleep(5)
+                continue
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with making ray')
                 continue
