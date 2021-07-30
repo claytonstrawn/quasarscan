@@ -49,7 +49,7 @@ def dict_of_all_info(fullname):
     skipped = []
     for i,quantity in enumerate(quantities):
         if quantity not in float_quantities+string_quantities:
-            print('quantity %s not recognized. Skipping.'%quantity)
+            #print('quantity %s not recognized. Skipping.'%quantity)
             skipped.append(i)
             continue
         ret_dict[quantity] = {}

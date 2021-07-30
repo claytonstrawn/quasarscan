@@ -42,7 +42,7 @@ def throw_errors_if_allowed(e,throwerrors,message=None):
     elif throwerrors == False:
         return
 
-def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None,run = 'default',throwerrors = False):
+def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None,run = 'default',throwerrors = 'warn'):
     if run not in ['default','test']:
         print('unknown option for "run" %s. Please restart with "run = default" or "run = test".'%run)
     #do not print out anything from yt (it prints plenty)
@@ -87,10 +87,6 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             ident = str(index)
             start = ds.arr(tuple(vector[5:8]),'unitary')
             end = ds.arr(tuple(vector[8:11]),'unitary')
-            if np.any(start < -.5) or np.any(start > 1) or np.any(end < -.5) or np.any(end > 1):
-                throw_errors_if_allowed(IllegalSightlineError,throwerrors,'"Unitary" units can'+ 
-                                        'only take in values between 0 and 1 (or -0.5 to +0.5), your values were'+
-                                       '%s,%s'%(start,end))
             try:
                 ray = trident.make_simple_ray(ds,
                                             start_position=start,

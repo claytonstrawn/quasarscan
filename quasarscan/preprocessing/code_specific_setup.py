@@ -37,8 +37,8 @@ def get_aux_files_art(dspath):
 
 def load_mockstreams_func(filename):
     temp_ds = yt.load(filename)
-    fields = ['density','temperature','metallicity','velocity_x','velocity_y','velocity_z']
-    units = ['g/cm**3','K','Zsun','cm/s','cm/s','cm/s']
+    fields = ['density','temperature','metallicity','velocity_x','velocity_y','velocity_z','phase_types']
+    units = ['g/cm**3','K','Zsun','cm/s','cm/s','cm/s','']
     data = {}
     for i,f in enumerate(fields):
         def func(field,data):
