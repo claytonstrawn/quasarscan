@@ -123,6 +123,46 @@ def weights(array,function):
     probs /= np.sum(probs)
     return probs
 
+def trim_sightline(ds,orig_start,orig_end,tolerated_offset = .0001):
+    left_edge = ds.domain_left_edge.in_units('kpc')
+    right_edge = ds.domain_right_edge.in_units('kpc')
+    center = (left_edge+right_edge)/2
+    sx,sy,sz = orig_start.in_units('kpc')
+    ex,ey,ez = orig_end.in_units('kpc')
+    fx = lambda t:(sx + t*(ex - sx))
+    fy = lambda t:(sy + t*(ey - sy))
+    fz = lambda t:(sz + t*(ez - sz))
+    def insquare(xaxis,yaxis,p):
+        a = left_edge[xaxis]<p[xaxis]<right_edge[xaxis]
+        b = left_edge[yaxis]<p[yaxis]<right_edge[yaxis]
+        return a and b
+    def incube(x,y,z):
+        a = left_edge[0]<=x<=right_edge[0]
+        b = left_edge[1]<=y<=right_edge[1]
+        c = left_edge[2]<=z<=right_edge[2]
+        return a and b and c
+    points = []
+    if incube(sx,sy,sz):
+        points.append(orig_start)
+    if incube(ex,ey,ez):
+        points.append(orig_end)
+    other_axes = {0:(1,2),1:(2,0),2:(0,1)}
+    for i in range(len('xyz')):
+        for edge in [left_edge[i],right_edge[i]]:
+            t = (edge-orig_start[i])/(orig_end[i]-orig_start[i])
+            x,x1,x2 = fx(t),fx(t+tolerated_offset),fx(t-tolerated_offset)
+            y,y1,y2 = fy(t),fy(t+tolerated_offset),fy(t-tolerated_offset)
+            z,z1,z2 = fz(t),fz(t+tolerated_offset),fz(t-tolerated_offset)
+            p = ds.arr([x,y,z],'kpc')
+            p1 = ds.arr([x1,y1,z1],'kpc')
+            p2 = ds.arr([x2,y2,z2],'kpc')
+            closer_p = p2 if np.linalg.norm(p2-center)<np.linalg.norm(p1-center) else p1
+            if insquare(other_axes[i][0],other_axes[i][1],p) and 0.<t<1.:
+                assert incube(closer_p[0],closer_p[1],closer_p[2]),"%s, (%s)"%(p1,p2)
+                points.append(closer_p)
+    assert len(points) == 2, 'must retain 2 endpoints! You got: %s'%points
+    return points
+
 #summary: Create the raw data array for this simulation, each sightline is one 
 #         line of the array
 # 
@@ -192,8 +232,9 @@ def create_qso_endpoints_helper(ds,R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L
         start_needrotation, end_needrotation = ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)
         start_rotated = ds.arr(np.matmul(rot_matrix, start_needrotation),'kpc')
         end_rotated = ds.arr(np.matmul(rot_matrix, end_needrotation),'kpc')
-        info[i][5:8] = (start_rotated + center).in_units('unitary').v
-        info[i][8:11] = (end_rotated + center).in_units('unitary').v
+        start_final,end_final = trim_sightline(ds,start_rotated + center,end_rotated + center)
+        info[i][5:8] = (start_final).in_units('unitary').v
+        info[i][8:11] = (end_final).in_units('unitary').v
     return scanparams,info
 
 def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,'Rvir'),\
