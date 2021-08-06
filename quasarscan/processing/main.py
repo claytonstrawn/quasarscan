@@ -23,9 +23,9 @@ class IllegalSightlineError(Exception):
 #can print out the time to see how fast the script is running
 use_tprint = True
 def tprint(*args,**kwargs):
-    if use_tprint:
+    if use_tprint is True:
         print(args,end=str(datetime.datetime.now())+'\n')
-    else:
+    elif use_tprint is 'no_time':
         print(args)
 
 def ion_to_field_name(ion,field_type = "number_density"):

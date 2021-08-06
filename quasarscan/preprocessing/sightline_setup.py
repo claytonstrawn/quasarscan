@@ -1,4 +1,4 @@
-#skeleton for sightline_setup
+ #skeleton for sightline_setup
 #designed to create and save QuasarSphere with realistic sightlines but with no data filled in
 #relies on yt (for making unit conversions)
 #relies on quasarsphere (makes QuasarSphere object)
@@ -161,6 +161,10 @@ def trim_sightline(ds,orig_start,orig_end,tolerated_offset = .0001):
                 assert incube(closer_p[0],closer_p[1],closer_p[2]),"%s, (%s)"%(p1,p2)
                 points.append(closer_p)
     assert len(points) == 2, 'must retain 2 endpoints! You got: %s'%points
+    if np.linalg.norm(points[0]-orig_start) > np.linalg.norm(points[1]-orig_start):
+        return points
+    else:
+        return [points[1],points[0]]
     return points
 
 #summary: Create the raw data array for this simulation, each sightline is one 
@@ -232,7 +236,11 @@ def create_qso_endpoints_helper(ds,R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L
         start_needrotation, end_needrotation = ray_endpoints_spherical(R,r,theta,phi,alpha,endonsph)
         start_rotated = ds.arr(np.matmul(rot_matrix, start_needrotation),'kpc')
         end_rotated = ds.arr(np.matmul(rot_matrix, end_needrotation),'kpc')
-        start_final,end_final = trim_sightline(ds,start_rotated + center,end_rotated + center)
+        try:
+            start_final,end_final = trim_sightline(ds,start_rotated + center,end_rotated + center)
+        except AssertionError:
+            i-=1
+            continue
         info[i][5:8] = (start_final).in_units('unitary').v
         info[i][8:11] = (end_final).in_units('unitary').v
     return scanparams,info
