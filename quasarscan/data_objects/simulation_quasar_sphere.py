@@ -101,6 +101,7 @@ def read_values(filename):
         myline = f.readline()[1:-1]
         if myline.strip('\n \t') == '':
             continue
+        myline = (' '.join(myline.split())).strip('[]\n\t')
         data[i] = np.fromstring(myline,sep = " ")
     f.close()
     return simparams,scanparams,ions,data,gasbins

@@ -104,7 +104,7 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=True):
 def add_radial_distance_fields(ds,center):
     for i,ax in enumerate('xyz'):
         def radial_distance_ax(field,data):
-            return data['gas',ax]-center[i]
+            return data[('gas',ax)]-center[i]
         ds.add_field(('gas','radial_distance_%s'%ax),
                    sampling_type='cell',
                    function=radial_distance_ax,
@@ -197,16 +197,16 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
         raise KeyError
     return fields_to_keep
 
-def check_redshift(ds,fullname = None,outputfilename=None,redshift = None):
+def check_redshift(ds,fullname = None,outputfilename=None,redshift = None,tolerance = 0.01):
     if outputfilename:
         assert fullname is None and redshift is None
-        redshift = float(outputfilename.split('z')[1].split('.')[0])
+        redshift = float(outputfilename.split('_z')[1].split('.')[0])
         fullname = outputfilename.split('coldensinfo')[0].split('/')[-1]
     code = fullname.split('_')[2]
     if code == 'mockstreams':
         ds.current_redshift = redshift
     else:
-        assert ds.current_redshift == redshift
+        assert np.abs(ds.current_redshift - redshift)<tolerance,"expected simulation to be at redshift %s, but was at redshift %s!"%(redshift,ds.current_redshift)
 
 #summary: wrapper for ytload which also sets up all necessary fields
 #         

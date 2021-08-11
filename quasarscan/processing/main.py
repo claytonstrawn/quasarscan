@@ -25,7 +25,7 @@ use_tprint = True
 def tprint(*args,**kwargs):
     if use_tprint is True:
         print(args,end=str(datetime.datetime.now())+'\n')
-    elif use_tprint is 'no_time':
+    elif use_tprint == 'no_time':
         print(args)
 
 def ion_to_field_name(ion,field_type = "number_density"):
@@ -105,7 +105,7 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                 continue
             trident.add_ion_fields(ray,q.ions)
             field_data = ray.all_data()
-            dl = field_data['dl']
+            dl = field_data['gas','dl']
             #3rd for loop is for processing each piece of info about each ion
             #including how much that ion is in each bin according to gasbinning
             #here just process topline data (column densities and ion fractions)
@@ -146,18 +146,23 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             #metallicity, average density (over the whole sightline)
             #mass-weighted temperature
             try:
-                Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
-                    np.sum(field_data[('gas',"H_nuclei_density")]*mh*dl)
+                if ('gas',"H_nuclei_density") in ray.derived_field_list:
+                    Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
+                        np.sum(field_data[('gas',"H_nuclei_density")]*mh*dl)
+                else:
+                    Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
+                        np.sum(field_data[('gas',"number_density")]*mh*dl)
                 vector[-1] = Z
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average metallicity')
             try:
-                n = np.average(field_data['number_density'],weights=field_data['number_density']*dl)
+                n = np.average(field_data['gas','number_density'],weights=field_data['gas','number_density']*dl)
                 vector[-2] = n
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average density')
             try:
-                T = np.average(field_data['temperature'],weights=field_data['density']*dl)
+                T = np.average(field_data['gas','temperature'],\
+                               weights=field_data['gas','density']*dl)
                 vector[-3] = T
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average temperature')

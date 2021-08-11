@@ -1,6 +1,6 @@
 from yt_astro_analysis.halo_analysis.halo_catalog.halo_catalog import HaloCatalog
 from yt.utilities.cosmology import Cosmology
-from yt import YTArray
+from unyt import unyt_array
 from quasarscan.utils.utils import sphcodes
 from quasarscan.preprocessing import code_specific_setup,parse_metadata,add_common_fields
 from quasarscan import __version__
@@ -30,28 +30,33 @@ def initialize_halo_catalog(ds,hc=None):
         hc.load(hc_str)
     return hc
 
-def get_halo_center(code,ds,hc=None,ith_largest = 1):
-    hc = initialize_halo_catalog(ds,hc=hc)
-        #check that the resolution is ok
+def get_halo_center(code,ds,hc=None,ith_largest = 1,method = 'hop'):
+    if method == 'hop':
+        hc = initialize_halo_catalog(ds,hc=hc)
+            #check that the resolution is ok
 
-    ad = ds.all_data()
-    if code not in sphcodes:
-        best_resolution = np.min(ad['index','cell_volume'])
+        ad = ds.all_data()
+        if code not in sphcodes:
+            best_resolution = np.min(ad['index','cell_volume'])
+        else:
+            best_resolution = None
+        sorted_halos = sorted(hc.catalog,key=lambda x:x['particle_mass'])
+        catalog_of_acceptable_halos = []
+        for i,h in enumerate(sorted_halos):
+            if len(catalog_of_acceptable_halos)==ith_largest:
+                return ds.arr(catalog_of_acceptable_halos[-1],'code_length')
+            center = np.array([h['particle_position_x'].in_units('unitary').v,
+                                h['particle_position_y'].in_units('unitary').v,
+                                h['particle_position_z'].in_units('unitary').v])
+            approx_Rvir = h['virial_radius'].in_units('kpc')*1.126
+            approx_halo = ds.sphere(center,approx_Rvir)
+            if best_resolution is not None and np.min(approx_halo['index','cell_volume']) == best_resolution:
+                catalog_of_acceptable_halos.append(center)
+        raise NotEnoughHalosError('Ran out of halos that reach max refinement!')
+    elif method == 'max':
+        return ds.find_max(('gas','density'))[1]
     else:
-        best_resolution = None
-    sorted_halos = sorted(hc.catalog,key=lambda x:x['particle_mass'])
-    catalog_of_acceptable_halos = []
-    for i,h in enumerate(sorted_halos):
-        if len(catalog_of_acceptable_halos)==ith_largest:
-            return ds.arr(catalog_of_acceptable_halos[-1],'code_length')
-        center = np.array([h['particle_position_x'].in_units('unitary').v,
-                            h['particle_position_y'].in_units('unitary').v,
-                            h['particle_position_z'].in_units('unitary').v])
-        approx_Rvir = h['virial_radius'].in_units('kpc')*1.126
-        approx_halo = ds.sphere(center,approx_Rvir)
-        if best_resolution is not None and np.min(approx_halo['index','cell_volume']) == best_resolution:
-            catalog_of_acceptable_halos.append(center)
-    raise NotEnoughHalosError('Ran out of halos that reach max refinement!')
+        assert False, 'method unknown'
 
 def find_virial_radius(ds,center):
     z = ds.current_redshift
@@ -160,7 +165,7 @@ def write_quantities_to_file(fullname,dspath,dict_of_quantities,tolerance = .001
         dict_of_all_info = {}
         all_avals = [a]
 
-    dict_of_quantities['a'] = YTArray(a,'')
+    dict_of_quantities['a'] = unyt_array(a,'')
     all_keys = ['a']
     new_keys = list(dict_of_quantities.keys())
     existing_keys = list(dict_of_all_info.keys())
@@ -196,13 +201,14 @@ def write_quantities_to_file(fullname,dspath,dict_of_quantities,tolerance = .001
 
 
 def create_metadata_table(fullname,filepath,hc = None,ith_largest = 1,Rvir=None,
-                          center=None,stars_boundary = 0.1, gal_edge = 0.1):
+                          center=None,stars_boundary = 0.1, gal_edge = 0.1,method = 'hop'):
     code = fullname.split('_')[2]
     ds,_ = code_specific_setup.load_and_setup(filepath,code)
     if center is None:
-        center = get_halo_center(code,ds,hc=hc,ith_largest = 1)
+        center = get_halo_center(code,ds,hc=hc,ith_largest = 1,method = method)
     else:
-        center = ds.arr(center,'unitary')
+        if not isinstance(center,unyt_array):
+            center = ds.arr(center,'unitary')
     print(center)
     if Rvir is None:
         Rvir,Mvir = find_virial_radius(ds,center)
