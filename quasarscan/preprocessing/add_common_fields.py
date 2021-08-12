@@ -10,11 +10,11 @@ def set_up_art(ds):
     
 def set_up_enzo(ds):
     def star_filter(pfilter, data):
-        return ((data[(pfilter.filtered_type, 'creation_time')] > 0))
+        return (data[pfilter.filtered_type, 'creation_time'] > 0)
     add_particle_filter('stars', function=star_filter, filtered_type='all', requires=['creation_time'])
     ds.add_particle_filter('stars')
     def dm_filter(pfilter, data):
-        return ((data[(pfilter.filtered_type, 'creation_time')] == 0))
+        return (data[pfilter.filtered_type, 'creation_time'] == 0)
     add_particle_filter('darkmatter', function=dm_filter, filtered_type='all', requires=['creation_time'])
     ds.add_particle_filter('darkmatter')
     
@@ -94,9 +94,9 @@ def set_up_gadget(ds):
     m5 = ad['PartType5','Masses']
     unique_dm5_masses = np.unique(m5)
     def dm_filter(pfilter, data):
-        allowed = data[(pfilter.filtered_type, 'Masses')]==unique_dm1_mass
+        allowed = data[pfilter.filtered_type, 'Masses']==unique_dm1_mass
         for v in unique_dm5_masses:
-            allowed = np.logical_or(allowed,data[(pfilter.filtered_type, 'Masses')]==v)
+            allowed = np.logical_or(allowed,data[pfilter.filtered_type, 'Masses']==v)
         return allowed
     add_particle_filter('darkmatter', function=dm_filter, filtered_type='all', requires=['Masses'])
     ds.add_particle_filter('darkmatter')
@@ -130,11 +130,11 @@ def set_up_gear(ds):
     m5 = ad['PartType5','Masses']
     unique_dm5_masses = np.unique(m5)
     def dm_filter(pfilter, data):
-        abovemin = data[(pfilter.filtered_type, 'Masses')]>=low
-        belowmax = data[(pfilter.filtered_type, 'Masses')]<=high
+        abovemin = data[pfilter.filtered_type, 'Masses']>=low
+        belowmax = data[pfilter.filtered_type, 'Masses']<=high
         allowed = np.logical_and(abovemin,belowmax)
         for v in unique_dm5_masses:
-            allowed = np.logical_or(allowed,data[(pfilter.filtered_type, 'Masses')]==v)
+            allowed = np.logical_or(allowed,data[pfilter.filtered_type, 'Masses']==v)
         return allowed
     add_particle_filter('darkmatter', function=dm_filter, filtered_type='all', requires=['Masses'])
     ds.add_particle_filter('darkmatter')
@@ -180,9 +180,9 @@ def set_up_gizmo(ds):
     m2 = ad['PartType2','Masses']
     unique_dm2_masses = np.unique(m2)    
     def dm_filter(pfilter, data):
-        allowed = np.zeros(data[(pfilter.filtered_type, 'Masses')].shape,dtype=bool)
+        allowed = np.zeros(data[pfilter.filtered_type, 'Masses'].shape,dtype=bool)
         for v in ds.arr(np.concatenate([unique_dm1_masses,unique_dm2_masses]).v,m2.units):
-            allowed = np.logical_or(allowed,data[(pfilter.filtered_type, 'Masses')]==v)
+            allowed = np.logical_or(allowed,data[pfilter.filtered_type, 'Masses']==v)
         return allowed
     add_particle_filter('darkmatter', function=dm_filter, filtered_type='all', requires=['Masses'])
     ds.add_particle_filter('darkmatter')

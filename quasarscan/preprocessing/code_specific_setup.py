@@ -46,7 +46,7 @@ def load_mockstreams_func(filename):
 
         temp_ds.add_field(("gas", f), function=func, sampling_type="local", units=units[i])
 
-        data[('gas',f)] = (temp_ds.data['gas',f])
+        data['gas',f] = (temp_ds.data['gas',f])
     bbox = np.array([[np.amin(temp_ds.data['data','x']),np.amax(temp_ds.data['data','x'])],
                      [np.amin(temp_ds.data['data','y']),np.amax(temp_ds.data['data','y'])],
                      [np.amin(temp_ds.data['data','z']),np.amax(temp_ds.data['data','z'])]])
@@ -104,7 +104,7 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=True):
 def add_radial_distance_fields(ds,center):
     for i,ax in enumerate('xyz'):
         def radial_distance_ax(field,data):
-            return data[('gas',ax)]-center[i]
+            return data['gas',ax]-center[i]
         ds.add_field(('gas','radial_distance_%s'%ax),
                    sampling_type='cell',
                    function=radial_distance_ax,

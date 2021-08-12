@@ -116,7 +116,7 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                 cdens = np.sum((ionfield * dl).in_units('cm**-2')).value
                 vector[11+j*(num_bin_vars+2)] = cdens
                 total_nucleus = np.sum(ionfield[ionfield>0]/\
-                                           field_data[("gas",ion_to_field_name(ion,'ion_fraction'))][ionfield>0]\
+                                           field_data["gas",ion_to_field_name(ion,'ion_fraction')][ionfield>0]\
                                             * dl[ionfield>0])
                 vector[11+j*(num_bin_vars+2)+1] = cdens / total_nucleus
                 #4th for loop is processing each gasbin for the current ion
@@ -147,11 +147,11 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             #mass-weighted temperature
             try:
                 if ('gas',"H_nuclei_density") in ray.derived_field_list:
-                    Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
-                        np.sum(field_data[('gas',"H_nuclei_density")]*mh*dl)
+                    Z = np.sum(field_data['gas',"metal_density"]*dl)/ \
+                        np.sum(field_data['gas',"H_nuclei_density"]*mh*dl)
                 else:
-                    Z = np.sum(field_data[('gas',"metal_density")]*dl)/ \
-                        np.sum(field_data[('gas',"number_density")]*mh*dl)
+                    Z = np.sum(field_data['gas',"metal_density"]*dl)/ \
+                        np.sum(field_data['gas',"number_density"]*mh*dl)
                 vector[-1] = Z
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average metallicity')
