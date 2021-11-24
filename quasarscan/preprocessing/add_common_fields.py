@@ -1,12 +1,15 @@
 from yt.utilities.cosmology import Cosmology
 from yt.data_objects.particle_filters import add_particle_filter
+from yt.utilities.physical_constants import mh
 import numpy as np 
 
 def set_up_art(ds):
-    #art is used as the archetype for all codes
-    #its default field names are what all other codes will
-    #implement
-    pass
+    def H_nuclei_density(field,data):
+        return data['gas','density']*data['gas','H_mass_fraction']/mh
+    ds.add_field(('gas','H_nuclei_density'),
+                sampling_type = 'cell',
+                function = H_nuclei_density,
+                units = 'cm**-3')
     
 def set_up_enzo(ds):
     def star_filter(pfilter, data):

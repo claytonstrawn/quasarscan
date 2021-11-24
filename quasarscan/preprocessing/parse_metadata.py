@@ -79,14 +79,14 @@ def all_avals(fullname,all_quantities_dict = None):
     avals.sort()
     return avals
 
-def get_closest_value_for_a(fullname,a,all_quantities_dict = None):
+def get_closest_value_for_a(fullname,a,tolerance = 0.2,all_quantities_dict = None):
     avals = np.array(list(dict_of_quantity('a',fullname,all_quantities_dict).keys()))
     avals.sort()
     best = -1.0
     for aval in avals:
         if np.abs(a-aval)<np.abs(best-a):
             best = aval
-    if np.abs(a-best)>.2:
+    if np.abs(a-best)>tolerance:
         return -1.0
     return best
 
@@ -96,18 +96,24 @@ def get_last_a_for_sim(fullname,all_quantities_dict = None):
     return avals[-1]
 
 def get_value(quantity, fullname, redshift = None, a = None, z=None, \
-              check_exists = False, all_quantities_dict = None, loud = False):
+              check_exists = False, all_quantities_dict = None, loud = False,
+             tolerance = 0.2):
     assert a is not None or z is not None or redshift is not None , 'no timestep specified'
     if a is None:
         redshift = z if redshift is None else redshift
         a = 1./(redshift+1)
     if check_exists:
-        return not np.isnan(get_value(quantity, fullname, a = a,all_quantities_dict = all_quantities_dict))
+        return not np.isnan(get_value(quantity, fullname, a = a,
+                                      all_quantities_dict = all_quantities_dict,
+                                      tolerance = tolerance))
     simname,version,code,simnum = fullname.split("_")
     if all_quantities_dict is None:
         all_quantities_dict = dict_of_all_info(fullname)
-    a0 = get_closest_value_for_a(fullname,a=a,all_quantities_dict=all_quantities_dict)
-    one_quantity_dict = dict_of_quantity(quantity,fullname,all_quantities_dict=all_quantities_dict)
+    a0 = get_closest_value_for_a(fullname,a=a,
+                                 all_quantities_dict=all_quantities_dict,
+                                 tolerance=tolerance)
+    one_quantity_dict = dict_of_quantity(quantity,fullname,
+                                         all_quantities_dict=all_quantities_dict)
     if one_quantity_dict is None:
         if loud:
             print('quantity "%s" not in ~/quasarscan_info/galaxy_catalogs/%s_%s_%s/%s.txt'%(quantity,simname,version,code,simnum))

@@ -5,7 +5,8 @@ import os
 
 def read_table(filename = "default"):
     if filename == 'default':
-        path = os.path.expanduser('~/quasarscan/quasarscan/utils/CI_PI_cutoff_tables.txt')
+        _ROOT = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.join(_ROOT,'CI_PI_cutoff_tables.txt')
         f=open(path,'r')
     else:
         f=open(filename,'r')

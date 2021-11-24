@@ -209,7 +209,9 @@ def create_metadata_table(fullname,filepath,hc = None,ith_largest = 1,Rvir=None,
     else:
         if not isinstance(center,unyt_array):
             center = ds.arr(center,'unitary')
-    print(center)
+        elif isinstance(center,unyt_array):
+            center = ds.arr(center.v,center.units)
+            center.convert_to_units('unitary')
     if Rvir is None:
         Rvir,Mvir = find_virial_radius(ds,center)
     else:
@@ -218,6 +220,10 @@ def create_metadata_table(fullname,filepath,hc = None,ith_largest = 1,Rvir=None,
         cell_mass,particle_mass = sp.quantities.total_mass()
         Mvir = cell_mass+particle_mass
     add_common_fields.add_radial_distance_fields(ds,center)
-    dict_of_quantities = get_required_quantities(ds,center,Rvir,Mvir,stars_boundary,gal_edge)
+    try:
+        dict_of_quantities = get_required_quantities(ds,center,Rvir,Mvir,stars_boundary,gal_edge)
+    except Exception as e:
+        print(e)
+        return ds
     dspath = ds.fullpath
     write_quantities_to_file(fullname,dspath,dict_of_quantities)

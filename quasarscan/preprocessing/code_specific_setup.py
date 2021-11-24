@@ -66,12 +66,14 @@ def ytload(path,code):
         ds = yt.load(path,file_particle_header=h,\
                                   file_particle_data=d,\
                                   file_particle_stars=s)
-        ds.length_unit.in_units('unitary')
     elif code == 'mockstreams':
         ds = load_mockstreams_func(path)
         #TODO: Vayun, load this like it's loaded in mock_streams.main
         #because I'm running into the same "TypeError: 'NoneType' object is not subscriptable"
         #error as we were last time
+    elif code == 'gadget':
+        unit_base = {'length':(1.0, "Mpccm/h")}
+        ds = yt.load(path,unit_base = unit_base)
     else:
         ds = yt.load(path)
     return ds
@@ -197,10 +199,10 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
         raise KeyError
     return fields_to_keep
 
-def check_redshift(ds,fullname = None,outputfilename=None,redshift = None,tolerance = 0.01):
+def check_redshift(ds,fullname = None,outputfilename=None,redshift = None,tolerance = 0.05):
     if outputfilename:
         assert fullname is None and redshift is None
-        redshift = float(outputfilename.split('_z')[1].split('.')[0])
+        redshift = float(outputfilename.split('_z')[1].split('.txt')[0])
         fullname = outputfilename.split('coldensinfo')[0].split('/')[-1]
     code = fullname.split('_')[2]
     if code == 'mockstreams':
