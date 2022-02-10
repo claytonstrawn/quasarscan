@@ -78,7 +78,7 @@ def set_up_changa(ds):
     def metal_density(field,data):
         return data['gas','metallicity']*data['gas','density']
     ds.add_field(('gas','metal_density'),
-                sampling_type = 'cell',
+                sampling_type = 'particle',
                 function = metal_density,
                 units = 'g/cm**3')
     
@@ -115,7 +115,7 @@ def set_up_gadget(ds):
     def metal_density(field,data):
         return data['gas','metallicity']*data['gas','density']
     ds.add_field(('gas','metal_density'),
-                sampling_type = 'cell',
+                sampling_type = 'particle',
                 function = metal_density,
                 units = 'g/cm**3')
 
@@ -158,14 +158,14 @@ def set_up_gear(ds):
         else:
             return data['PartType0', "Metals"][:,9].in_units("")/Z_Solar
     ds.add_field(('gas','metallicity'),
-                sampling_type = 'cell',
+                sampling_type = 'particle',
                 function = new_metallicity,
                 units = '',
                 force_override = True)
     def metal_density(field,data):
         return data['gas','metallicity']*data['gas','density']
     ds.add_field(('gas','metal_density'),
-                sampling_type = 'cell',
+                sampling_type = 'particle',
                 function = metal_density,
                 units = 'g/cm**3')
 
@@ -202,7 +202,7 @@ def set_up_gizmo(ds):
     def metal_density(field,data):
         return data['gas','metallicity']*data['gas','density']
     ds.add_field(('gas','metal_density'),
-                sampling_type = 'cell',
+                sampling_type = 'particle',
                 function = metal_density,
                 units = 'g/cm**3')
     

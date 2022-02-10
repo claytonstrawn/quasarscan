@@ -68,9 +68,6 @@ def ytload(path,code):
                                   file_particle_stars=s)
     elif code == 'mockstreams':
         ds = load_mockstreams_func(path)
-        #TODO: Vayun, load this like it's loaded in mock_streams.main
-        #because I'm running into the same "TypeError: 'NoneType' object is not subscriptable"
-        #error as we were last time
     elif code == 'gadget':
         unit_base = {'length':(1.0, "Mpccm/h")}
         ds = yt.load(path,unit_base = unit_base)
@@ -99,7 +96,8 @@ def add_necessary_fields_to_ds(code,ds,add_pi_fracs=True):
         raise KeyError
     assert ds.dataset_type == yt_dstype_names[code]
     if add_pi_fracs:
-        PI_field_defs.make_funcs(ds=ds,add_fields=True)
+        sph = code in sphcodes
+        PI_field_defs.make_funcs(ds=ds,add_fields=True,sph=sph)
     set_up_funcs[code](ds)
     check_necessary_fields_exist(ds,code)
 

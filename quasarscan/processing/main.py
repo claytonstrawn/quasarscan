@@ -66,8 +66,8 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
     code_specific_setup.check_redshift(ds,outputfilename=outputfilename)
     num_bin_vars = q.gasbins.get_length()
     #Can start at a position further than 0 if reached
-    starting_point = q.length_reached 
-    bins = np.append(np.arange(starting_point,q.length,save_after_num)[:-1],q.length)
+    starting_point = q.length_reached
+    bins = np.append(np.arange(starting_point,q.length,save_after_num),q.length)
     #first for loop is non-parallel. If 32 processors available, it will break up
     #into bins of size 32 at a time for example. At end, saves data from all 32.
     #this is (~12 bins) in usual circumstances

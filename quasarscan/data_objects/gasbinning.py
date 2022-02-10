@@ -71,8 +71,7 @@ class GasBin(object):
     def get_keys(self):
         newlist = []
         for val in self.binnames:
-            #can't have that, it looks too much like scientific notation
-            assert val[-1] != 'e'
+            assert val[-1] != 'e', "variable names cannot end with 'e', it looks too much like scientific notation in a formula"
             newlist.append(self.name+":"+val)
         return newlist
 
@@ -99,7 +98,7 @@ def ds_has_field(ds,gb):
         return gb.field in ds.derived_field_list
     elif isinstance(gb.field,dict):
         key = list(gb.field.keys())[0]
-        return ('gas',gb.field[key]) in ds.derived_field_list
+        return gb.field[key] in ds.derived_field_list
     else:
         return False
 
@@ -143,7 +142,8 @@ class GasBinsHolder(object):
                         current_edges.append(begin)
                         current_ytfield = ytfields[i]
                         current_units = units[i]
-                newBin = GasBin(field_name,current_bins,current_edges+[end],field = current_ytfield,units = current_units)
+                newBin = GasBin(field_name,current_bins,current_edges+[end],
+                                field = current_ytfield,units = current_units)
                 self.bin_types.append(newBin)
             return
         if bins == "all_amr":
@@ -154,15 +154,20 @@ class GasBinsHolder(object):
             res_bin = resolution_bin_sph
         elif bins is None:
             bins = []
-        if "density" in bins and ds_has_field(ds,density_bin):
+        if "density" in bins:
+            assert ds_has_field(ds,density_bin)
             self.bin_types.append(density_bin)
-        if "temperature" in bins and ds_has_field(ds,temperature_bin):
+        if "temperature" in bins:
+            assert ds_has_field(ds,temperature_bin)
             self.bin_types.append(temperature_bin)
-        if "radial_velocity" in bins and ds_has_field(ds,radial_velocity_bin):
+        if "radial_velocity" in bins:
+            assert ds_has_field(ds,radial_velocity_bin)
             self.bin_types.append(radial_velocity_bin)
-        if "resolution" in bins and ds_has_field(ds,res_bin):
+        if "resolution" in bins:
+            assert ds_has_field(ds,res_bin)
             self.bin_types.append(res_bin)
-        if "ionization_mechanism" in bins and ds_has_field(ds,pi_bin):
+        if "ionization_mechanism" in bins:
+            assert ds_has_field(ds,pi_bin)
             self.bin_types.append(pi_bin)
 
     def __contains__(self, key):

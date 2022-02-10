@@ -40,7 +40,7 @@ def transpose_err_array(errs):
 #        
 #outputs:  future_colors: list of colors plotted to replicate in other plots if desired
 def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,ax=None,fig=None,
-               average='default',dots=False,grid=False,linestyle='',ls='',linewidth = 1.5,
+               average='default',dots=False,grid=True,linestyle='',ls='',linewidth = 1.5,
                fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
                alpha = 1.0,elinewidth=None,capsize=3,zorder = 100,**kwargs):
     if ax is None:
@@ -88,7 +88,7 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
         ax.set_ylim(ylims)
     if grid:
         ax.grid()
-    ax.legend()
+    ax.legend().set_zorder(2)
     return fig,ax
 
 
@@ -121,7 +121,7 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,
         ax.set_ylim(ylims)
     if grid:
         ax.grid()
-    ax.legend()
+    ax.legend().set_zorder(2)
     return fig,ax
 
 def figure_out_limits(xerrs,i,j,default=.15):
@@ -204,7 +204,7 @@ def plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,quasar
         ax.set_ylim(ylims)
     if grid:
         ax.grid()
-    ax.legend()
+    ax.legend().set_zorder(2)
     return fig,ax
 
 def plot_hist_on_ax(plot_type,xs,ys,xlabel,ylabel,title,weight,cbarlabel,ax=None,fig=None,ns = (42,15),\

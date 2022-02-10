@@ -92,7 +92,7 @@ def make_PI_CI_funcs(ion,redshift):
     return PI_ion,CI_ion
 
 ions = table[0]
-def make_funcs(ds=None,z=None,ions = ions,add_fields=False,loud = False):
+def make_funcs(ds=None,z=None,ions = ions,sph = False,add_fields=False,loud = False):
     if not z and not ds:
         if loud:
             print('assuming z=1')
@@ -111,12 +111,13 @@ def make_funcs(ds=None,z=None,ions = ions,add_fields=False,loud = False):
         all_PI_funcs[ion]=PI_ion
         all_CI_funcs[ion]=CI_ion
         if add_fields and ds:                     
+            sampling_type = 'cell' if not sph else 'particle'
             ds.add_field(('gas',PI_field_name),
-                           sampling_type="cell",
+                           sampling_type=sampling_type,
                            function=PI_ion,
                            units='')
             ds.add_field(('gas',CI_field_name),
-                           sampling_type="cell",
+                           sampling_type=sampling_type,
                            function=CI_ion,
                            units='')
         elif add_fields:

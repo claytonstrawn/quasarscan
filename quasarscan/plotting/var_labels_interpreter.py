@@ -202,10 +202,6 @@ def configure_variables(xVar,yVar,average,logx='guess',logy='guess',labels=None,
 def get_labels_and_titles(plot_type,xVar_packet,yVar_packet,average,title=None,add_averaging_type=False,**kwargs):
     xVar,xVar_name,logx = xVar_packet
     yVar,yVar_name,logy = yVar_packet
-    if add_averaging_type:
-        add_to_title = title[1] if isinstance(title,tuple) and title[0] == None else ''
-    else:
-        add_to_title = ''
     if isinstance(title,str):
         title = title
     else:
@@ -219,7 +215,8 @@ def get_labels_and_titles(plot_type,xVar_packet,yVar_packet,average,title=None,a
             title = "Galaxy 2 Parameter Dependence"
         elif plot_type == 4:
             title = "Sightline 2 Variable Correlation"
-    title+=" ("+str(average)+") "+add_to_title
+    if add_averaging_type:
+        title+=" ("+str(average)+") "
 
     if plot_type == 0 and ":" in yVar[0] and yVar[0].split(":")[1] != "cdens":
         ylabel = "fraction of ion in state"
