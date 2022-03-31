@@ -70,7 +70,12 @@ class SimQuasarSphere(QuasarSphere):
         for i in range(8):
             f.write(firstfew[i])
         for vector in self.info:
-            f.write(str(vector).replace("\n",""))
+            str_vector = '['
+            for v in vector:
+                str_vector += '%e '%v
+            str_vector = str_vector[:-1]
+            str_vector += ']'
+            f.write(str_vector)
             f.write("\n")
         f.close()
         print("saved file %s"%filename)
@@ -102,7 +107,11 @@ def read_values(filename):
         if myline.strip('\n \t') == '':
             continue
         myline = (' '.join(myline.split())).strip('[]\n\t')
-        data[i] = np.fromstring(myline,sep = " ")
+        try:
+            data[i] = np.fromstring(myline,sep = " ")
+        except Exception as e:
+            print(i,[k for k in myline])
+            raise e
     f.close()
     return simparams,scanparams,ions,data,gasbins
 

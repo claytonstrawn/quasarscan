@@ -1,6 +1,7 @@
 from yt.utilities.cosmology import Cosmology
 from yt.data_objects.particle_filters import add_particle_filter
 from yt.utilities.physical_constants import mh
+from unyt import unyt_quantity,unyt_array
 import numpy as np 
 
 def set_up_art(ds):
@@ -118,6 +119,7 @@ def set_up_gadget(ds):
                 sampling_type = 'particle',
                 function = metal_density,
                 units = 'g/cm**3')
+    alias_default_velocities(ds,'PartType0','particle')
 
 def set_up_gear(ds):
     def star_mass_rename(field,data):
@@ -168,6 +170,7 @@ def set_up_gear(ds):
                 sampling_type = 'particle',
                 function = metal_density,
                 units = 'g/cm**3')
+    alias_default_velocities(ds,'PartType0','particle')
 
 def set_up_gizmo(ds):
     def star_mass_rename(field,data):
@@ -205,6 +208,7 @@ def set_up_gizmo(ds):
                 sampling_type = 'particle',
                 function = metal_density,
                 units = 'g/cm**3')
+    alias_default_velocities(ds,'PartType0','particle')
     
 def set_up_mockstreams(ds):
     def metal_density(field,data):
@@ -214,35 +218,71 @@ def set_up_mockstreams(ds):
                 function = metal_density,
                 units = 'g/cm**3')
     
-set_up_funcs = {'art':set_up_art,'enzo':set_up_enzo,'ramses':set_up_ramses,'changa':set_up_changa,'gear':set_up_gear,'gizmo':set_up_gizmo,'gadget':set_up_gadget,'mockstreams':set_up_mockstreams}    
+set_up_funcs = {'art':set_up_art,'enzo':set_up_enzo,\
+                'ramses':set_up_ramses,'changa':set_up_changa,\
+                'gear':set_up_gear,'gizmo':set_up_gizmo,\
+                'gadget':set_up_gadget,'mockstreams':set_up_mockstreams}
 
-def add_radial_distance_fields(ds,center):
-    for i,ax in enumerate('xyz'):
+def alias_default_velocities(ds,ptype,sampling_type):
+    fields_to_alias = ['relative_velocity_%s'%ax for ax in 'xyz']
+    for fname in fields_to_alias:
+        units = ds.field_info['gas',fname].units
+        def fake_alias_function(ptype,fname):
+            def fake_alias(field,data):
+                return data['gas',fname]
+            return fake_alias
+        ds.add_field((ptype,fname),
+                    sampling_type = sampling_type,
+                    function = fake_alias_function(ptype,fname),
+                    units = units)
+
+def set_up_general(ds,code,center,v,Rvir):
+    sph = (code in ['gizmo','gadget','gear','tipsy','changa'])
+    sampling_type = 'cell' if not sph else 'particle'
+    def radial_distance_ax_function(ax,center_i):
         def radial_distance_ax(field,data):
-            return data['gas',ax]-center[i]
-        ds.add_field(('gas','radial_distance_%s'%ax),
-                   sampling_type='cell',
-                   function=radial_distance_ax,
-                   units='cm',force_override = True)
-    
-def add_relative_velocity_fields(ds,v):
+            return data['gas',ax]-ds.quan(center_i,'unitary')
+        return radial_distance_ax
     for i,ax in enumerate('xyz'):
+        center_i = center[i]
+        ds.add_field(('gas','radial_distance_%s'%ax),
+                   sampling_type=sampling_type,
+                       function=radial_distance_ax_function(ax,center_i),
+                       units='cm',force_override = True)
+    def normed_radial_distance(field,data):
+        total_distance = np.sqrt(data['gas','radial_distance_x']**2\
+                               +data['gas','radial_distance_y']**2\
+                               +data['gas','radial_distance_z']**2)
+        return total_distance.in_units('kpc')/unyt_quantity(Rvir,'kpc')
+    ds.add_field(('gas','normed_radial_distance'),
+               sampling_type=sampling_type,
+                   function=normed_radial_distance,
+                   units='',force_override = True)
+    def relative_velocity_ax_function(ax,v_i):
         def relative_velocity_ax(field,data):
-            return data['gas','velocity_%s'%ax]-v[i]
+            return data['gas','velocity_%s'%ax]-ds.quan(v_i,'km/s')
+        return relative_velocity_ax
+    for i,ax in enumerate('xyz'):
+        v_i = v[i]
         ds.add_field(('gas','relative_velocity_%s'%ax),
-                   sampling_type='cell',
-                   function=relative_velocity_ax,
+                   sampling_type=sampling_type,
+                   function=relative_velocity_ax_function(ax,v_i),
                    units='cm/s',force_override = True)
-        def relative_momentum_ax(field,data):
-            return data['gas','relative_velocity_%s'%ax]*data['gas','mass']
-        ds.add_field(('gas','relative_momentum_%s'%ax),
-                   sampling_type='cell',
-                   function=relative_momentum_ax,
-                   units='g*cm/s',force_override = True)
-        
-def add_radial_velocity_fields(ds,v):
+    def relative_velocity(field,data):
+        shape = data['gas','relative_velocity_x'].shape
+        to_ret_shape = tuple(list(shape)+[3])
+        toret = unyt_array(np.zeros(to_ret_shape),'cm/s')
+        for i,ax in enumerate('xyz'):
+            exec("toret[%s%d] = data['gas','relative_velocity_x']"%(':,'*len(shape),i))
+        return toret
+    ds.add_field(('gas','relative_velocity'),
+           sampling_type=sampling_type,
+           function=relative_velocity,
+           units='cm/s',force_override = True)
     def radial_velocity(field,data):
-        tot_distance = np.sqrt(data['gas','radial_distance_x']**2+data['gas','radial_distance_y']**2+data['gas','radial_distance_z']**2)
+        tot_distance = np.sqrt(data['gas','radial_distance_x']**2\
+                               +data['gas','radial_distance_y']**2\
+                               +data['gas','radial_distance_z']**2)
         x_comp = data['gas','radial_distance_x']*data['gas','relative_velocity_x']/tot_distance
         y_comp = data['gas','radial_distance_y']*data['gas','relative_velocity_y']/tot_distance
         z_comp = data['gas','radial_distance_z']*data['gas','relative_velocity_z']/tot_distance
@@ -250,4 +290,4 @@ def add_radial_velocity_fields(ds,v):
     ds.add_field(('gas','radial_velocity'),
                sampling_type='cell',
                function=radial_velocity,
-               units='km/s',force_override = True)
+               units='km/s',force_override = True)  

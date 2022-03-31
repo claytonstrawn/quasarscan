@@ -7,6 +7,11 @@ class BadBinNameError(Exception):
     def __init__(self, message):
         self.message = message
         print(self.message)
+        
+class FieldMissingError(Exception):
+    def __init__(self, message):
+        self.message = message
+        print(self.message)
 
 #read a dictionary of a string and return a dictionary object
 def parse_string_for_dict(s):
@@ -51,12 +56,15 @@ class GasBin(object):
         #TODO - convert bin names to be stored in all caps
         for binname in binnames:
             if binname[-1] == 'e':
-                raise BadBinNameError('Bin names cannot end in "e" (it looks too much like Python float syntax)')
+                raise BadBinNameError('Bin names cannot end in '+\
+                                      '"e" (it looks too much like Python float syntax)')
         self.binnames = binnames
 
     def __eq__(self,other):
         if self.name == other.name:
-            if self.binvalstr == other.binvalstr and self.binnames == other.binnames and self.units == other.units:
+            if self.binvalstr == other.binvalstr and \
+                self.binnames == other.binnames and \
+                self.units == other.units:
                 return True
             else:
                 return False
@@ -64,6 +72,10 @@ class GasBin(object):
 
     def __ne__(self,other):
         return not self.__eq__(other)
+    
+    def __str__(self):
+        units = '(dimensionless)' if self.units == '' else self.units
+        return '{'+self.name+','+units+', (%s)}'%(self.field,)
 
     def get_length(self):
         return len(self.binnames)
@@ -71,36 +83,68 @@ class GasBin(object):
     def get_keys(self):
         newlist = []
         for val in self.binnames:
-            assert val[-1] != 'e', "variable names cannot end with 'e', it looks too much like scientific notation in a formula"
+            assert val[-1] != 'e',\
+                    "variable names cannot end with "+\
+                    "'e', it looks too much like scientific notation in a formula"
             newlist.append(self.name+":"+val)
         return newlist
 
 if 'write' in mode:
     # below are all the known gasbins. More could easily be made
-    density_bin = GasBin("density",["low","between6_4","between4_2","between2_0","selfshielding","starforming"],["0.0",'1.674e-30','1.674e-28','1.674e-26',"1.6737e-25","1.6737e-23","np.inf"],units = 'g/cm**3')#[0,1e-6,1e-4,1e-2,1e-1,1e1,inf]*mh
-    temperature_bin = GasBin("temperature",["cold","cool","warm_hot","hot"],["0.0","10**3.8","10**4.5","10**6.5","np.inf"],units = "K")
-    radial_velocity_bin = GasBin("radial_velocity",["inflow",'inflow_slow',"tangential",'outflow_slow',"outflow"],['-np.inf','-500','-10','10','500','np.inf'],units = "km/s")
-    resolution_bin_amr = GasBin("resolution",["high","between1_5","between5_15","low"],['0.00e+00', '1e9', '1.250e+11','3.375e+12', 'np.inf'],field = ('gas','cell_volume'),units = "pc**3")# (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
-    resolution_bin_sph = GasBin("resolution",["high","between1_5","between5_15","low"],['0.00e+00', '1000', '5000','15000', 'np.inf'],field = ('gas','smoothing_length'),units = "pc")# (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
+    density_bin = GasBin("density",\
+                        ["low","between6_4","between4_2",\
+                         "between2_0","selfshielding","starforming"],\
+                         ["0.0",'1.674e-30','1.674e-28',\
+                          '1.674e-26',"1.6737e-25","1.6737e-23","np.inf"],\
+                         units = 'g/cm**3')
+                        #[0,1e-6,1e-4,1e-2,1e-1,1e1,inf]*mh
+    temperature_bin = GasBin("temperature",\
+                             ["cold","cool","warm_hot","hot"],\
+                             ["0.0","10**3.8","10**4.5","10**6.5","np.inf"],units = "K")
+    radial_velocity_bin = GasBin("radial_velocity",\
+                                 ["inflow",'inflow_slow',"tangential",'outflow_slow',"outflow"],\
+                                 ['-np.inf','-500','-10','10','500','np.inf'],units = "km/s")
+    distance_bin = GasBin("radial_distance",\
+                         ["galaxy",'innercgm',"outercgm",'cgm2igm',"igm"],\
+                         ['0.0','0.1','0.5','1.0','2.0','np.inf'],\
+                         field = ('gas','normed_radial_distance'),units = "")
+
+    resolution_bin_amr = GasBin("resolution",["high","between1_5","between5_15","low"],\
+                                ['0.00e+00', '1e9', '1.250e+11','3.375e+12', 'np.inf'],\
+                                field = ('gas','cell_volume'),units = "pc**3")
+                                # (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
+    resolution_bin_sph = GasBin("resolution",["high","between1_5","between5_15","low"],\
+                                ['0.00e+00', '1000', '5000','15000', 'np.inf'],\
+                                field = ('gas','smoothing_length'),units = "pc")
+                                # (['0.00e+00', '1000', '5000','15000', 'np.inf']pc)**3
     all_ions_w_known_PI_defs = PI_field_defs.make_funcs()[0]
     allionizationfields = {}
     for ion in all_ions_w_known_PI_defs:
         allionizationfields[ion]=('gas','PI_%s'%(ion.replace(' ','')))
     pi_bin = GasBin('ionization_mechanism',['PI'],['0.9','1.1'], field = allionizationfields)
-    possible_bin_types = ["density","temperature","radial_velocity","resolution","ionization_mechanism"]
+    possible_bin_types = ["density","temperature",\
+                          "radial_velocity","resolution",\
+                          "ionization_mechanism","radial_distance"]
 
-def ds_has_field(ds,gb):
+def assert_ds_has_field(ds,gb):
     if ds is None:
-        return True
+        return
     if isinstance(gb.field,str):
-        return ('gas',gb.field) in ds.derived_field_list
+        if ('gas',gb.field) in ds.derived_field_list:
+            return
     elif isinstance(gb.field,tuple):
-        return gb.field in ds.derived_field_list
+        if gb.field in ds.derived_field_list:
+            return
     elif isinstance(gb.field,dict):
         key = list(gb.field.keys())[0]
-        return gb.field[key] in ds.derived_field_list
-    else:
-        return False
+        if gb.field[key] in ds.derived_field_list:
+            return
+    toprintlist = []
+    for f in ds.derived_field_list:
+        if f[0] == 'gas':
+            toprintlist.append(f)
+    raise FieldMissingError('field required for %s is not in the dataset.'%gb+\
+                            ' Dataset includes %s'%toprintlist)
 
 
 # GasBinsHolder object contains multiple GasBin objects
@@ -155,21 +199,24 @@ class GasBinsHolder(object):
         elif bins is None:
             bins = []
         if "density" in bins:
-            assert ds_has_field(ds,density_bin)
+            assert_ds_has_field(ds,density_bin)
             self.bin_types.append(density_bin)
         if "temperature" in bins:
-            assert ds_has_field(ds,temperature_bin)
+            assert_ds_has_field(ds,temperature_bin)
             self.bin_types.append(temperature_bin)
         if "radial_velocity" in bins:
-            assert ds_has_field(ds,radial_velocity_bin)
+            assert_ds_has_field(ds,radial_velocity_bin)
             self.bin_types.append(radial_velocity_bin)
         if "resolution" in bins:
-            assert ds_has_field(ds,res_bin)
+            assert_ds_has_field(ds,res_bin)
             self.bin_types.append(res_bin)
         if "ionization_mechanism" in bins:
-            assert ds_has_field(ds,pi_bin)
+            assert_ds_has_field(ds,pi_bin)
             self.bin_types.append(pi_bin)
-
+        if "radial_distance" in bins:
+            assert_ds_has_field(ds,distance_bin)
+            self.bin_types.append(distance_bin)
+            
     def __contains__(self, key):
         for b in self.bin_types:
             if key == b.name:
@@ -236,7 +283,8 @@ class GasBinsHolder(object):
                 else:
                     specific_val=":%s"%val
                 if gb.field != ('gas',gb.name):
-                    specific_val += ":field-%s"%(str(gb.field).replace(', ',',').replace(': ',':').replace("'",""))
+                    specific_val += ":field-%s"%\
+                        (str(gb.field).replace(', ',',').replace(': ',':').replace("'",""))
                 if gb.units:
                     specific_val += ":units-%s"%gb.units
                 to_return+=", %s%s"%(current_to_add,specific_val)
