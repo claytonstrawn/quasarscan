@@ -66,7 +66,7 @@ class SimQuasarSphere(QuasarSphere):
         for ion in self.ions:
             toAdd = "%s:cdens, %s:fraction, %s, "%(ion,ion,self.gasbins.get_bin_str(numbers = False,append = ion+":"))
             firstfew[7] += toAdd
-        firstfew[7] += "T, n, Z]\n"
+        firstfew[7] += "T, nmean, nmax, Z]\n"
         for i in range(8):
             f.write(firstfew[i])
         for vector in self.info:
@@ -101,16 +101,18 @@ def read_values(filename):
     gasbins = GasBinsHolder(string = firstfew[6])
     length = scanparams[5]
     num_extra_columns = gasbins.get_length()
-    data = np.zeros((int(length),11+len(ions)*(num_extra_columns+2)+3))
+    myline = f.readline()[1:-1].strip('[]\n\t').split(' ')
+    data = np.zeros((int(length),len(myline)))
     for i in range(length):
-        myline = f.readline()[1:-1]
+        if i>0:
+            myline = f.readline()[1:-1]
         if myline.strip('\n \t') == '':
             continue
         myline = (' '.join(myline.split())).strip('[]\n\t')
+        to_add = np.fromstring(myline,sep = " ")
         try:
-            data[i] = np.fromstring(myline,sep = " ")
+            data[i] = to_add
         except Exception as e:
-            print(i,[k for k in myline])
             raise e
     f.close()
     return simparams,scanparams,ions,data,gasbins

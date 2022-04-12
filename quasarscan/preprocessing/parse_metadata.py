@@ -3,13 +3,19 @@ path_to_dicts = os.path.expanduser('~')
 import sys
 sys.path.append(path_to_dicts)
 import numpy as np
+from quasarscan.utils.variable_lists import string_type_metadata_quantities,param_xVars,all_metadata_quantities
 
 class NoMetadataError(Exception):
     def __init__(self, message):
         self.message = message
         print(self.message)
+        
+class UnknownQuantityError(Exception):
+    def __init__(self, message):
+        self.message = message
+        print(self.message)
 
-def dict_of_all_info(fullname):
+def dict_of_all_info(fullname,throw_errors = True):
     #This is a guide for what info can be found in what column, starting from column 0.
     assert len(fullname.split('_')) == 4, 'fullname %s formatted incorrectly. Format is "simname_version_code_simnum"'%fullname
     simname,version,code,simnum = fullname.split('_')
@@ -17,15 +23,9 @@ def dict_of_all_info(fullname):
     #Setting up the dictionary of the desired property, where the dictionary key is the name of the galaxy folder : the redshift, and the dictionary value is the respective desired property quantity
     ret_dict = {}
 
-    float_quantities = ['a','center_x','center_y','center_z','L_x','L_y','L_z',\
-        'bulk_velocity_x','bulk_velocity_y','bulk_velocity_z',\
-        'Rvir','Mvir','Lmag','sfr','Mstar','Mgas','Mgas_galaxy',\
-        'Mdm', 'z', 'box_size', 'beta', 's', 'eta', 'fh', 'ths', \
-        'thh', 'density_contrast', 'stream_temperature', 'bulk_temperature',\
-        'stream_size_growth', 'n', 'interface_thickness', 'stream_metallicity', \
-        'interface_metallicity', 'bulk_metallicity', 'stream_rotation', 'n_streams']
+    float_quantities = param_xVars
 
-    string_quantities = ['compaction_stage','model_name','dist_method']
+    string_quantities = string_type_metadata_quantities
         
     path_to_metadata = os.path.expanduser('~/quasarscan_data/galaxy_catalogs')
     if os.path.isdir(path_to_metadata):
@@ -41,7 +41,8 @@ def dict_of_all_info(fullname):
     lines = f.readlines()
     f.close()
 
-    # the following lines including the while loop retrieve the desired property value by iterating through the textfile line by line 
+    # the following lines including the while loop retrieve the
+    # desired property value by iterating through the textfile line by line 
     firstline = lines[1]
     quantities = firstline.replace('\n','').split(', ')
     column_numbers = {}
@@ -49,9 +50,11 @@ def dict_of_all_info(fullname):
     skipped = []
     for i,quantity in enumerate(quantities):
         if quantity not in float_quantities+string_quantities:
-            #print('quantity %s not recognized. Skipping.'%quantity)
+            if throw_errors is True:
+                raise UnknownQuantityError("%s not found in list %s"%(quantities,float_quantities+string_quantities))
+            elif throw_errors == 'warn':
+                print('quantity %s not recognized. Skipping.'%quantity)
             skipped.append(i)
-            continue
         ret_dict[quantity] = {}
         column_numbers[i] = quantity
     for line in lines[2:]:
@@ -64,6 +67,7 @@ def dict_of_all_info(fullname):
                 ret_dict[column_numbers[i]][a] = float(value)
             elif column_numbers[i] in string_quantities:
                 ret_dict[column_numbers[i]][a] = value
+    [assert k in ret_dict.keys() for k in all_metadata_quantities[simname].keys()]
     return ret_dict
     
 def dict_of_quantity(quantity,fullname,all_quantities_dict = None):
@@ -73,6 +77,7 @@ def dict_of_quantity(quantity,fullname,all_quantities_dict = None):
         return dict_of_all_info(fullname)[quantity]
     else:
         return None
+    
 
 def all_avals(fullname,all_quantities_dict = None):
     avals = np.array(list(dict_of_quantity('a',fullname,all_quantities_dict).keys()))

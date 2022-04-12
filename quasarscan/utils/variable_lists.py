@@ -1,14 +1,51 @@
-stringcriteria = ["ions","name","simname","version","code","simnum","compaction_stage"]
-intensives = ["Z","T","n"]
-intensiveslabels = {"Z":"avg metallicity","T":"avg temperature","n":"avg density"}
-intensivespositions = {"Z":-1,"T":-2,"n":-3}
+stringcriteria = ["ions","name","simname","version","code","simnum"]
+intensives = ["Z","T","nmax","nmean"]
+intensiveslabels = {"Z":"avg metallicity","T":"avg temperature","nmean":"avg density","nmax":"max density"}
 sightline_xVars = ["r","rdivR","rMpc","theta","phi"]
-param_xVars = ["redshift","a","Mvir","gas_Rvir","star_Rvir","dm_Rvir","sfr","ssfr","L_mag","Mstar","Mgas","Rvir"]
 sightline_unit_labels = {"r":"r (kpc)","r>0":"r (kpc)","rdivR":"r/Rvir","rdivR>0":"r/Rvir",\
            "theta":"viewing angle (rad)","theta_r>0":"viewing angle (rad)","phi" \
            :"azimuthal viewing angle (rad)","rMpc":"r (Mpc)"}
-param_unit_labels = {"redshift":"z","a":"a","Rvir":'Virial radius (kpc)',"Mvir":"Virial Mass (Msun)",\
-                    "gas_Rvir":"Gas Mass within Rvir (Msun)","Mgas":"Gas Mass within Rvir (Msun)","star_Rvir":"Stellar Mass within Rvir (Msun)",\
-                    "Mstar":"Stellar Mass within Rvir (Msun)","dm_Rvir":"Dark Matter Mass within Rvir (Msun)","sfr":"Star Formation Rate (Msun yr-1)",\
-                    "ssfr":"Specific Star Formation Rate (Msun yr-1 Mstar-1)","L_mag":"Magnitude of Angular Momentum"}
-all_known_variables = stringcriteria+intensives+sightline_xVars+param_xVars
+
+projects = ['VELA','MOCK','AGORA']
+all_metadata_quantities = {}
+
+all_metadata_quantities['VELA'] = ["a", "center_x", "center_y", "center_z", "L_x", "L_y", "L_z", "bulk_velocity_x",\
+                            "bulk_velocity_y", "bulk_velocity_z", "Rvir", "Mvir", "Lmag", "sfr", "Mstar", "Mgas", \
+                            "compaction_stage"]
+all_metadata_quantities['MOCK'] = ["a", "Rvir", "center_x", "center_y", "center_z", "L_x", "L_y", "L_z", "model_name",\
+                          "box_size", "Mvir", "z", "stream_density_beta", "bulk_density_beta",\
+                          "stream_temperature_beta", "bulk_temperature_beta", "stream_metallicity_beta", \
+                          "interface_metallicity_beta", "bulk_metallicity_beta", "n", "interface_thickness", \
+                          "stream_metallicity", "interface_metallicity", "bulk_metallicity", "stream_rotation", \
+                          "endpoint", "dist_method", "n_streams", "stream_size_growth", "stream_width", \
+                          "stream_temperature", "bulk_temperature", "stream_density", "bulk_density"]
+all_metadata_quantities['AGORA'] = ["a", "center_x", "center_y", "center_z", "Rvir", "L_x", "L_y", "L_z", \
+                                    "bulk_velocity_x", "bulk_velocity_y", "bulk_velocity_z", "unitary_conversion"]
+
+all_metadata_quantities_all_projects = []
+for project in projects:
+    all_metadata_quantities_all_projects+=all_metadata_quantities[project]
+all_metadata_quantities_all_projects = list(set(all_metadata_quantities_all_projects))
+
+string_type_metadata_quantities = ["compaction_stage","model_name","dist_method"]
+
+param_xVars = [var for var in all_metadata_quantities_all_projects if var not in string_type_metadata_quantities]
+
+param_unit_labels = {"redshift":"z",\
+                     "a":"a",\
+                     "Rvir":'Virial radius (kpc)',\
+                     "Mvir":"Virial Mass (Msun)",\
+                     "Mgas":"Gas Mass within Rvir (Msun)",\
+                     "Mstar":"Stellar Mass within Rvir (Msun)",\
+                     "sfr":"Star Formation Rate (Msun yr-1)",\
+                     "ssfr":"Specific Star Formation Rate (Msun yr-1 Mstar-1)",\
+                     "Lmag":"Magnitude of Angular Momentum",\
+                     "unitary_conversion":"Unitary conversion"}
+def get_param_unit_label(quantity):
+    try:
+        return param_unit_labels[quantity]
+    except KeyError:
+        print('param %s is not set up with unique label. Set it up in quasarscan/utils/variable_lists.py'%quantity)
+        return quantity
+    
+all_known_variables = stringcriteria+intensives+sightline_xVars+all_metadata_quantities_all_projects+derived_quantities

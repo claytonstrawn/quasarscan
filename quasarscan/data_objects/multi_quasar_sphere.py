@@ -38,7 +38,7 @@ class MultiQuasarSphere(QuasarSphere):
         self.ions = ions_in_all
         self.length = sum_of_lengths
         num_extra_columns = self.gasbins.get_length()
-        self.info = np.zeros((self.length,11+len(self.ions)*(num_extra_columns+2)+3))
+        self.info = np.zeros((self.length,11+len(self.ions)*(num_extra_columns+2)+4))
         currentpos = 0
         for i in range(self.number):
             q = list_of_quasar_spheres[i]
@@ -58,5 +58,6 @@ class MultiQuasarSphere(QuasarSphere):
             self.info[currentpos:currentpos+size,-1] = q.info[:size,-1]
             self.info[currentpos:currentpos+size,-2] = q.info[:size,-2] 
             self.info[currentpos:currentpos+size,-3] = q.info[:size,-3] 
+            self.info[currentpos:currentpos+size,-4] = q.info[:size,-4] 
             self.info[currentpos:currentpos+size,3]*=convert
             currentpos += size

@@ -166,14 +166,21 @@ def run_sightlines(outputfilename,save_after_num,parallel,\
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average metallicity')
             try:
-                n = np.sum(field_data['gas','number_density']*dl)/np.sum(dl)
-                vector[-2] = n
+                n_index_int = np.argmax(field_data['gas','number_density']*dl)
+                n_index_tup = np.unravel_index(n_index_int,dl.shape)
+                nmax = field_data['gas','number_density'][n_index_tup]
+                vector[-2] = nmax
+            except Exception as e:
+                throw_errors_if_allowed(e,throwerrors,'problem with max density')
+            try:
+                nmean = np.sum(field_data['gas','number_density']*dl)/np.sum(dl)
+                vector[-3] = nmean
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average density')
             try:
                 T = np.average(field_data['gas','temperature'],\
                                weights=field_data['gas','density']*dl)
-                vector[-3] = T
+                vector[-4] = T
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average temperature')
             try:

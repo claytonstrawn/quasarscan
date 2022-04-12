@@ -227,7 +227,7 @@ def create_qso_endpoints_helper(ds,R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L
     weightth = weights(th_arr, "sin")
     weightr = weights(r_arr, "lin")        
     num_extra_columns = gasbins.get_length()
-    info = np.zeros((int(length),11+len(ions)*(num_extra_columns+2)+3))-1.0
+    info = np.zeros((int(length),11+len(ions)*(num_extra_columns+2)+4))-1.0
     rot_matrix = get_rotation_matrix(L)
     for i in range(int(length)):
         theta = np.random.choice(th_arr,p = weightth)
