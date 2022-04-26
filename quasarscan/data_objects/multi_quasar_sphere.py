@@ -18,6 +18,7 @@ class MultiQuasarSphere(QuasarSphere):
         mytype = 'unknown'
         
         ions_lists = []
+        intensives_lists = []
         sum_of_lengths = 0
         
         for i in range(self.number):
@@ -28,17 +29,21 @@ class MultiQuasarSphere(QuasarSphere):
             else:
                 assert mytype == q.type, "QuasarSphere types must be the same."
             ions_lists.append(q.ions) 
+            intensives_lists.append(q.intensives) 
             sum_of_lengths += q.length_reached
             self.gasbins.combine_holders(q.gasbins)
         self.type = 'multi_'+mytype
         if self.number > 0:
             ions_in_all = list(reduce(set.intersection, map(set, ions_lists)))
+            intensives_in_all = list(reduce(set.intersection, map(set, intensives_lists)))
         else:
             ions_in_all = []
+            intensives_in_all = []
         self.ions = ions_in_all
+        self.intensives = intensives_in_all
         self.length = sum_of_lengths
         num_extra_columns = self.gasbins.get_length()
-        self.info = np.zeros((self.length,11+len(self.ions)*(num_extra_columns+2)+4))
+        self.info = np.zeros((self.length,11+len(self.ions)*(num_extra_columns+2)+len(self.intensives)))
         currentpos = 0
         for i in range(self.number):
             q = list_of_quasar_spheres[i]
@@ -55,9 +60,7 @@ class MultiQuasarSphere(QuasarSphere):
                     convert/=q.Rvir
                 else:
                     raise NoRvirError('Rvir is not known for all simulations, cannot combine this way!')
-            self.info[currentpos:currentpos+size,-1] = q.info[:size,-1]
-            self.info[currentpos:currentpos+size,-2] = q.info[:size,-2] 
-            self.info[currentpos:currentpos+size,-3] = q.info[:size,-3] 
-            self.info[currentpos:currentpos+size,-4] = q.info[:size,-4] 
+            for i in range(len(self.intensives)):
+                self.info[currentpos:currentpos+size,-i] = q.info[:size,-i]
             self.info[currentpos:currentpos+size,3]*=convert
             currentpos += size

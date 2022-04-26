@@ -2,7 +2,7 @@ import numpy as np
 from quasarscan.plotting.read_and_init_from_file import read_and_init
 from quasarscan.utils import utils
 from quasarscan.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
-                                            intensivespositions,sightline_xVars,param_xVars,\
+                                            sightline_xVars,param_xVars,\
                                             sightline_unit_labels,param_unit_labels,\
                                             all_known_variables
 from quasarscan.plotting.sorter import MultiSphereSorter
@@ -128,7 +128,7 @@ class QuasarArrayHandler(object):
         if len(qlist)==0:
             #Cannot constrain further
             return
-        elif constrain_criteria not in qlist[0].__dict__.keys():
+        elif constrain_criteria not in all_known_variables:
             print("Constrain criteria " + constrain_criteria + " does not exist. Please re-enter a valid criteria.")
             raise BadCriteriaError(constrain_criteria)
         elif isinstance(at_end,float):
@@ -435,6 +435,7 @@ class QuasarArrayHandler(object):
         if verbose and filter_for != []:
             print('Restricting quasars of type "%s" to ones containing %s'%(qtype,filter_for))
         ion_constraints = []
+        intensive_constraints = []
         gasbin_constraints = []
         metadata_constraints = []
         for item in filter_for:
@@ -450,8 +451,11 @@ class QuasarArrayHandler(object):
                 ion_constraints.append(item)
             elif item in param_xVars:
                 metadata_constraints.append(item)
+            elif item in intensives:
+                intensive_constraints.append(item)
         before_filter = self.get_qlist(qtype)
         self.constrain_current_quasar_array('ions',ion_constraints,qtype=qtype)
+        self.constrain_current_quasar_array('intensives',intensive_constraints,qtype=qtype)
         self.constrain_via_gasbins(gasbin_constraints)
         for item in metadata_constraints:
             self.constrain_current_quasar_array(item,qtype=qtype,change_array_name=False)

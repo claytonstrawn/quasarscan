@@ -17,7 +17,8 @@ class UnknownQuantityError(Exception):
 
 def dict_of_all_info(fullname,throw_errors = True):
     #This is a guide for what info can be found in what column, starting from column 0.
-    assert len(fullname.split('_')) == 4, 'fullname %s formatted incorrectly. Format is "simname_version_code_simnum"'%fullname
+    assert len(fullname.split('_')) == 4, 'fullname %s formatted incorrectly. '%fullname+\
+                                            'Format is "simname_version_code_simnum"'
     simname,version,code,simnum = fullname.split('_')
   
     #Setting up the dictionary of the desired property, where the dictionary key is the name of the galaxy folder : the redshift, and the dictionary value is the respective desired property quantity
@@ -51,7 +52,7 @@ def dict_of_all_info(fullname,throw_errors = True):
     for i,quantity in enumerate(quantities):
         if quantity not in float_quantities+string_quantities:
             if throw_errors is True:
-                raise UnknownQuantityError("%s not found in list %s"%(quantities,float_quantities+string_quantities))
+                raise UnknownQuantityError("%s not found in list %s"%(quantity,float_quantities+string_quantities))
             elif throw_errors == 'warn':
                 print('quantity %s not recognized. Skipping.'%quantity)
             skipped.append(i)
@@ -67,7 +68,6 @@ def dict_of_all_info(fullname,throw_errors = True):
                 ret_dict[column_numbers[i]][a] = float(value)
             elif column_numbers[i] in string_quantities:
                 ret_dict[column_numbers[i]][a] = value
-    [assert k in ret_dict.keys() for k in all_metadata_quantities[simname].keys()]
     return ret_dict
     
 def dict_of_quantity(quantity,fullname,all_quantities_dict = None):

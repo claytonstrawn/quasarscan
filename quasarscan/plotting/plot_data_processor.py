@@ -17,7 +17,7 @@ from quasarscan.data_objects import gasbinning,\
                                      simulation_quasar_sphere,\
                                      multi_quasar_sphere
 from quasarscan.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
-                                            intensivespositions,sightline_xVars,param_xVars,\
+                                            sightline_xVars,param_xVars,\
                                             sightline_unit_labels,param_unit_labels,\
                                             all_known_variables
 
@@ -122,7 +122,7 @@ def get_xy_type2(xVar,yVar,quasar_array,rlims):
         xs[i] = np.empty(0)
         ys[i] = np.empty(0)
         for q in ary:
-            x = eval("q."+xVar)
+            x = q.__getattribute__(xVar)
             y = get_yVar_from_str(q,yVar)
             rs = q.get_sightline_values('r')
             acceptedLines = np.logical_and(rlims[0]<=rs/q.Rvir,\
@@ -147,8 +147,8 @@ def get_xy_type3(xVar,yVar,quasar_array,rlims):
         xs[i] = np.empty(0)
         ys[i] = np.empty(0)
         for q in ary:
-            x = eval("q."+xVar)
-            y = eval("q."+yVar)
+            x = q.__getattribute__(xVar)
+            y = q.__getattribute__(yVar)
             xs[i] = np.append(xs[i],x)
             ys[i] = np.append(ys[i],y)
     return xs,ys

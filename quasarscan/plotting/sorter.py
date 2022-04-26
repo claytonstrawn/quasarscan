@@ -1,7 +1,7 @@
 import numpy as np
 
 from quasarscan.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
-                                            intensivespositions,sightline_xVars,param_xVars,\
+                                            sightline_xVars,param_xVars,\
                                             sightline_unit_labels,param_unit_labels,\
                                             all_known_variables
 
@@ -27,7 +27,7 @@ class MultiSphereSorter(object):
             raise IllegalSort('Cannot use at_end with string-based criteria %s'%criteria)
         criteria_array = self.get_criteria_array(criteria)
         result_array = np.empty(len(accepted_values),dtype = 'object')
-        if criteria == 'ions':
+        if criteria in ['ions','intensives']:
             result_array = [self.constrain_by_ions(accepted_values,criteria_array)]
             return np.array(result_array,dtype=object)   
         for i,value in enumerate(accepted_values):
@@ -88,7 +88,10 @@ class MultiSphereSorter(object):
         if not at_end:
             res = []
             for q in self.array:
-                criteria_vals = q.__getattribute__(criteria)
+                try:
+                    criteria_vals = q.__getattribute__(criteria)
+                except AttributeError:
+                    criteria_vals = np.nan
                 res.append(criteria_vals)
             return np.array(res,dtype=object)
         else:

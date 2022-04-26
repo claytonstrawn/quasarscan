@@ -18,7 +18,9 @@ class SimQuasarSphere(QuasarSphere):
         self.simparams = simparams
         self.scanparams = scanparams
         self.add_extra_scanparam_fields()
+        ions,intensives = ions[:ions.index('T')],ions[ions.index('T'):]
         self.ions = ions
+        self.intensives = intensives
         self.info = data
         self.gasbins = gasbins
         super().__init__(simparams[0],simparams[1])
@@ -70,12 +72,7 @@ class SimQuasarSphere(QuasarSphere):
         for i in range(8):
             f.write(firstfew[i])
         for vector in self.info:
-            str_vector = '['
-            for v in vector:
-                str_vector += '%e '%v
-            str_vector = str_vector[:-1]
-            str_vector += ']'
-            f.write(str_vector)
+            f.write(str(vector).replace("\n",""))
             f.write("\n")
         f.close()
         print("saved file %s"%filename)
@@ -97,12 +94,14 @@ def read_values(filename):
     firstfew[7] = f.readline()[:-1].split(": ")[1]
     simparams = eval(firstfew[2])
     scanparams = eval(firstfew[4])
-    ions = eval(firstfew[5])
+    full_list = firstfew[7].replace(' ','').strip('[]\n\t').split(',')
+    intensives = full_list[full_list.index('T'):]
+    ions = eval(firstfew[5])+intensives
     gasbins = GasBinsHolder(string = firstfew[6])
     length = scanparams[5]
     num_extra_columns = gasbins.get_length()
-    myline = f.readline()[1:-1].strip('[]\n\t').split(' ')
-    data = np.zeros((int(length),len(myline)))
+    myline = f.readline()[1:-1].strip('[]\n\t')
+    data = np.zeros((int(length),len(myline.split())))
     for i in range(length):
         if i>0:
             myline = f.readline()[1:-1]

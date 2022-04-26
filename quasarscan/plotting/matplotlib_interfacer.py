@@ -88,7 +88,7 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
         ax.set_ylim(ylims)
     if grid:
         ax.grid()
-    ax.legend()
+    ax.legend().set_zorder(2)
     return fig,ax
 
 
@@ -121,7 +121,7 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,
         ax.set_ylim(ylims)
     if grid:
         ax.grid()
-    ax.legend()
+    ax.legend().set_zorder(2)
     return fig,ax
 
 def figure_out_limits(xerrs,i,j,default=.15):

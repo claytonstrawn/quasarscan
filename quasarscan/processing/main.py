@@ -4,7 +4,6 @@ import numpy as np
 import trident
 from quasarscan.data_objects import simulation_quasar_sphere
 from quasarscan.preprocessing import code_specific_setup
-from quasarscan.preprocessing.add_common_fields import set_up_general
 from quasarscan.utils import roman
 import sys
 import os
@@ -44,12 +43,9 @@ def throw_errors_if_allowed(e,throwerrors,message=None):
     elif throwerrors == False:
         return
 
-def run_sightlines(outputfilename,save_after_num,parallel,\
-                   simulation_dest = None,run = 'default',throwerrors = 'warn'):
+def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None,run = 'default',throwerrors = 'warn'):
     if run not in ['default','test']:
-        print('unknown option for "run" %s.'%run+\
-              ' Please restart with "run = default"'+\
-              ' or "run = test".')
+        print('unknown option for "run" %s. Please restart with "run = default" or "run = test".'%run)
     #do not print out anything from yt (it prints plenty)
     yt.funcs.mylog.setLevel(50)
     if parallel:
@@ -63,14 +59,10 @@ def run_sightlines(outputfilename,save_after_num,parallel,\
         if simulation_dest:
             q.simparams[6] = simulation_dest
         else:
-            raise NoSimulationError('Simulation file location unknown, '+\
-                                    'run with "simulation_dest" to process')
+            raise NoSimulationError('Simulation file location unknown, run with "simulation_dest" to process')
     else:
         simulation_dest = q.simparams[6]
-    ds,fields_to_keep = code_specific_setup.load_and_setup(simulation_dest,\
-                                                           q.fullname,ions = q.ions,\
-                                                           redshift = q.redshift)
-    set_up_general(ds,q.code,q.center,q.bulk_velocity,q.Rvir)
+    ds,fields_to_keep = code_specific_setup.load_and_setup(simulation_dest,q.code,q.ions)
     code_specific_setup.check_redshift(ds,outputfilename=outputfilename)
     num_bin_vars = q.gasbins.get_length()
     #Can start at a position further than 0 if reached
@@ -108,8 +100,6 @@ def run_sightlines(outputfilename,save_after_num,parallel,\
                 print('Interrupt again within 5 seconds to *actually* end')
                 time.sleep(5)
                 continue
-            except ValueError as e:
-                throw_errors_if_allowed(e,throwerrors,'ray has shape %s - %s, but size 0'%(start,end))
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with making ray')
                 continue

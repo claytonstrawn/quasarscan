@@ -64,20 +64,14 @@ class QuasarSphere(object):
                 v = get_value(key,self.fullname,redshift = self.redshift,\
                               all_quantities_dict = self.metadata_dict)
                 self.__setattr__(key,v)
-        if 'Mgas' in self.__dict__ and 'Mgas_galaxy' in self.__dict__:
-            self.Mgas_CGM = self.Mgas - self.Mgas_galaxy
-        if 'sfr' in self.__dict__ and 'Mstar' in self.__dict__:
-            try:
-                self.ssfr = self.sfr / self.Mstar
-            except:
-                self.ssfr = np.nan
         self.final_a0 = get_last_a_for_sim(self.fullname,all_quantities_dict = self.metadata_dict)
 
     def create_ion_list_w_bins(self):
         if 'empty' in self.type:
             self.ion_list_w_bins = []
             return
-        toreturn = ['i', 'theta', 'phi', 'r', 'alpha', 'startx', 'starty', 'startz', 'endx', 'endy', 'endz']
+        toreturn = ['i', 'theta', 'phi', 'r', 'alpha', \
+                    'startx', 'starty', 'startz', 'endx', 'endy', 'endz']
         for ion in self.ions:
             toreturn.append('%s:cdens'%ion)
             if 'sim' in self.type:
@@ -87,9 +81,8 @@ class QuasarSphere(object):
             elif 'obs' in self.type:
                 toreturn.append('%s:eb'%ion)
         if 'sim' in self.type:
-            toreturn.append('T')
-            toreturn.append('rho')
-            toreturn.append('Z')
+            for intensive in self.intensives:
+                toreturn.append(intensive)
         self.ion_list_w_bins = toreturn
 
     def get_ion_column_num(self,ion):
@@ -98,7 +91,8 @@ class QuasarSphere(object):
         if ion in self.ion_list_w_bins:
             return self.ion_list_w_bins.index(ion)
         else:
-            raise IonNotFoundError('Ion %s not found in this Sphere, which is %s. Available ions are: %s and sorted into bins: %s'%(ion,self.fullname,self.ions,self.gasbins.get_all_keys()))
+            print(self.ion_list_w_bins[-10:])
+            raise IonNotFoundError('Ion %s not found in this Sphere, which is %s. Available ions are: %s and sorted into bins: %s. It could also be a metadata error. Known quantities are %s'%(ion,self.fullname,self.ions,self.gasbins.get_all_keys(),self.__dict__.keys()))
 
     def get_ion_values(self,ion):
         if ion == 'zeros':

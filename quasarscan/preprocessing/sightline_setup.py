@@ -13,8 +13,6 @@ from quasarscan.preprocessing import parse_metadata
 from quasarscan.data_objects import quasar_sphere,simulation_quasar_sphere,gasbinning
 from quasarscan.utils import ion_lists,utils
 from quasarscan.preprocessing import code_specific_setup
-from quasarscan.preprocessing.add_common_fields import set_up_general
-
 
 
 class BadMetadataError(Exception):
@@ -256,7 +254,7 @@ def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,
             ions = ion_lists.dict_of_ionlists[ions]
         except KeyError:
             raise BadListError('list nickname not recognized, enter ions as list of strings')
-    ds,_ = code_specific_setup.load_and_setup(filename,fullname,redshift = redshift)
+    ds,_ = code_specific_setup.load_and_setup(filename,code)
     code_specific_setup.check_redshift(ds,fullname=fullname,redshift = redshift)
     Rvir = parse_metadata.get_value("Rvir",fullname,redshift=redshift)
     center_x = parse_metadata.get_value("center_x",fullname,redshift=redshift)
@@ -267,12 +265,6 @@ def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,
     L_y = parse_metadata.get_value("L_y",fullname,redshift=redshift)
     L_z = parse_metadata.get_value("L_z",fullname,redshift=redshift)
     L = np.array([L_x,L_y,L_z])
-    bvx = parse_metadata.get_value("bulk_velocity_x",fullname,redshift=redshift)
-    bvy = parse_metadata.get_value("bulk_velocity_y",fullname,redshift=redshift)
-    bvz = parse_metadata.get_value("bulk_velocity_z",fullname,redshift=redshift)
-    bv = np.array([bvx,bvy,bvz])
-    print('center',center,'L',L,'bv',bv)
-    set_up_general(ds,code,center,bv,Rvir)
 
     if np.isnan(Rvir) or np.any(np.isnan(center)) or np.any(np.isnan(L)):
         if run != 'force':

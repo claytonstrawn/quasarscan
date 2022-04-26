@@ -9,7 +9,7 @@ from quasarscan.preprocessing import parse_metadata
 from quasarscan.utils import roman,ion_lists
 from quasarscan.utils.utils import sort_ions,reversearray
 from quasarscan.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
-                                            intensivespositions,sightline_xVars,param_xVars,\
+                                            sightline_xVars,param_xVars,\
                                             sightline_unit_labels,param_unit_labels,\
                                             all_known_variables
 from quasarscan.plotting.quasar_array_handler import QuasarArrayHandler
