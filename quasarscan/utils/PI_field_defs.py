@@ -13,17 +13,18 @@ def read_table(filename = "default"):
     lines = f.readlines()[6:]
     f.close()
     ions = []
-    redshifts = []
+    redshifts = {}
     rhos = {}
     ts = {}
     for line in lines:
         if len(line.split())==2:
             current_ion = line.replace('\n','')
             ions.append(current_ion)
+            redshifts[current_ion] = []
         elif len(line.split())>2:
             redshift = line.split(',')[0]
-            if not redshift in redshifts:
-                redshifts.append(redshift)
+            if not redshift in redshifts[current_ion]:
+                redshifts[current_ion].append(redshift)
             rho_or_t = line.split()[1].replace(':','')
             start_of_list = line.index('[')
             if rho_or_t == 'rho':
@@ -37,16 +38,16 @@ def cutoffs_for_ion_at_redshift(ion,redshift):
     if isinstance(redshift,str):
         redshift = float(redshift)
     ions,redshifts,rhos,ts = table
-    if ion in ions and str(redshift) in redshifts:
+    if ion in ions and str(redshift) in redshifts[ion]:
         return rhos[(ion,str(redshift))],ts[(ion,str(redshift))]
     else:
-        for i,z in enumerate(redshifts):
+        for i,z in enumerate(redshifts[ion]):
             if float(z)>redshift:
                 break
-            if i == len(redshifts)-1:
+            if i == len(redshifts[ion])-1:
                 return rhos[(ion,str(z))],ts[(ion,str(z))]
-        z_below = redshifts[i-1]
-        z_above = redshifts[i]
+        z_below = redshifts[ion][i-1]
+        z_above = redshifts[ion][i]
         fraction_z_below = (float(z_above)-redshift)/(float(z_above)-float(z_below))
         fraction_z_above = 1-fraction_z_below
         if len(rhos[(ion,z_below)]) > len(rhos[(ion,z_above)]):
