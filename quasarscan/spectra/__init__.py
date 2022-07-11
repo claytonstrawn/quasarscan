@@ -6,3 +6,6 @@ def soumily_was_here():
 
 def paul_was_here():
     print('paul is here')
+    
+def antonio_was_here():
+    print('antonio is here')
