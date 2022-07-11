@@ -5,7 +5,10 @@ def load_file(filename):
     print('running')
     z_redshift = filename.split('+')[2]
     redshift = float(z_redshift.split('z')[1])
-    file = open(filename + '.txt')
+    if filename[-4:] == '.txt':
+        file = open(filename)
+    else:
+        file = open(filename + '.txt')
     string_file = file.read()
     array_file = string_file.split('\n')
     array_file.pop(0)
