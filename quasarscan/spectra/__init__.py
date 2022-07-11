@@ -3,4 +3,6 @@ def clayton_is_here():
 
 def soumily_was_here():
     print('soumily is here')
-    
+
+def paul_was_here():
+    print('paul is here')
