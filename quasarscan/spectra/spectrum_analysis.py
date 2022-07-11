@@ -81,7 +81,7 @@ def automatic_component_detector_v2(wl,flux,ion,line_wavelength,redshift,
                         left_distance = 200,right_distance = "default"):
     if right_distance == 'default':
         right_distance = left_distance
-    line = (ion,line_wavelength)
+    #line = (ion,line_wavelength)
     speedoflight = 299792458/1000
     v_ion = speedoflight*(wl/(line[1]*(1+redshift))-1)
     
@@ -113,21 +113,21 @@ def automatic_component_detector_v2(wl,flux,ion,line_wavelength,redshift,
 
         if  (flux[maximums[i]] - flux[minimums[i+1]])> 0.0 and (flux[maximums[i]] - flux[minimums[i]]) > extreme_boundary :
             
-            max_vion_add = (line[0] + ' ' + str(line[1]), v_ion[maximums[i]])
+            max_vion_add = (ion + ' ' + str(line_wavelength), v_ion[maximums[i]])
             max_vion = max_vion + [max_vion_add]
             
-            max_flux_add = (line[0] + ' ' + str(line[1]), flux[maximums[i]])
+            max_flux_add = (ion + ' ' + str(line_wavelength), flux[maximums[i]])
             max_flux = max_flux  + [max_flux_add]
             
-            min_vion_add = (line[0] + ' ' + str(line[1]), v_ion[minimums[i]])
+            min_vion_add = (ion + ' ' + str(line_wavelength), v_ion[minimums[i]])
             min_vion = min_vion + [min_vion_add]
             
-            min_flux_add = (line[0] + ' ' + str(line[1]), flux[minimums[i]])
+            min_flux_add = (ion + ' ' + str(line_wavelength), flux[minimums[i]])
             min_flux = min_flux  + [min_flux_add]
             
-        last_v_min = ((line[0] + ' ' + str(line[1])), v_ion[minimums[len(maximums)]])
+        last_v_min = ((ion + ' ' + line_wavelength), v_ion[minimums[len(maximums)]])
         min_vion = min_vion + [last_v_min]
-        last_f_min = ((line[0] + ' ' + str(line[1])), flux[minimums[len(maximums)]])
+        last_f_min = ((ion + ' ' + str(line_wavelength)), flux[minimums[len(maximums)]])
         min_flux = min_flux + [last_f_min]
 
     list_of_lines = []
