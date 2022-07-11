@@ -279,7 +279,7 @@ def create_qso_endpoints(fullname,filename,redshift,ions,gasbins='default',R=(6,
     gasbins = gasbinning.GasBinsHolder(ds=ds,bins = utils.get_gasbins_arg(code))
     scanparams,info = create_qso_endpoints_helper(ds,R, n_th,n_phi,n_r,rmax,length, ions,gasbins,L, center,Rvir)
     simparams = [fullname,redshift,center.v[0],center.v[1],center.v[2],Rvir,filename,L[0],L[1],L[2]]
-    q = simulation_quasar_sphere.SimQuasarSphere((simparams,scanparams,ions,info,gasbins))
+    q = simulation_quasar_sphere.SimQuasarSphere((simparams,scanparams,ions+['T','nmean','nmax','Z'],info,gasbins))
     if run == 'test':
         return q
     outputfilename = q.save_values()

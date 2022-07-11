@@ -6,6 +6,11 @@ from quasarscan import __version__
 import datetime
 import os
 
+class FileNotFoundError(Exception):
+    def __init__(self, message):
+        self.message = message
+        print(self.message)
+
 class SimQuasarSphere(QuasarSphere):
     def __init__(self,start_up_info_packet):
         self.number = 1
@@ -82,6 +87,8 @@ class SimQuasarSphere(QuasarSphere):
 
 
 def read_values(filename):
+    if not os.path.exists(filename):
+        raise FileNotFoundError("No file named %s."%filename)
     f = open(filename)
     firstfew = [None]*8
     firstfew[0] = f.readline()

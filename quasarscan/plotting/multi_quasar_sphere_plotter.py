@@ -144,7 +144,7 @@ class MultiQuasarSpherePlotter():
         elif qtype in ['sim','empty']:
             xerrs,yerrs = None,None
             if not empty:
-                to_return = matplotlib_interfacer.plot_sim_on_ax(plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title, **kwargs)
+                to_return = matplotlib_interfacer.plot_scatter_on_ax(plot_type, xs, ys, xlabel, ylabel, labels, title, **kwargs)
         if empty:
             to_return = None,None
         self.quasar_array_handler.update_qlist(qtype,unfiltered_qlist)
