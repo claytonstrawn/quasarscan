@@ -84,6 +84,7 @@ def plot_vel_around_line(wl,flux,ion,line_wavelength,redshift,noise = 0,color = 
     
 
 class AbsorptionLine(object):
+    
     def __init__(self, line, velocity, min_flux):
         self.line = line
         self.ion = line[0]
