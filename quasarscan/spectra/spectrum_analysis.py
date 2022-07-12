@@ -105,7 +105,7 @@ def automatic_component_detector_v2(wl,flux,ion,line_wavelength,redshift,
         right_distance = left_distance
     #line = (ion,line_wavelength)
     speedoflight = 299792458/1000
-    v_ion = speedoflight*(wl/(line[1]*(1+redshift))-1)
+    v_ion = speedoflight*(wl/(line_wavelength*(1+redshift))-1)
     
     diff_flux = np.gradient(flux)
     
@@ -148,13 +148,13 @@ def automatic_component_detector_v2(wl,flux,ion,line_wavelength,redshift,
             min_flux_add = (ion + ' ' + str(line_wavelength), flux[minimums[i]])
             min_flux = min_flux  + [min_flux_add]
             
-        last_v_min = ((ion + ' ' + line_wavelength), v_ion[minimums[len(maximums)]])
+        last_v_min = ((ion + ' ' + str(line_wavelength)), v_ion[minimums[len(maximums)]])
         min_vion = min_vion + [last_v_min]
         last_f_min = ((ion + ' ' + str(line_wavelength)), flux[minimums[len(maximums)]])
         min_flux = min_flux + [last_f_min]
 
     list_of_lines = []
     for i in range (len(min_vion)):
-        list_of_lines_add = AbsorptionLine(line, min_vion[i][1], min_flux[i][1])
+        list_of_lines_add = AbsorptionLine((ion,line_wavelength), min_vion[i][1], min_flux[i][1])
         list_of_lines = list_of_lines + [list_of_lines_add]
     return list_of_lines
