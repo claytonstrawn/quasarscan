@@ -121,11 +121,11 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
     
     for i in range(1, len(wl[1:])): 
         if v_ion[i] > (0 - left_distance) and v_ion[i] < (0 + right_distance):
-            if diff_flux[i]>0 and diff_flux[i-1]<0 and flux[i]:
+            if diff_flux[i]>0 and diff_flux[i-1]<0:
                 #minimum
                 minimums = minimums + [i]
                 
-            if diff_flux[i]<0 and diff_flux[i-1]>0 and flux[i]:
+            if diff_flux[i]<0 and diff_flux[i-1]>0:
                 #maximum
                 maximums = maximums + [i]
                 
@@ -151,11 +151,26 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
             
             min_flux_add = (line[0] + ' ' + str(line[1]), flux[minimums[i]])
             min_flux = min_flux  + [min_flux_add]
-            
-#        last_v_min = ((line[0] + ' ' + str(line[1])), v_ion[minimums[len(maximums)]])
-#        min_vion = min_vion + [last_v_min]
-#        last_f_min = ((line[0] + ' ' + str(line[1])), flux[minimums[len(maximums)]])
-#        min_flux = min_flux + [last_f_min]
+    
+    if flux[minimums[len(maximums)]] < 0.98: 
+        last_v_min = ((line[0] + ' ' + str(line[1])), v_ion[minimums[len(maximums)]])
+        min_vion = min_vion + [last_v_min]
+        last_f_min = ((line[0] + ' ' + str(line[1])), flux[minimums[len(maximums)]])
+        min_flux = min_flux + [last_f_min]
+
+    print('\n')
+    print('min_vions ' + line[0] + ' ' + str(line[1]) + ': ')
+    print(min_vion)
+    print('\n')
+    print('min_flux ' + line[0] + ' ' + str(line[1]) + ': ')
+    print(min_flux)
+    print('\n')
+    print('max_vions ' + line[0] + ' ' + str(line[1]) + ': ')
+    print(max_vion)     
+    print('\n')
+    print('max_flux '  + line[0] + ' ' + str(line[1]) + ': ')
+    print(max_flux)   
+    print('\n')
 
     list_of_lines = []
     for i in range (len(min_vion)):
