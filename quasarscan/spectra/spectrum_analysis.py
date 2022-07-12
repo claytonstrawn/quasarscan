@@ -100,6 +100,12 @@ class AbsorptionLine(object):
                 color = None
         ax.plot(self.velocity, self.min_flux - 0.05, "o", color = color)
         
+class Component(object):
+    def __init__(self, velocity, list_of_lines):
+        pass
+    def print_out_lines(self):
+        pass
+        
 def automatic_component_detector_v2(wl,flux,ion,line_wavelength,redshift,
                         left_distance = 200,right_distance = "default"):
     if right_distance == 'default':
