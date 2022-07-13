@@ -5,7 +5,7 @@ default_color_assignments = {('O VI',1031.912000): matplotlib_default_colors[0],
                              ('O VI',1037.613000): matplotlib_default_colors[1],\
                              ('C IV',1548.187000): matplotlib_default_colors[2],\
                              ('C IV',1550.772000): matplotlib_default_colors[3]}
-
+from trident.absorption_spectrum.absorption_spectrum_fit import generate_total_fit
 
 def load_file(filename):
     z_redshift = filename.split('+')[2]
@@ -32,6 +32,73 @@ def load_file(filename):
     wl = np.array(xs)
     flux = np.array(ys)
     return wl, flux, redshift
+
+def trident_file_reader(filename = 'default'):
+    if filename = 'default':
+        filename = os.path.expanduser('~/trident/trident/data/line_lists/lines.txt')
+    try:
+        with open(filename) as f:
+            lines = f.readlines()
+    except FileNotFoundError as e:
+        print(f'File "{filename}" not found. Please specify the location of the trident file ".../lines.txt"')
+        raise e
+    lines_dict = {}
+    for line in lines[1:]:
+        elements = line.split()
+        ion = f'{elements[0]} {elements[1]}'
+        wl = float(elements[2])
+        gamma = float(elements[3])
+        f = float(elements[4])
+        if ion not in lines_dict:
+            lines_dict[ion] = [(wl,gamma,f)]
+        else:
+            lines_dict[ion] += [(wl,gamma,f)]
+    return lines_dict
+
+def trident_lines_starting_points(ions,lines_dict,**kwargs):
+    to_return = {}
+    if isinstance(ions,str):
+        ions = [ions]
+    for ion in ions:
+        ion_name_nospace = ion.replace(' ','')
+        ion_parameters = {'name':ion_name_nospace,
+                     'maxN':1e17,'minN':1e11,
+                     'maxb':300, 'minb':1,
+                     'maxz':6, 'minz':0,
+                     'init_b':20,
+                     'init_N':1e12}
+        for kwarg in kwargs:
+            ion_parameters[kwarg] = kwargs[kwarg]
+        fs,gammas,wavelengths,numlines = [],[],[],0
+        try:
+            lines_to_use = lines_dict[ion]
+        except KeyError:
+            continue
+        for line in lines_to_use:
+            numlines+=1
+            wavelengths+=[line[0]]
+            gammas+=[line[1]]
+            fs+=[line[2]]
+        ion_parameters['f'] = fs
+        ion_parameters['Gamma'] = gammas
+        ion_parameters['wavelength'] = wavelengths
+        ion_parameters['numLines'] = numlines
+        to_return[ion_name_nospace] = ion_parameters
+    return list(to_return.keys()),to_return
+
+nolinesdict = {'N': np.array([], dtype=np.float64),\
+               'b': np.array([], dtype=np.float64),\
+               'z': np.array([], dtype=np.float64),\
+               'group#': np.array([], dtype=np.float64)}
+
+def call_trident_fitter(wavelength,flux,ions,filename = 'default',**kwargs):
+    lines_dict = trident_file_reader(filename=filename)
+    orderFits,speciesDicts = trident_lines_starting_points(ions,lines_dict,**kwargs)
+    fitted_lines, fitted_flux = generate_total_fit(wavelength, flux, orderFits, speciesDicts)
+    for ion in ions:
+        if ion.replace(' ','') not in fitted_lines:
+            fitted_lines[ion.replace(' ','')] = nolinesdict
+    return fitted_lines, fitted_flux
 
 def plot_wl_around_line(wl,flux,ion,line_wavelength,redshift,noise = 0,color = 'default',
                         left_distance = 20,right_distance = "default",ax = None):
