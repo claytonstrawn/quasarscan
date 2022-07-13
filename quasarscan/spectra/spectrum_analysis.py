@@ -100,14 +100,14 @@ def call_trident_fitter(wavelength,flux,ions,filename = 'default',**kwargs):
             fitted_lines[ion.replace(' ','')] = nolinesdict
     return fitted_lines, fitted_flux
 
-def plot_wl_around_line(wl,flux,ion,line_wavelength,redshift,noise = 0,color = 'default',
+def plot_wl_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
                         left_distance = 20,right_distance = "default",ax = None):
     if right_distance == 'default':
         right_distance = left_distance
     if ax is None:
         _,ax = plt.subplots()
     
-    center = line_wavelength * (1+redshift)
+    center = line[1] * (1+redshift)
     
     ax.plot([center,center],[0,1],color = 'red',linestyle = ':')
     
@@ -115,17 +115,17 @@ def plot_wl_around_line(wl,flux,ion,line_wavelength,redshift,noise = 0,color = '
     noise_flux = flux + add_noise
     
     if color =='default':
-        if (ion,line_wavelength) in default_color_assignments:
-            color = default_color_assignments[(ion,line_wavelength)]
+        if line in default_color_assignments:
+            color = default_color_assignments[line]
         else:
             color = None
-    ax.plot(wl,noise_flux,label = ion,color = color)
+    ax.plot(wl,noise_flux,label = line[0],color = color)
     ax.legend()
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Wavelength (Å)")
     ax.set_xlim(center-left_distance,center+right_distance)
 
-def plot_vel_around_line(wl,flux,ion,line_wavelength,redshift,noise = 0,color = 'default',
+def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
                         left_distance = 200,right_distance = "default",ax = None):
     
     if right_distance == 'default':
@@ -133,17 +133,17 @@ def plot_vel_around_line(wl,flux,ion,line_wavelength,redshift,noise = 0,color = 
     if ax is None:
         _,ax = plt.subplots()
     speedoflight = 299792458/1000
-    v_ion = speedoflight*(wl/(line_wavelength*(1+redshift))-1)
+    v_ion = speedoflight*(wl/(line[1]*(1+redshift))-1)
 
     add_noise = np.random.normal(0,noise,len(flux))
     noise_flux = flux + add_noise
     
     if color =='default':
-        if (ion,line_wavelength) in default_color_assignments:
-            color = default_color_assignments[(ion,line_wavelength)]
+        if line in default_color_assignments:
+            color = default_color_assignments[line]
         else:
             color = None
-    ax.plot(v_ion,noise_flux,label = ion,color = color)
+    ax.plot(v_ion,noise_flux,label = line[0],color = color)
     ax.legend()
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Velocity (km/s)")
@@ -168,67 +168,108 @@ class AbsorptionLine(object):
         ax.plot(self.velocity, self.min_flux - 0.05, "o", color = color)
         
 class Component(object):
-    def __init__(self, velocity, list_of_lines):
-        pass
-    def print_out_lines(self):
-        pass
+    def __init__(self, list_of_lines):
+        self.list_of_lines = list_of_lines
         
-def automatic_component_detector_v2(wl,flux,ion,line_wavelength,redshift,
-                        left_distance = 200,right_distance = "default"):
+    def print_out_lines(self):
+        for i in range(len(list_of_lines)):
+            same_comp_list = alignment_checker(i, list_of_lines)
+            ion_list = []
+            velocity = 0
+            for comp in same_comp_list:
+                velocity_add = comp.velocity
+                velocity = velocity + [velocity_add]
+                ion_list_add = comp.ion
+                ion_list = ion_list + [ion_list_add]
+                velocity = velocity/len(same_comp_list)
+            print("There is a component at " + velocity + " with " + str(ion_list))
+            
+           
+        
+def automatic_component_detector_v2(wl,flux,line,redshift,
+                        left_distance = 200,right_distance = "default", extreme_boundary = 0.01):
     if right_distance == 'default':
         right_distance = left_distance
     #line = (ion,line_wavelength)
     speedoflight = 299792458/1000
-    v_ion = speedoflight*(wl/(line_wavelength*(1+redshift))-1)
+    v_ion = speedoflight*(wl/(line[1]*(1+redshift))-1)
     
     diff_flux = np.gradient(flux)
-    
-    absorption_cutoff = 0.99
-    extreme_boundary = 0.05
     
     minimums = []
     maximums = []
     
     for i in range(1, len(wl[1:])): 
         if v_ion[i] > (0 - left_distance) and v_ion[i] < (0 + right_distance):
-            if diff_flux[i]>0 and diff_flux[i-1]<0 and flux[i]<absorption_cutoff:
+            if diff_flux[i]>0 and diff_flux[i-1]<0:
                 #minimum
                 minimums = minimums + [i]
                 
-            if diff_flux[i]<0 and diff_flux[i-1]>0 and flux[i]<absorption_cutoff:
+            if diff_flux[i]<0 and diff_flux[i-1]>0:
                 #maximum
                 maximums = maximums + [i]
                 
-    
+    #print(len(minimums))
+    #print(len(maximums))
     min_vion = []
     max_vion = []
     min_flux = []
     max_flux = []
     
+   
     for i in range(len(maximums)):
 
-        if  (flux[maximums[i]] - flux[minimums[i+1]])> 0.0 and \
-            (flux[maximums[i]] - flux[minimums[i]]) > extreme_boundary :
+        if (flux[maximums[i]] - flux[minimums[i+1]])> 0.0 and \
+         (flux[maximums[i]] - flux[minimums[i]]) > extreme_boundary :
             
-            max_vion_add = (ion + ' ' + str(line_wavelength), v_ion[maximums[i]])
+            max_vion_add = (line[0] + ' ' + str(line[1]), v_ion[maximums[i]])
             max_vion = max_vion + [max_vion_add]
             
-            max_flux_add = (ion + ' ' + str(line_wavelength), flux[maximums[i]])
+            max_flux_add = (line[0] + ' ' + str(line[1]), flux[maximums[i]])
             max_flux = max_flux  + [max_flux_add]
             
-            min_vion_add = (ion + ' ' + str(line_wavelength), v_ion[minimums[i]])
+            min_vion_add = (line[0] + ' ' + str(line[1]), v_ion[minimums[i]])
             min_vion = min_vion + [min_vion_add]
             
-            min_flux_add = (ion + ' ' + str(line_wavelength), flux[minimums[i]])
+            min_flux_add = (line[0] + ' ' + str(line[1]), flux[minimums[i]])
             min_flux = min_flux  + [min_flux_add]
-            
-        last_v_min = ((ion + ' ' + str(line_wavelength)), v_ion[minimums[len(maximums)]])
+    
+    if flux[minimums[len(maximums)]] < 0.98: 
+        last_v_min = ((line[0] + ' ' + str(line[1])), v_ion[minimums[len(maximums)]])
         min_vion = min_vion + [last_v_min]
-        last_f_min = ((ion + ' ' + str(line_wavelength)), flux[minimums[len(maximums)]])
+        last_f_min = ((line[0] + ' ' + str(line[1])), flux[minimums[len(maximums)]])
         min_flux = min_flux + [last_f_min]
+
+   # print('\n')
+    #print('min_vions ' + line[0] + ' ' + str(line[1]) + ': ')
+   # print(min_vion)
+    #print('\n')
+    #print('min_flux ' + line[0] + ' ' + str(line[1]) + ': ')
+    #print(min_flux)
+    #print('\n')
+    #print('max_vions ' + line[0] + ' ' + str(line[1]) + ': ')
+    #print(max_vion)     
+    #print('\n')
+    #print('max_flux '  + line[0] + ' ' + str(line[1]) + ': ')
+    #print(max_flux)   
+    #print('\n')
 
     list_of_lines = []
     for i in range (len(min_vion)):
-        list_of_lines_add = AbsorptionLine((ion,line_wavelength), min_vion[i][1], min_flux[i][1])
+        list_of_lines_add = AbsorptionLine(line, min_vion[i][1], min_flux[i][1])
         list_of_lines = list_of_lines + [list_of_lines_add]
+        
+    print(list_of_lines)
     return list_of_lines
+
+def alignment_checker(v_min, v_max, list_of_lines):
+    bins = range(v_min, v_max, 2)
+    counter = [[]] * len(bins)
+    #same_comp = []
+    for i in range(len(list_of_lines)):
+        for j in range(len(bins)):
+            if(list_of_lines[i].velocity > bins[j-1] and list_of_lines[i].velocity < bins[j]):
+                counter[j] += [list_of_lines[i]]
+              #  same_comp_add = list_of_lines[i]
+               # same_comp = same_comp + [same_comp_add]
+    return same_comp
