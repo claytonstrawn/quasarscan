@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 matplotlib_default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 default_color_assignments = {('O VI',1031.912000): matplotlib_default_colors[0],\
                              ('O VI',1037.613000): matplotlib_default_colors[1],\
@@ -34,7 +35,7 @@ def load_file(filename):
     return wl, flux, redshift
 
 def trident_file_reader(filename = 'default'):
-    if filename = 'default':
+    if filename == 'default':
         filename = os.path.expanduser('~/trident/trident/data/line_lists/lines.txt')
     try:
         with open(filename) as f:
@@ -184,7 +185,8 @@ class Component(object):
                 velocity = velocity/len(same_comp_list)
             print("There is a component at " + velocity + " with " + str(ion_list))
             
-           
+def trident_component_interpreter(dict_of_trident_components):
+    return list_of_AbsorptionLine_objects
         
 def automatic_component_detector_v2(wl,flux,line,redshift,
                         left_distance = 200,right_distance = "default", extreme_boundary = 0.01):
