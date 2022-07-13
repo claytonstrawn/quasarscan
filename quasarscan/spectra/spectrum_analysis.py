@@ -101,10 +101,23 @@ class AbsorptionLine(object):
         ax.plot(self.velocity, self.min_flux - 0.05, "o", color = color)
         
 class Component(object):
-    def __init__(self, velocity, list_of_lines):
-        pass
+    def __init__(self, list_of_lines):
+        self.list_of_lines = list_of_lines
+        
     def print_out_lines(self):
-        pass
+        for i in range(len(list_of_lines)):
+            same_comp_list = alignment_checker(i, list_of_lines)
+            ion_list = []
+            velocity = 0
+            for comp in same_comp_list:
+                velocity_add = comp.velocity
+                velocity = velocity + [velocity_add]
+                ion_list_add = comp.ion
+                ion_list = ion_list + [ion_list_add]
+                velocity = velocity/len(same_comp_list)
+            print("There is a component at " + velocity + " with " + str(ion_list))
+            
+           
         
 def automatic_component_detector_v2(wl,flux,line,redshift,
                         left_distance = 200,right_distance = "default", extreme_boundary = 0.01):
@@ -129,16 +142,18 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
                 #maximum
                 maximums = maximums + [i]
                 
-    
+    #print(len(minimums))
+    #print(len(maximums))
     min_vion = []
     max_vion = []
     min_flux = []
     max_flux = []
     
+   
     for i in range(len(maximums)):
 
-        if  (flux[maximums[i]] - flux[minimums[i+1]])> 0.0 and \
-            (flux[maximums[i]] - flux[minimums[i]]) > extreme_boundary :
+        if (flux[maximums[i]] - flux[minimums[i+1]])> 0.0 and \
+         (flux[maximums[i]] - flux[minimums[i]]) > extreme_boundary :
             
             max_vion_add = (line[0] + ' ' + str(line[1]), v_ion[maximums[i]])
             max_vion = max_vion + [max_vion_add]
@@ -158,22 +173,36 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
         last_f_min = ((line[0] + ' ' + str(line[1])), flux[minimums[len(maximums)]])
         min_flux = min_flux + [last_f_min]
 
-    print('\n')
-    print('min_vions ' + line[0] + ' ' + str(line[1]) + ': ')
-    print(min_vion)
-    print('\n')
-    print('min_flux ' + line[0] + ' ' + str(line[1]) + ': ')
-    print(min_flux)
-    print('\n')
-    print('max_vions ' + line[0] + ' ' + str(line[1]) + ': ')
-    print(max_vion)     
-    print('\n')
-    print('max_flux '  + line[0] + ' ' + str(line[1]) + ': ')
-    print(max_flux)   
-    print('\n')
+   # print('\n')
+    #print('min_vions ' + line[0] + ' ' + str(line[1]) + ': ')
+   # print(min_vion)
+    #print('\n')
+    #print('min_flux ' + line[0] + ' ' + str(line[1]) + ': ')
+    #print(min_flux)
+    #print('\n')
+    #print('max_vions ' + line[0] + ' ' + str(line[1]) + ': ')
+    #print(max_vion)     
+    #print('\n')
+    #print('max_flux '  + line[0] + ' ' + str(line[1]) + ': ')
+    #print(max_flux)   
+    #print('\n')
 
     list_of_lines = []
     for i in range (len(min_vion)):
         list_of_lines_add = AbsorptionLine(line, min_vion[i][1], min_flux[i][1])
         list_of_lines = list_of_lines + [list_of_lines_add]
+        
+    print(list_of_lines)
     return list_of_lines
+
+def alignment_checker(v_min, v_max, list_of_lines):
+    bins = range(v_min, v_max, 2)
+    counter = [[]] * len(bins)
+    #same_comp = []
+    for i in range(len(list_of_lines)):
+        for j in range(len(bins)):
+            if(list_of_lines[i].velocity > bins[j-1] and list_of_lines[i].velocity < bins[j]):
+                counter[j] += [list_of_lines[i]]
+              #  same_comp_add = list_of_lines[i]
+               # same_comp = same_comp + [same_comp_add]
+    return same_comp
