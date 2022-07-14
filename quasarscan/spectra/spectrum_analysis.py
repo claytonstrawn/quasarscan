@@ -96,10 +96,13 @@ def call_trident_fitter(wavelength,flux,ions,filename = 'default',**kwargs):
     lines_dict = trident_file_reader(filename=filename)
     orderFits,speciesDicts = trident_lines_starting_points(ions,lines_dict,**kwargs)
     fitted_lines, fitted_flux = generate_total_fit(wavelength, flux, orderFits, speciesDicts)
+    dict_to_return = {}
     for ion in ions:
         if ion.replace(' ','') not in fitted_lines:
-            fitted_lines[ion.replace(' ','')] = nolinesdict
-    return fitted_lines, fitted_flux
+            dict_to_return[ion] = nolinesdict
+        else: 
+            dict_to_return[ion] = fitted_lines[ion.replace(' ','')]
+    return dict_to_return, fitted_flux
 
 def plot_wl_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
                         left_distance = 20,right_distance = "default",ax = None):
