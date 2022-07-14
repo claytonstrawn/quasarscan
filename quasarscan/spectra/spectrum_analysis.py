@@ -166,7 +166,11 @@ class AbsorptionLine(object):
                 color = default_color_assignments[self.line]
             else:
                 color = None
-        ax.plot(self.velocity, self.min_flux - 0.05, "o", color = color)
+        if self.min_flux is None:
+            flux_to_plot = 1.1
+        else:
+            flux_to_plot = self.min_flux - 0.05
+        ax.plot(self.velocity, flux_to_plot, "o", color = color)
         
 class Component(object):
     def __init__(self, list_of_lines):
