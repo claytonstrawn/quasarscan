@@ -54,6 +54,7 @@ def trident_file_reader(filename = 'default'):
             lines_dict[ion] = [(wl,gamma,f)]
         else:
             lines_dict[ion] += [(wl,gamma,f)]
+        lines_dict['fakeion'] = [(1000,1e7,1e-1)]
     return lines_dict
 
 def trident_lines_starting_points(ions,lines_dict,**kwargs):
@@ -105,7 +106,8 @@ def call_trident_fitter(wavelength,flux,ions,filename = 'default',**kwargs):
     return dict_to_return, fitted_flux
 
 def plot_wl_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
-                        left_distance = 20,right_distance = "default",ax = None):
+                        left_distance = 20,right_distance = "default",
+                        label = 'default',ax = None,plot_chunk = 'all'):
     if right_distance == 'default':
         right_distance = left_distance
     if ax is None:
@@ -123,14 +125,23 @@ def plot_wl_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
             color = default_color_assignments[line]
         else:
             color = None
-    ax.plot(wl,noise_flux,label = line[0],color = color)
+    if label == 'default':
+        label = str(line)
+    if plot_chunk == 'all':
+        chunk = np.ones(len(wl),dtype = bool)
+    elif plot_chunk == 'lims':
+        chunk = np.logical_and(wl>=center-left_distance,wl<=center+right_distance)
+    elif isinstance(plot_chunk,(int,float)):
+        chunk = np.logical_and(wl>=center-left_distance*plot_chunk,wl<=center+right_distance*plot_chunk)
+    ax.plot(wl[chunk],noise_flux[chunk],label = label,color = color)
     ax.legend()
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Wavelength (Å)")
     ax.set_xlim(center-left_distance,center+right_distance)
 
 def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
-                        left_distance = 200,right_distance = "default",ax = None):
+                        left_distance = 200,right_distance = "default",\
+                        label = 'default',ax = None,plot_chunk = 'lims'):
     
     if right_distance == 'default':
         right_distance = left_distance
@@ -147,7 +158,15 @@ def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
             color = default_color_assignments[line]
         else:
             color = None
-    ax.plot(v_ion,noise_flux,label = line[0],color = color)
+    if label == 'default':
+        label = str(line)
+    if plot_chunk == 'all':
+        chunk = np.ones(len(wl),dtype = bool)
+    elif plot_chunk == 'lims':
+        chunk = np.logical_and(v_ion>=0-left_distance,v_ion<=0+right_distance)
+    elif isinstance(plot_chunk,(int,float)):
+        chunk = np.logical_and(v_ion>=0-left_distance*plot_chunk,v_ion<=0+right_distance*plot_chunk)
+    ax.plot(v_ion[chunk],noise_flux[chunk],label = label,color = color)
     ax.legend()
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Velocity (km/s)")
