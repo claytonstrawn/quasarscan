@@ -90,7 +90,8 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
             ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],zorder = zorder,
                                   color=coloration[i],markersize=markersize,alpha = alpha,linewidth=linewidth)
     else:
-        fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',"stddev":'.',"median":".",'default':'.'}
+        fmtdict = {"mean":'.',"median_std":',',"covering_fraction":',',\
+                   "stddev":'.',"median":".",'default':'.'}
         if not fmt:
             fmt = fmtdict[average]
         if fmt=='fill':

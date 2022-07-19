@@ -7,10 +7,14 @@ default_color_assignments = {('O VI',1031.912000): matplotlib_default_colors[0],
                              ('C IV',1548.187000): matplotlib_default_colors[2],\
                              ('C IV',1550.772000): matplotlib_default_colors[3]}
 from trident.absorption_spectrum.absorption_spectrum_fit import generate_total_fit
-
+#/project/projectdirs/agora/paper_CGM/spectra_from_trident/Ion_Spectra/AGORA_art_CR/1.998998976095549/Line_0/C I.txt
 def load_file(filename):
-    z_redshift = filename.split('+')[2]
-    redshift = float(z_redshift.split('z')[1])
+    folders = filename.split('/')
+    index_of_enclosing = folders.index('spectra_from_trident')
+    folders = folders[index_of_enclosing:]
+    simname = folders[2]
+    redshift = float(folders[3])
+    line_num = int(folders[4].split('_')[1])
     if filename[-4:] == '.txt':
         file = open(filename)
     else:
