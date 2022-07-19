@@ -214,7 +214,7 @@ class Component(object):
         self.velocity = total_velocity/len(list_of_lines) 
         
     def alignment_printer(self):
-        print('There is a component at ' + str(self.velocity) + ' km/s with ions: ' , self.list_of_lines)
+        print('There is a component at ' + str(self.velocity) + ' km/s with ions: ', print_ion(self.list_of_lines))
         
     def plot_data(self, ax, color = 'black'): 
         flux_to_plot = self.min_flux - 0.1
@@ -301,16 +301,53 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
     print(list_of_lines)
     return list_of_lines
 
-def alignment_checker(v_min, v_max, bin_step, list_of_lines):
-    bins = list(np.arange(v_min, v_max, bin_step))
-    counter = [[]] * len(bins)
+#def alignment_checker(v_min, v_max, bin_step, list_of_lines):
+#    bins = list(np.arange(v_min, v_max, bin_step))
+#    counter = [[]] * len(bins)
+#    list_of_comps = []
+#    total_velocity = 0
+#    for i in range(1, len(bins)):
+#        for j in range(len(list_of_lines)):
+#            if(list_of_lines[j].velocity > bins[i-1] and list_of_lines[j].velocity < bins[i]):
+#                counter[i] = counter[i] + [list_of_lines[j]]
+#        if(len(counter[i]) != 0):
+#            add_comp = Component(counter[i])
+#            list_of_comps = list_of_comps + [add_comp]
+#    return list_of_comps
+
+def alignment_checker(list_of_lines):
+    x = len(list_of_lines)
+    swapped = False
+    for i in range(x-1):
+        for j in range(0, x-i-1):
+            if (list_of_lines[j].velocity > list_of_lines[j+1].velocity):
+                swapped = True
+                list_of_lines[j], list_of_lines[j+1] = list_of_lines[j+1], list_of_lines[j]
+        if not swapped:
+            break
+    counter = [[]] * len(list_of_lines)
     list_of_comps = []
     total_velocity = 0
-    for i in range(1, len(bins)):
-        for j in range(len(list_of_lines)):
-            if(list_of_lines[j].velocity > bins[i-1] and list_of_lines[j].velocity < bins[i]):
-                counter[i] = counter[i] + [list_of_lines[j]]
-        if(len(counter[i]) != 0):
-            add_comp = Component(counter[i])
+    c = 0
+    n = 0
+    for i in range(len(list_of_lines)):
+        i = n 
+        j = n
+        while (j < len(list_of_lines)):
+            if(abs(list_of_lines[i].velocity - list_of_lines[j].velocity) <=4):
+                counter[c] = counter[c] + [list_of_lines[j]]
+                n = j
+            j = j+1
+        if(len(counter[c]) != 0):
+            add_comp = Component(counter[c])
             list_of_comps = list_of_comps + [add_comp]
+        c = c + 1
+        n = n + 1
     return list_of_comps
+
+def print_ion(list_of_lines):
+    lines = []
+    for i in range(len(list_of_lines)):
+        add_line = str(list_of_lines[i].ion)
+        lines = lines + [add_line]
+    return str(lines)
