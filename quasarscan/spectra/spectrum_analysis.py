@@ -175,6 +175,7 @@ def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Velocity (km/s)")
     ax.set_xlim(0-left_distance,0+right_distance)
+
     
 
 class AbsorptionLine(object):
@@ -201,19 +202,25 @@ class AbsorptionLine(object):
 class Component(object):
     def __init__(self, list_of_lines):
         self.list_of_lines = list_of_lines
+       # ion_list = []
+        self.min_flux = np.inf
+        total_velocity = 0
+        for line in list_of_lines:
+          #  ion_list = ion_list + [(line.ion,line.rest_wavelength)]
+            total_velocity = total_velocity + line.velocity
+            new_flux = line.min_flux
+            if(new_flux < self.min_flux):
+                self.min_flux = new_flux
+        self.velocity = total_velocity/len(list_of_lines) 
         
-    def print_out_lines(self):
-        for i in range(len(list_of_lines)):
-            same_comp_list = alignment_checker(i, list_of_lines)
-            ion_list = []
-            velocity = 0
-            for comp in same_comp_list:
-                velocity_add = comp.velocity
-                velocity = velocity + [velocity_add]
-                ion_list_add = comp.ion
-                ion_list = ion_list + [ion_list_add]
-                velocity = velocity/len(same_comp_list)
-            print("There is a component at " + velocity + " with " + str(ion_list))
+    def alignment_printer(self):
+        print('There is a component at ' + str(self.velocity) + ' km/s with ions: ' , self.list_of_lines)
+        
+    def plot_data(self, ax, color = 'black'): 
+        flux_to_plot = self.min_flux - 0.1
+        ax.plot([self.velocity - 1, self.velocity + 1], [flux_to_plot, flux_to_plot], linewidth = 4, color = color)
+        
+    
             
 def trident_component_interpreter(dict_of_trident_components):
     return list_of_AbsorptionLine_objects
@@ -294,14 +301,16 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
     print(list_of_lines)
     return list_of_lines
 
-def alignment_checker(v_min, v_max, list_of_lines):
-    bins = range(v_min, v_max, 2)
+def alignment_checker(v_min, v_max, bin_step, list_of_lines):
+    bins = list(np.arange(v_min, v_max, bin_step))
     counter = [[]] * len(bins)
-    #same_comp = []
-    for i in range(len(list_of_lines)):
-        for j in range(len(bins)):
-            if(list_of_lines[i].velocity > bins[j-1] and list_of_lines[i].velocity < bins[j]):
-                counter[j] += [list_of_lines[i]]
-              #  same_comp_add = list_of_lines[i]
-               # same_comp = same_comp + [same_comp_add]
-    return same_comp
+    list_of_comps = []
+    total_velocity = 0
+    for i in range(1, len(bins)):
+        for j in range(len(list_of_lines)):
+            if(list_of_lines[j].velocity > bins[i-1] and list_of_lines[j].velocity < bins[i]):
+                counter[i] = counter[i] + [list_of_lines[j]]
+        if(len(counter[i]) != 0):
+            add_comp = Component(counter[i])
+            list_of_comps = list_of_comps + [add_comp]
+    return list_of_comps
