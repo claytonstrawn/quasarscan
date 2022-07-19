@@ -220,8 +220,7 @@ class Component(object):
         flux_to_plot = self.min_flux - 0.1
         ax.plot([self.velocity - 1, self.velocity + 1], [flux_to_plot, flux_to_plot], linewidth = 4, color = color)
         
-    
-            
+        
 def trident_component_interpreter(dict_of_trident_components):
     return list_of_AbsorptionLine_objects
         
@@ -300,20 +299,6 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
         
     print(list_of_lines)
     return list_of_lines
-
-#def alignment_checker(v_min, v_max, bin_step, list_of_lines):
-#    bins = list(np.arange(v_min, v_max, bin_step))
-#    counter = [[]] * len(bins)
-#    list_of_comps = []
-#    total_velocity = 0
-#    for i in range(1, len(bins)):
-#        for j in range(len(list_of_lines)):
-#            if(list_of_lines[j].velocity > bins[i-1] and list_of_lines[j].velocity < bins[i]):
-#                counter[i] = counter[i] + [list_of_lines[j]]
-#        if(len(counter[i]) != 0):
-#            add_comp = Component(counter[i])
-#            list_of_comps = list_of_comps + [add_comp]
-#    return list_of_comps
 
 def alignment_checker(list_of_lines):
     x = len(list_of_lines)
