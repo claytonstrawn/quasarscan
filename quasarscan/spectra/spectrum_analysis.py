@@ -68,7 +68,7 @@ def trident_lines_starting_points(ions,lines_dict,**kwargs):
     for ion in ions:
         ion_name_nospace = ion.replace(' ','')
         ion_parameters = {'name':ion_name_nospace,
-                     'maxN':1e17,'minN':1e11,
+                     'maxN':1e20,'minN':1e8,
                      'maxb':300, 'minb':1,
                      'maxz':6, 'minz':0,
                      'init_b':20,
@@ -100,7 +100,7 @@ nolinesdict = {'N': np.array([], dtype=np.float64),\
 def call_trident_fitter(wavelength,flux,ions,filename = 'default',**kwargs):
     lines_dict = trident_file_reader(filename=filename)
     orderFits,speciesDicts = trident_lines_starting_points(ions,lines_dict,**kwargs)
-    fitted_lines, fitted_flux = generate_total_fit(wavelength, flux, orderFits, speciesDicts)
+    fitted_lines, fitted_flux = generate_total_fit(wavelength, flux, orderFits, speciesDicts,maxLength = 5000)
     dict_to_return = {}
     for ion in ions:
         if ion.replace(' ','') not in fitted_lines:
