@@ -97,9 +97,23 @@ nolinesdict = {'N': np.array([], dtype=np.float64),\
                'z': np.array([], dtype=np.float64),\
                'group#': np.array([], dtype=np.float64)}
 
-def call_trident_fitter(wavelength,flux,ions,filename = 'default',**kwargs):
+def call_trident_fitter(wavelength,flux,filename = 'default',line = None,**kwargs):
     lines_dict = trident_file_reader(filename=filename)
-    orderFits,speciesDicts = trident_lines_starting_points(ions,lines_dict,**kwargs)
+    #create a new version of lines_dict that only includes the line we are interested in, 
+    #not all the lines for the ion
+    new_lines_dict = {}#do something
+    if line != None:
+        ions = [line[0]]
+        for ion in ions:
+            ion_lines = lines_dict[ion]
+            line_parameters = []
+            for line_parameter in ion_lines:
+                if line[1] == line_parameter[0]:
+                    line_parameters = line_parameters + [line_parameter]
+
+            new_lines_dict[ion] = line_parameters
+            print(new_lines_dict)
+    orderFits,speciesDicts = trident_lines_starting_points(ions,new_lines_dict,**kwargs)
     fitted_lines, fitted_flux = generate_total_fit(wavelength, flux, orderFits, speciesDicts,maxLength = 5000)
     dict_to_return = {}
     for ion in ions:
@@ -107,6 +121,7 @@ def call_trident_fitter(wavelength,flux,ions,filename = 'default',**kwargs):
             dict_to_return[ion] = nolinesdict
         else: 
             dict_to_return[ion] = fitted_lines[ion.replace(' ','')]
+            
     return dict_to_return, fitted_flux
 
 def plot_wl_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
@@ -183,7 +198,7 @@ class AbsorptionLine(object):
     def __init__(self, line, velocity, min_flux):
         self.line = line
         self.ion = line[0]
-        self.rest_wavelength = line[1]
+        self_wavelength = line[1]
         self.velocity = velocity
         self.min_flux = min_flux
     
@@ -336,3 +351,40 @@ def print_ion(list_of_lines):
         add_line = str(list_of_lines[i].ion)
         lines = lines + [add_line]
     return str(lines)
+
+def get_line_list(atom_list = ['C', 'O', 'Ne', 'Mg'], ion_list = []):
+    dictionary = trident_file_reader()
+    for key in dictionary.keys():
+        if key not in ion_list and key.split(' ')[0] in atom_list:
+            add_ion = key
+            ion_list = ion_list + [add_ion]
+    line_list = []
+    for ion in ion_list:
+        for i in range(len(dictionary[ion])):
+            line_list = line_list + [(ion,dictionary[ion][i][0])]
+    return atom_list, ion_list, line_list
+
+def one_line_interpreter(wl,fl,fitted_lines, cosmo_redshift, line):
+    ion,nat_wavelength = line
+    list_of_AbsorptionLine_objects = []
+    lines_dict = fitted_lines[ion]
+    for i in range(len(lines_dict['N'])):
+        N = fitted_lines[ion]['N'][i]
+        b = fitted_lines[ion]['b'][i]
+        z = fitted_lines[ion]['z'][i]
+        speedoflight = 299792458/1000
+        wavelength_detected = nat_wavelength * (1+z)
+        rest_wavelength = nat_wavelength * (1+cosmo_redshift)
+        doppler_redshift = wavelength_detected/rest_wavelength-1
+        velocity = speedoflight*doppler_redshift
+        minflux = np.interp(wavelength_detected,wl,fl)
+        minflux = minflux if minflux > .01 else 0
+        if minflux > 0.95:
+            continue
+        print(f'best fit for line #{i} at wavelength {wavelength_detected}: \n{line}, with wavelength {rest_wavelength} velocity {velocity}')  
+        print(f"column density equals {N:0.2e}")
+        absorption_line = AbsorptionLine(line, velocity, minflux, wavelength_detected, N, b, z)
+        #add in to AbsorptionLine the other fitted/known quantites
+        #wavelength_detected, N, b, and z
+        list_of_AbsorptionLine_objects.append(absorption_line)
+    return list_of_AbsorptionLine_objects
