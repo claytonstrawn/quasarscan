@@ -180,12 +180,16 @@ def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
 
 class AbsorptionLine(object):
     
-    def __init__(self, line, velocity, min_flux):
+    def __init__(self, line, velocity, min_flux, wavelength_detected, N, b, z):
         self.line = line
         self.ion = line[0]
         self.rest_wavelength = line[1]
         self.velocity = velocity
         self.min_flux = min_flux
+        self.wavelength_detected = wavelength_detected
+        self.N = N
+        self.b = b
+        self.z = z
     
     def plot_data(self, ax, color = 'default'): 
         if color == 'default':
@@ -300,7 +304,7 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
     print(list_of_lines)
     return list_of_lines
 
-def alignment_checker(list_of_lines):
+def alignment_checker(list_of_lines, acceptable_width = 4):
     x = len(list_of_lines)
     swapped = False
     for i in range(x-1):
@@ -319,7 +323,7 @@ def alignment_checker(list_of_lines):
         i = n 
         j = n
         while (j < len(list_of_lines)):
-            if(abs(list_of_lines[i].velocity - list_of_lines[j].velocity) <=4):
+            if(abs(list_of_lines[i].velocity - list_of_lines[j].velocity) <= acceptable_width):
                 counter[c] = counter[c] + [list_of_lines[j]]
                 n = j
             j = j+1
