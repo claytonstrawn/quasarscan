@@ -66,6 +66,13 @@ class Component(object):
                 self.z_cos = line.z_cos
             else:
                 assert self.z_cos == line.z_cos
+    
+    def __contains__(self, item):
+        ion, wl = item
+        for line in self.list_of_lines:
+            if ion == line.ion and wl == line.wavelength:
+                return True
+        return False
         
     def alignment_printer(self):
         print('There is a component at ' + str(self.velocity) + \
@@ -82,7 +89,7 @@ class Component(object):
 def print_ion(list_of_lines):
     lines = []
     for i in range(len(list_of_lines)):
-        add_line = str(list_of_lines[i].ion)
+        add_line = str(list_of_lines[i].line)
         lines = lines + [add_line]
     return str(lines)
 
