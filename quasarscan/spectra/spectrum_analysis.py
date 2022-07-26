@@ -8,7 +8,12 @@ matplotlib_default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 default_color_assignments = {('O VI',1031.912000): matplotlib_default_colors[0],\
                              ('O VI',1037.613000): matplotlib_default_colors[1],\
                              ('C IV',1548.187000): matplotlib_default_colors[2],\
-                             ('C IV',1550.772000): matplotlib_default_colors[3]}
+                             ('C IV',1550.772000): matplotlib_default_colors[3],\
+                             ('Ne VIII', 780.324000): matplotlib_default_colors[4],\
+                             ('Ne VIII', 770.409000): matplotlib_default_colors[5],\
+                             ('Mg X', 624.941000): matplotlib_default_colors[6],\
+                             ('Mg X', 609.793000): matplotlib_default_colors[7]}
+
 #/project/projectdirs/agora/paper_CGM/spectra_from_trident/Ion_Spectra/AGORA_art_CR/1.998998976095549/Line_0/C I.txt
 
 def load_file(filename):
