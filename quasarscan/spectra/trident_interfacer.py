@@ -96,7 +96,7 @@ def call_trident_fitter(wavelength,flux,filename = 'default',line = None,**kwarg
             dict_to_return[ion] = fitted_lines[ion.replace(' ','')]
     return dict_to_return, fitted_flux
 
-def one_line_interpreter(wl,fl,fitted_lines, cosmo_redshift, line, loud = False):
+def one_line_interpreter(wl,fl,fitted_lines,cosmo_redshift,line,fluxthreshold = 0.99,loud = False):
     ion,nat_wavelength = line
     list_of_AbsorptionLine_objects = []
     lines_dict = fitted_lines[ion]
@@ -111,7 +111,7 @@ def one_line_interpreter(wl,fl,fitted_lines, cosmo_redshift, line, loud = False)
         velocity = speedoflight*doppler_redshift
         minflux = np.interp(wavelength_detected,wl,fl)
         minflux = minflux if minflux > .01 else 0
-        if minflux > 0.99:
+        if minflux > fluxthreshold:
             continue
         if loud:
             print(f'best fit for line #{i} at wavelength {wavelength_detected}: '+\
