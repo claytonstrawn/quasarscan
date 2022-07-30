@@ -44,10 +44,10 @@ class AbsorptionLine(object):
             flux_to_plot = 1.1
         else:
             flux_to_plot = self.min_flux - 0.05
-        ax.plot(self.velocity, flux_to_plot, "o", color = color)
+        ax.plot(self.velocity, flux_to_plot, "^", color = color)
         
 class Component(object):
-    def __init__(self, list_of_lines):
+    def __init__(self, list_of_lines,component_threshold = None):
         self.list_of_lines = list_of_lines
         self.min_flux = np.inf
         total_velocity = 0
@@ -66,12 +66,16 @@ class Component(object):
                 self.z_cos = line.z_cos
             else:
                 assert self.z_cos == line.z_cos
+        self.component_threshold = component_threshold
     
     def __contains__(self, item):
         ion, wl = item
         for line in self.list_of_lines:
             if ion == line.ion and wl == line.wavelength:
-                return True
+                if self.component_threshold is None:
+                    return True
+                elif self.component_threshold < line.N:
+                    return True
         return False
         
     def alignment_printer(self):
@@ -83,8 +87,8 @@ class Component(object):
             flux_to_plot = 1.2
         else:
             flux_to_plot = self.min_flux - 0.1
-        ax.plot([self.velocity - 1, self.velocity + 1], 
-                [flux_to_plot, flux_to_plot], linewidth = 4, color = color)
+        ax.plot([self.velocity - 2,self.velocity - 1,self.velocity, self.velocity + 1,self.velocity + 2], 
+                [flux_to_plot]*5, 's',markersize = 2, color = color)
         
 def print_ion(list_of_lines):
     lines = []
