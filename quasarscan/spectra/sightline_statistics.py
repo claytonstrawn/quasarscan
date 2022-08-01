@@ -53,22 +53,25 @@ def sightline_looping(code,sightline_range,ions):
     redshift = redshifts[code]
     avg_num_list = []
     avg_b_list = []
-    all_comp_tots = []
     for ion in ions:
         total_ion_num = 0
         total_ion_b = 0
+        all_comp_tots = []
+        all_bs = []
         for sightline_num in range(sightline_range):
             f_name = f"{root}/AGORA_{code}_CR/{redshift}/Line_{sightline_num}/components.txt"
             data = load_components(f_name)
             line_comp_tot = ncomps(ion, data)
-            all_comp_tots =  all_comp_tots + [line_comp_tot]
-            total_ion_num = total_ion_num + line_comp_tot
+            
+            if line_comp_tot != 0:
+                all_comp_tots =  all_comp_tots + [line_comp_tot]
+                
             line_b_avg = bparam(ion, data)
             if line_b_avg != 0:
-                total_ion_b = total_ion_b + line_b_avg
-            #print("total_ion_num: ", total_ion_num)
-        avg_num = total_ion_num/20
-        avg_b = total_ion_b/20
+                all_bs =  all_bs + [line_b_avg]
+
+        avg_num = np.average(all_comp_tots)
+        avg_b = np.average(all_bs)
         avg_num_list = avg_num_list + [avg_num]
         avg_b_list = avg_b_list + [avg_b]
     print("avg num: ", avg_num_list)
