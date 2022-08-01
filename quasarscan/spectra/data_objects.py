@@ -176,3 +176,35 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
         list_of_lines = list_of_lines + [list_of_lines_add]
         
     return list_of_lines
+
+def load_components(loc):
+    read_comp_list = []
+    with open(loc,'r') as f:
+        lines = f.readlines()
+    x = 0
+    for i in range(len(lines)):
+        i = x
+        if(i >= len(lines)):
+            break
+        line = lines[i]
+        element = line.split('_')
+        if(element[0] == 'Component'):
+            comp_line_list = []
+            x = i + 1
+            line_elements = lines[x].split('_')   
+            while(line_elements[0] != 'Component'):
+                comp_line_list_add = AbsorptionLine((line_elements[1], float(line_elements[2])), float(line_elements[3]),
+                                velocity = float(line_elements[4]), min_flux = float(line_elements[5]), N = float(line_elements[6]),
+                                                    b = float(line_elements[7]), z = float(line_elements[8]))
+                comp_line_list = comp_line_list + [comp_line_list_add]
+                x = x+1
+                if(x >= len(lines)):
+                    break
+                line_elements = lines[x].split('_')
+        make_comp_add = Component(comp_line_list)
+        make_comp_add.velocity = float(element[1])
+        make_comp_add.min_flux = float(element[2])
+        make_comp_add.z_cos = float(element[3])
+        read_comp_list = read_comp_list + [make_comp_add]
+        #create the Components back from the text in the lines as a list
+    return read_comp_list
