@@ -47,7 +47,7 @@ class AbsorptionLine(object):
         ax.plot(self.velocity, flux_to_plot, "^", color = color)
         
 class Component(object):
-    def __init__(self, list_of_lines,component_threshold = None):
+    def __init__(self, list_of_lines,component_threshold = None,sightline_name = None):
         self.list_of_lines = list_of_lines
         self.min_flux = np.inf
         total_velocity = 0
@@ -67,6 +67,7 @@ class Component(object):
             else:
                 assert self.z_cos == line.z_cos
         self.component_threshold = component_threshold
+        self.sightline_name = sightline_name
     
     def __contains__(self, item):
         ion, wl = item
@@ -179,6 +180,8 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
 
 def load_components(loc):
     read_comp_list = []
+    code = loc.split('/')[-4].split('_')[1]
+    sightline = loc.split('/')[-2].split('_')[1]
     with open(loc,'r') as f:
         lines = f.readlines()
     x = 0
@@ -201,7 +204,7 @@ def load_components(loc):
                 if(x >= len(lines)):
                     break
                 line_elements = lines[x].split('_')
-        make_comp_add = Component(comp_line_list)
+        make_comp_add = Component(comp_line_list,sightline_name = f'{code}_{sightline}')
         make_comp_add.velocity = float(element[1])
         make_comp_add.min_flux = float(element[2])
         make_comp_add.z_cos = float(element[3])
