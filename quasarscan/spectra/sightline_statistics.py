@@ -62,6 +62,8 @@ def sightline_looping(code,sightline_range,ions,vars_to_return = [],include_zero
              'gadget':2.003003004441382, 'gear':2.0000000000018687, 'gizmo':2.0012562123472377}
     redshift = redshifts[code]
     vars_funcs_dict = {'num':ncomps,'b':bparam,'n':nparam,'covering_fraction':covering_fraction}
+    #add a second thing, in addition to 
+    #to_return values, return the errors on each
     to_return = np.zeros((len(vars_to_return),len(ions)))+np.nan
     for i,var in enumerate(vars_to_return):
         try:
