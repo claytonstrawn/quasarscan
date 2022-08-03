@@ -70,7 +70,7 @@ def sightline_looping(code,sightline_range,ions):
             if line_b_avg != 0:
                 all_bs =  all_bs + [line_b_avg]
 
-        avg_num = np.average(all_comp_tots)
+            avg_num = np.average(all_comp_tots)
         avg_b = np.average(all_bs)
         avg_num_list = avg_num_list + [avg_num]
         avg_b_list = avg_b_list + [avg_b]
