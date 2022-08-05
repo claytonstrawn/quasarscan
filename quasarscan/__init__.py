@@ -26,10 +26,14 @@ if hasyt:
         print('Running quasarscan in loadonly mode. Can load simulations, but not create new metadata or process new sightlines. Quasarscan can still plot existing data.')
 
 print('Checking for saved output data...',end = '')
-path = "quasarscan_data"
 import os
-if os.path.exists(path):
+HOME = os.path.expanduser('~')
+PATH = "quasarscan_data"
+import os
+if os.path.exists(PATH):
     print("folder 'quasarscan_data' found.")
+elif os.path.exists(os.path.join(HOME,PATH)):
+    print("folder '~/quasarscan_data' found.")
 else:
     print("no data found.")
     if not hasyt:

@@ -2,6 +2,7 @@ from quasarscan.data_objects import observation_quasar_sphere,\
                                      quasar_sphere,\
                                      simulation_quasar_sphere
 from quasarscan.preprocessing import parse_metadata
+from quasarscan.utils.utils import data_path
 import os
 import numpy as np
 
@@ -31,23 +32,23 @@ def one_is_in_name(name,loadonly):
 #
 #outputs: textfiles: list of names of textfiles
 def get_all_textfiles(loadonly,qtype,throw_errors = False):
-    path = "quasarscan_data"
-    assert os.path.exists(path), "folder 'quasarscan_data' not found, so nothing available to plot!"
+    PATH = data_path()
+    assert os.path.exists(PATH), "folder 'quasarscan_data' not found, so nothing available to plot!"
     if qtype == 'sim':
-        path = "quasarscan_data/output"
+        path = os.path.join(PATH,"output")
         if not os.path.exists(path):
             print("folder 'quasarscan_data/output' not found, so no simulations available to plot!")
             if throw_errors:
                 raise NoFilesError()
         dirs = os.listdir(path)
     elif qtype == 'obs':
-        path = "quasarscan_data/observations"
+        path = os.path.join(PATH,"observations")
         if not os.path.exists(path):
             print("folder 'quasarscan_data/observations' not found, so no observations available to plot!")
             if throw_errors:
                 raise NoFilesError()
     elif qtype == 'empty':
-        path = "quasarscan_data/galaxy_catalogs"
+        path = os.path.join(PATH,"galaxy_catalogs")
         if not os.path.exists(path):
             print("folder 'quasarscan_data/galaxy_catalogs' not found, so no metadata available to plot!")
             if throw_errors:

@@ -1,6 +1,7 @@
 from quasarscan.utils import roman
 from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
+import os
 
 def round_redshift(redshift):
     if abs(redshift - 0.0) <= .05: return 0.00
@@ -166,3 +167,13 @@ def definecolorbar(bar_type = 'HotCustom',**kwargs):
                              (1.0, 0.0, 0.0))}
         custom = LinearSegmentedColormap('BlackandWhite', bwdict)
     return custom
+
+def data_path():
+    HOME = os.path.expanduser('~')
+    if os.path.exists("quasarscan_data"):
+        PATH = 'quasarscan_data'
+    elif os.path.exists(os.path.join(HOME,"quasarscan_data")):
+        PATH = os.path.join(HOME,"quasarscan_data")
+    else:
+        PATH = None
+    return PATH

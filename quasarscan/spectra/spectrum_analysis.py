@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from quasarscan.utils.utils import data_path
 
 speedoflight = 299792458/1000  #units are km/s (so 1/1000 of the m/s value)
 
@@ -16,6 +17,28 @@ default_color_assignments = {('O VI',1031.912000): matplotlib_default_colors[0],
 
 #/project/projectdirs/agora/paper_CGM/spectra_from_trident/Ion_Spectra/AGORA_art_CR/1.998998976095549/Line_0/C I.txt
 
+def load_sightline_from_qsdata(fullname,approx_redshift,sightline_num,line=None,tolerance = 0.1):
+    PATH = data_path()
+    root = os.path.join(PATH,"output","spectra_from_trident","all")
+    for z in os.listdir(os.path.join(root,fullname)):
+        if np.abs(float(z)-approx_redshift)<tolerance:
+            redshift = z
+    full_path = os.path.join(f"{root}",f"{fullname}",f"{redshift}",f"Line_{sightline_num}")
+    if line is not None:
+        ion,wavelength = line
+        atom = ion.split(' ')[0]
+        line_name = f'{ion}_{wavelength}'
+        filename  = os.path.join(full_path,f"{atom}",f"{line_name}.txt")
+        if not os.path.exists(filename):
+            one_level_up = os.path.join(full_path,f"{atom}")
+            print(f"file '{filename}' does not exist. Lines for this ion are:")
+            options = os.listdir(one_level_up)
+            for option in options:
+                print('\t',option)
+    else:
+        filename  = os.path.join(full_path,"full.txt")
+    return load_file(filename)
+
 def load_file(filename):
     folders = filename.split('/')
     index_of_enclosing = folders.index('spectra_from_trident')
@@ -28,13 +51,13 @@ def load_file(filename):
     else:
         file = open(filename + '.txt')
     string_file = file.read()
-    array_file = string_file.split('\n')
-    array_file.pop(0)
-    array_file.pop(len(array_file)-1)
+    list_file = string_file.split('\n')
+    list_file.pop(0)
+    list_file.pop(len(list_file)-1)
     xs = []
     ys = []
-    for i in range(len(array_file)):
-        line = array_file[i]
+    for i in range(len(list_file)):
+        line = list_file[i]
         linelist = line.split(' ')
         xs.append(float(linelist[0]))
         ys.append(float(linelist[2]))
