@@ -6,14 +6,18 @@ from quasarscan.utils.utils import data_path
 speedoflight = 299792458/1000  #units are km/s (so 1/1000 of the m/s value)
 
 matplotlib_default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-default_color_assignments = {('O VI',1031.912000): matplotlib_default_colors[0],\
+
+default_color_assignments = {
+                             ('O VI',1031.912000): matplotlib_default_colors[0],\
                              ('O VI',1037.613000): matplotlib_default_colors[1],\
                              ('C IV',1548.187000): matplotlib_default_colors[2],\
                              ('C IV',1550.772000): matplotlib_default_colors[3],\
                              ('Ne VIII', 780.324000): matplotlib_default_colors[4],\
                              ('Ne VIII', 770.409000): matplotlib_default_colors[5],\
                              ('Mg X', 624.941000): matplotlib_default_colors[6],\
-                             ('Mg X', 609.793000): matplotlib_default_colors[7]}
+                             ('Mg X', 609.793000): matplotlib_default_colors[7],\
+                             ('Si IV',1402.770000): matplotlib_default_colors[8],\
+                            }
 
 #/project/projectdirs/agora/paper_CGM/spectra_from_trident/Ion_Spectra/AGORA_art_CR/1.998998976095549/Line_0/C I.txt
 
