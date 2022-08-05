@@ -21,6 +21,12 @@ def comps_fraction(ion,comp_list):
         comp_fraction = line_comp_tot/len(comp_list)
     return comp_fraction
 
+#summary: returns total number of components for an ion in a sightline as an array 
+#
+#inputs: ion: ion to count
+#        comp_list: list of components for the sightline
+#
+#output: array of the total number of components for an ion in a sightline
 def ncomps(ion,comp_list):
     line_comp_tot = 0
     for comp in comp_list:
@@ -34,6 +40,13 @@ def ncomps(ion,comp_list):
 #collect b for each component within that line
 #but only counting ones where this ion is found
 #return the average b
+
+#summary: returns total b for components of the ion in a line as an array 
+#
+#inputs: ion: ion to count
+#        comp_list: list of components for the sightline
+#
+#output: array of the total b for components of the ion in a line as an array 
 def bparam(ion, comp_list):
     all_bs = []
     for comp in comp_list:
@@ -50,6 +63,12 @@ def covering_fraction(ion,comp_list):
                 return [1]
     return [0]
 
+#summary: returns total column density components of the ion in a line as an array 
+#
+#inputs: ion: ion to count
+#        comp_list: list of components for the sightline
+#
+#output: array of the total column density for an ion of a component in a sightline
 def nparam(ion, comp_list):
     all_ns = []
     for comp in comp_list:
@@ -59,19 +78,16 @@ def nparam(ion, comp_list):
                 break
     return all_ns
 
-def nparamsd(ion, comp_list, avg_N):
-    sd_nsum = 0
-    count = 0
-    for comp in comp_list:
-        for line in comp.list_of_lines:
-            if ion == line.ion:
-                sd_nsum = sd_nsum + (((np.log10(line.N)) - avg_N) ** 2)
-                count = count + 1
-   # count = count - 1
-  #  n_sd = sd_nsum
-    to_return = [sd_nsum, count]
-    return to_return
-
+#summary: returns average and standard error of chosen variables(total components, b, column density, covering fraction) for each ion chosen for the code chosen
+#
+#inputs: code: galaxy code
+#       sightline_range: sightlines used to find average
+#       ions: list of ions to find averages for
+#       vars_to_return: list of what to find the averages for, can choose from total components, b, column density, or covering fraction
+#       include_zero: choose to include even if there's 0 components for an ion, default is false
+#       min_data_points: minimum number of components needed to be included
+#
+#output: array of averages for each chosen variable for each chosen ion and an array of standard errors for each chosen variable for each chosen ion
 def sightline_looping(code,sightline_range,ions,vars_to_return = [],include_zero = False, min_data_points = 2):
     root = '/global/project/projectdirs/agora/paper_CGM/spectra_from_trident/Ion_Spectra/'
     redshifts = {'art':1.998998976095549, 'enzo':1.9999988698963, 'ramses':2.0005652511032306, 
