@@ -1,5 +1,6 @@
 import numpy as np
 from quasarscan.spectra.data_objects import load_components
+import math
 
 #for one code:
 #iterate over all the lines
@@ -39,6 +40,7 @@ def bparam(ion, comp_list):
         for line in comp.list_of_lines:
             if ion == line.ion:
                 all_bs.append(line.b)
+                break
     return all_bs
 
 def covering_fraction(ion,comp_list):
@@ -54,17 +56,32 @@ def nparam(ion, comp_list):
         for line in comp.list_of_lines:
             if ion == line.ion:
                 all_ns.append(np.log10(line.N))
+                break
     return all_ns
 
-def sightline_looping(code,sightline_range,ions,vars_to_return = [],include_zero = False):
+def nparamsd(ion, comp_list, avg_N):
+    sd_nsum = 0
+    count = 0
+    for comp in comp_list:
+        for line in comp.list_of_lines:
+            if ion == line.ion:
+                sd_nsum = sd_nsum + (((np.log10(line.N)) - avg_N) ** 2)
+                count = count + 1
+   # count = count - 1
+  #  n_sd = sd_nsum
+    to_return = [sd_nsum, count]
+    return to_return
+
+def sightline_looping(code,sightline_range,ions,vars_to_return = [],include_zero = False, min_data_points = 2):
     root = '/global/project/projectdirs/agora/paper_CGM/spectra_from_trident/Ion_Spectra/'
     redshifts = {'art':1.998998976095549, 'enzo':1.9999988698963, 'ramses':2.0005652511032306, 
              'gadget':2.003003004441382, 'gear':2.0000000000018687, 'gizmo':2.0012562123472377}
     redshift = redshifts[code]
-    vars_funcs_dict = {'num':ncomps,'b':bparam,'n':nparam,'covering_fraction':covering_fraction}
+    vars_funcs_dict = {'num':ncomps,'b':bparam, 'n':nparam,'covering_fraction':covering_fraction}
     #add a second thing, in addition to 
     #to_return values, return the errors on each
-    to_return = np.zeros((len(vars_to_return),len(ions)))+np.nan
+    to_return = np.zeros((len(vars_to_return),len(ions)))+np.nan        
+    return_SE = np.zeros((len(vars_to_return),len(ions)))+np.nan 
     for i,var in enumerate(vars_to_return):
         try:
             func = vars_funcs_dict[var]
@@ -85,6 +102,13 @@ def sightline_looping(code,sightline_range,ions,vars_to_return = [],include_zero
                             all_var =  all_var + one_ion_results
                 else:
                     all_var =  all_var + one_ion_results
-            avg_var = np.average(all_var)
+            if len(all_var) < min_data_points:
+                avg_var = np.nan
+            else:
+                avg_var = np.average(all_var) 
+            sd_var = np.std(all_var, ddof = 1)
+            se_var = sd_var/math.sqrt((len(all_var)))
+            return_SE[i][j] = se_var             
             to_return[i][j] = avg_var
-    return to_return
+                
+    return to_return, return_SE
