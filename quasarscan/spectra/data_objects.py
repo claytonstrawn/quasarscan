@@ -3,7 +3,22 @@ from quasarscan.spectra.spectrum_analysis import default_color_assignments,\
                                                     matplotlib_default_colors,\
                                                     speedoflight
 
+
+#multiple objects used for finding, storing, and plotting components
 class AbsorptionLine(object):
+    #summary: initialise absorption line and load all data
+    #
+    #inputs: line:loads line, ion, and wavelength
+    #        z_cos: loads cosmological redshift from codes
+    #        z_tot: if None, calculated from wl
+    #        velocity: if None, calculated from wl and speed of light
+    #        wavelength_detected: if None, set to wl
+    #        min_flux: loads minflux, if None, isn't saved
+    #        N: loads column density, if None, isn't saved
+    #        b: loads b, if None, isn't saved
+    #        z: loads redshift from data, if None, isn't saved
+    #
+    #output: AbsorptionLine object 
     def __init__(self, line, z_cos, z_tot = None, velocity = None,\
                  wavelength_detected = None, min_flux = None, N = None, \
                  b = None, z = None):
@@ -33,7 +48,12 @@ class AbsorptionLine(object):
         self.N = N
         self.b = b
         self.z = z
-    
+    #summary: plots component on minflux vs velocity graph
+    #
+    #inputs: ax: axis for graphing
+    #        color: what color the point should be, if default, takes color from default color assignments
+    #
+    #output: graphs component on a graph
     def plot_data(self, ax, color = 'default'): 
         if color == 'default':
             if self.line in default_color_assignments:
@@ -47,6 +67,13 @@ class AbsorptionLine(object):
         ax.plot(self.velocity, flux_to_plot, "^", color = color)
         
 class Component(object):
+    #summary: initialise components and loads data
+    #
+    #inputs: list_of_lines: loads a list of AbsorptionLine objects
+    #        componenet_threshold: loads component threshold ,if None, ignores
+    #        sightline_name: 
+    #         
+    #output: Component object
     def __init__(self, list_of_lines,component_threshold = None,sightline_name = None):
         self.list_of_lines = list_of_lines
         self.min_flux = np.inf
@@ -78,11 +105,21 @@ class Component(object):
                 elif self.component_threshold < line.N:
                     return True
         return False
-        
+    
+    #summary: prints at what velocity components from different ions line up
+    #
+    #inputs: none
+    #
+    #output: velocities where components from different ions line up
     def alignment_printer(self):
         print('There is a component at ' + str(self.velocity) + \
               ' km/s with ions: ', print_ion(self.list_of_lines))
         
+    #summary: plots a point for where the components line up
+    #
+    #inputs: ax: axis to plot the pont
+    #        color: color to plot point, default is black
+    #output: graphs point on graph
     def plot_data(self, ax, color = 'black'): 
         if self.min_flux is None:
             flux_to_plot = 1.2
@@ -90,7 +127,12 @@ class Component(object):
             flux_to_plot = self.min_flux - 0.1
         ax.plot([self.velocity - 2,self.velocity - 1,self.velocity, self.velocity + 1,self.velocity + 2], 
                 [flux_to_plot]*5, 's',markersize = 2, color = color)
-        
+
+#summary: converts list of Absorption Line object's line variable to a string, mainly used for Component alignment_printer function
+#
+#input: list_of_lines: list of Absorption Line objects
+#
+#output: string of all of the Absorption Line objects ion and wavelengths
 def print_ion(list_of_lines):
     lines = []
     for i in range(len(list_of_lines)):
@@ -98,6 +140,12 @@ def print_ion(list_of_lines):
         lines = lines + [add_line]
     return str(lines)
 
+#summary: sorts components and checks if they are aligned within a certain threshold, aligned components are put into the Component object
+#
+#inputs: list_of_lines: list of AbsorptionLine objects
+#        acceptable_width: threshold for components to be within to be considered aligned, default is 4km/s
+#
+#output: list of Component objects with aligned components
 def alignment_checker(list_of_lines, acceptable_width = 4):
     x = len(list_of_lines)
     swapped = False
@@ -178,6 +226,11 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
         
     return list_of_lines
 
+#summary: reads Components from file and turns them back into component objects
+#
+#inputs: loc: file path for the components file
+#
+#output: list of aligned Component objects
 def load_components(loc):
     read_comp_list = []
     code = loc.split('/')[-4].split('_')[1]
