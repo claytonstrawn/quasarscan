@@ -56,13 +56,6 @@ def bparam(ion, comp_list):
                 break
     return all_bs
 
-def covering_fraction(ion,comp_list):
-    for comp in comp_list:
-        for line in comp.list_of_lines:
-            if ion == line.ion:
-                return [1]
-    return [0]
-
 #summary: returns total column density components of the ion in a line as an array 
 #
 #inputs: ion: ion to count
@@ -77,6 +70,13 @@ def nparam(ion, comp_list):
                 all_ns.append(np.log10(line.N))
                 break
     return all_ns
+
+def covering_fraction(ion,comp_list):
+    for comp in comp_list:
+        for line in comp.list_of_lines:
+            if ion == line.ion:
+                return [1]
+    return [0]
 
 #summary: returns average and standard error of chosen variables(total components, b, column density, covering fraction) for each ion chosen for the code chosen
 #

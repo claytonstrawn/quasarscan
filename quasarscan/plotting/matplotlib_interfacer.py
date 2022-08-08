@@ -11,33 +11,6 @@ def transpose_err_array(errs):
         return None
     else:
         return errs.transpose()
-    
-    
-class ZBiasFreePlotter(object):
-    def __init__(self):
-        self.plot_calls = []
-
-    def add_plot(self, f, xs, ys, *args, **kwargs):
-        self.plot_calls.append((f, xs, ys, args, kwargs))
-
-    def draw_plots(self, chunk_size=512):
-        scheduled_calls = []
-        for f, xs, ys, args, kwargs in self.plot_calls:
-            assert(len(xs) == len(ys))
-            index = np.arange(len(xs))
-            np.random.shuffle(index)
-            index_blocks = [index[i:i+chunk_size] for i in np.arange(len(index))[::chunk_size]]
-            for i, index_block in enumerate(index_blocks):
-                # Only attach a label for one of the chunks
-                if i != 0 and kwargs.get("label") is not None:
-                    kwargs = kwargs.copy()
-                    kwargs["label"] = None
-                scheduled_calls.append((f, xs[index_block], ys[index_block], args, kwargs))
-
-        np.random.shuffle(scheduled_calls)
-
-        for f, xs, ys, args, kwargs in scheduled_calls:
-            f(xs, ys, *args, **kwargs)
 
 #summary: helper function for plot_err that handles simulation data
 #
@@ -134,12 +107,19 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,
     if fmt is None:
         fmt = '.'
     if zorder == 'random':
-        bias_free_plotter = ZBiasFreePlotter()
+        #this slows down plotting quite a bit -- instead of say six calls to ax.plot
+        #which each plots around 200 points, it now does 1200 calls to ax.plot which 
+        #each plot 1 point. I could not figure out any way to give points individual 
+        #zorders without doing this however. This does successfully eliminate z-bias
         for i in range(len(xs)):
-            bias_free_plotter.add_plot(ax.plot, xs[i],ys[i],'o',label=labels[i],
-                                       color=coloration[i],markersize=markersize,
-                                       alpha = alpha,marker=fmt)
-        bias_free_plotter.draw_plots()
+            zordering_bot = np.random.choice(np.arange(-100,0),len(xs[i]))
+            for j in range(len(xs[i])):
+                if j==0:
+                    label=labels[i]
+                else:
+                    label = None
+                ax.plot(xs[i][j],ys[i][j],'o',label=label,color=coloration[i],markersize=markersize,
+                                    alpha = alpha,zorder=zordering_bot[j],marker=fmt)
     else:
         for i in range(len(xs)):
             ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=markersize,
