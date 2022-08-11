@@ -226,6 +226,22 @@ def automatic_component_detector_v2(wl,flux,line,redshift,
         
     return list_of_lines
 
+#summary: saves Components to a text file
+#
+#inputs: list_of_comps: list of Component objects to save in file
+#        dest: file path to save the component file
+#
+#output: n/a, Components saved in a text file
+def save_components(list_of_comps,dest):
+    to_write = ''
+    for comp in list_of_comps:
+        to_write+= "Component_" + str(comp.velocity) +  '_' +  str(comp.min_flux) + '_' + str(comp.z_cos) + '\n' 
+        #info about the component (velocity,minval,etc)
+        for line in comp.list_of_lines:
+            to_write+= "Line_" + str(line.ion) + '_' + str(line.wavelength) + '_' + str(line.z_cos) +  '_' + str(line.velocity) +  '_' +                     str(line.min_flux) + '_' + str(line.N) + '_' + str(line.b) + '_' + str(line.z) + '\n'  #info about the line
+    with open(dest,'w') as f:
+        f.write(to_write)
+        
 #summary: reads Components from file and turns them back into component objects
 #
 #inputs: loc: file path for the components file
