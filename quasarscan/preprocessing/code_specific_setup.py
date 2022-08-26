@@ -1,6 +1,6 @@
 import yt
 import numpy as np
-from quasarscan.utils import PI_field_defs
+from pi_or_ci import PI_field_defs
 from quasarscan.preprocessing.add_common_fields import set_up_funcs
 
 
