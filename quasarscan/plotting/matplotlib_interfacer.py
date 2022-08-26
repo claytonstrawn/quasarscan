@@ -190,7 +190,10 @@ def plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,quasar
     for i in range(len(xs)):
         color = coloration[i]
         for j in range(len(xs[i])):
-            current_label = quasar_array[i][j].author+'-'+labels[i]
+            if labels[i]!= quasar_array[i][j].author:
+                current_label = quasar_array[i][j].author+'-'+labels[i]
+            else:
+                current_label = labels[i]
             if current_label[0] not in citations:
                 citations.append(current_label[0])
             if current_label not in used_labels:
