@@ -52,6 +52,9 @@ class MultiQuasarSpherePlotter():
     def list_all_quasar_spheres(self,*criteria,qtype='sim',log=False):
         self.quasar_array_handler.list_all_quasar_spheres(*criteria,qtype=qtype,log=log)
 
+    def get_qlist(self,qtype='sim'):
+        return self.quasar_array_handler.get_qlist(qtype)
+    
     #summary: cancel all constraints
     #
     #inputs: None
@@ -192,6 +195,7 @@ class MultiQuasarSpherePlotter():
                     self.plot_hist(yVar, xVar=xVar, qtype=qtype, fig = fig,ax = ax, **kwargs)
                 matplotlib_interfacer.handle_faberplot_titles(i,j,axes,lq2)
         self.quasar_array_handler.update_qlist(qtype,old_quasar_array)
+        return fig,axes
 
 
 

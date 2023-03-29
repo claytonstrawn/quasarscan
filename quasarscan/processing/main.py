@@ -4,7 +4,7 @@ import numpy as np
 import trident
 from quasarscan.data_objects import simulation_quasar_sphere
 from quasarscan.preprocessing import code_specific_setup
-from quasarscan.utils import roman
+from quasarscan.utils import roman,utils
 import sys
 import os
 import datetime
@@ -43,7 +43,7 @@ def throw_errors_if_allowed(e,throwerrors,message=None):
     elif throwerrors == False:
         return
 
-def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None,run = 'default',throwerrors = 'warn'):
+def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None,run = 'default',throwerrors = 'warn',agora = False,metal_source = None):
     if run not in ['default','test']:
         print('unknown option for "run" %s. Please restart with "run = default" or "run = test".'%run)
     #do not print out anything from yt (it prints plenty)
@@ -62,7 +62,10 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             raise NoSimulationError('Simulation file location unknown, run with "simulation_dest" to process')
     else:
         simulation_dest = q.simparams[6]
-    ds,fields_to_keep = code_specific_setup.load_and_setup(simulation_dest,q.code,q.ions)
+    ds,fields_to_keep = code_specific_setup.load_and_setup(simulation_dest,
+                                                           q.code,q.ions,
+                                                           agora=agora,
+                                                           redshift = q.redshift)
     code_specific_setup.check_redshift(ds,outputfilename=outputfilename)
     num_bin_vars = q.gasbins.get_length()
     #Can start at a position further than 0 if reached
@@ -88,11 +91,12 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             ident = str(index)
             start = ds.arr(tuple(vector[5:8]),'unitary')
             end = ds.arr(tuple(vector[8:11]),'unitary')
+            data_filename = "ray"+q.code+ident+".h5"
             try:
                 ray = trident.make_simple_ray(ds,
                                             start_position=start,
                                             end_position=end,
-                                            data_filename="ray"+ident+".h5",
+                                            data_filename=data_filename,
                                             fields = fields_to_keep,
                                             ftype='gas')
             except KeyboardInterrupt:
@@ -103,7 +107,22 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with making ray')
                 continue
-            trident.add_ion_fields(ray,q.ions)
+            if agora:
+                metal_source = 'custom'
+                H_source = 'density'
+                custom_metal_function = utils.agora_custom_metals
+                custom_H_function = None
+            else:
+                metal_source = metal_source
+                H_source = None
+                custom_metal_function = None
+                custom_H_function = None
+            trident.add_ion_fields(ray,q.ions,
+                                    metal_source = metal_source,
+                                    custom_metal_function = custom_metal_function,
+                                    H_source = H_source,
+                                    custom_H_function = custom_H_function,
+                                  )
             field_data = ray.all_data()
             dl = field_data['gas','dl']
             #3rd for loop is for processing each piece of info about each ion
@@ -112,12 +131,12 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             #(~10 ions)
             for j in range(len(q.ions)):
                 ion = q.ions[j]
+                atom = ion.split(' ')[0]
                 ionfield = field_data["gas",ion_to_field_name(ion)]
+                atomfield = field_data["gas",'trident_%s_nuclei_density'%atom]
                 cdens = np.sum((ionfield * dl).in_units('cm**-2')).value
+                total_nucleus = np.sum((atomfield * dl).in_units('cm**-2')).value
                 vector[11+j*(num_bin_vars+2)] = cdens
-                total_nucleus = np.sum(ionfield[ionfield>0]/\
-                                           field_data["gas",ion_to_field_name(ion,'ion_fraction')][ionfield>0]\
-                                            * dl[ionfield>0])
                 vector[11+j*(num_bin_vars+2)+1] = cdens / total_nucleus
                 #4th for loop is processing each gasbin for the current ion
                 #(~20 bins)
@@ -141,12 +160,16 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                             print(str(variable_name)+" not in ray.derived_field_list")
                     except Exception as e:
                         throw_errors_if_allowed(e,throwerrors,'Could not bin into %s with edges %s'%(variable_name,edges))
-                toprint+="%s:%e "%(ion,cdens)
+                toprint+="%s:%e (%s frac:%e)"%(ion,cdens,atom,cdens/total_nucleus)
             #gets some more information from the general sightline.
             #metallicity, average density (over the whole sightline)
             #mass-weighted temperature
             try:
-                if ('gas',"H_nuclei_density") in ray.derived_field_list:
+                if agora:
+                    Z = np.sum(field_data['gas',"agora_metallicity"].in_units('')*\
+                               field_data['gas',"density"]*dl)/ \
+                        np.sum(field_data['gas',"density"]*dl)
+                elif ('gas',"H_nuclei_density") in ray.derived_field_list:
                     Z = np.sum(field_data['gas',"metal_density"]*dl)/ \
                         np.sum(field_data['gas',"H_nuclei_density"]*mh*dl)
                 else:
@@ -173,8 +196,11 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                 vector[-4] = T
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average temperature')
+                
+            toprint+="%s:%e %s:%e %s:%e %s:%e"%('Z',Z,'nmax',nmax,'nmean',nmean,'T',T)
+            
             try:
-                os.remove("ray"+ident+".h5")
+                os.remove(data_filename)
             except:
                 pass 
             tprint(toprint)

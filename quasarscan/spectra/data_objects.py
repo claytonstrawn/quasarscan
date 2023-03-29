@@ -21,7 +21,7 @@ class AbsorptionLine(object):
     #output: AbsorptionLine object 
     def __init__(self, line, z_cos, z_tot = None, velocity = None,\
                  wavelength_detected = None, min_flux = None, N = None, \
-                 b = None, z = None):
+                 b = None, z = None,bv_adjust = None):
         #need at least one of these
         self.line = line
         self.ion = line[0]
@@ -43,6 +43,9 @@ class AbsorptionLine(object):
             self.z = self.wl_det/self.wl_nat-1
             self.velocity = speedoflight*(self.wl_det/self.wl_rest-1)
         
+        if bv_adjust is not None:
+            self.velocity += bv_adjust
+        
         #these four should be well defined, but if they aren't, its ok
         self.min_flux = min_flux
         self.N = N
@@ -54,7 +57,7 @@ class AbsorptionLine(object):
     #        color: what color the point should be, if default, takes color from default color assignments
     #
     #output: graphs component on a graph
-    def plot_data(self, ax, color = 'default'): 
+    def plot_data(self, ax, color = 'default',plot_type = 'vel'): 
         if color == 'default':
             if self.line in default_color_assignments:
                 color = default_color_assignments[self.line]
@@ -64,7 +67,11 @@ class AbsorptionLine(object):
             flux_to_plot = 1.1
         else:
             flux_to_plot = self.min_flux - 0.05
-        ax.plot(self.velocity, flux_to_plot, "^", color = color)
+        if plot_type = 'vel':
+            x_coord = self.velocity
+        elif plot_type == 'wl':
+            x_coord = self.wl_det
+        ax.plot(x_coord, flux_to_plot, "^", color = color)
         
 class Component(object):
     #summary: initialise components and loads data
@@ -125,7 +132,10 @@ class Component(object):
             flux_to_plot = 1.2
         else:
             flux_to_plot = self.min_flux - 0.1
-        ax.plot([self.velocity - 2,self.velocity - 1,self.velocity, self.velocity + 1,self.velocity + 2], 
+        x_coord = self.velocity
+        offset = 2
+        ax.plot([x_coord - offset,x_coord - 0.5*offset,
+                 x_coord, x_coord + 0.5*offset,x_coord + offset], 
                 [flux_to_plot]*5, 's',markersize = 2, color = color)
 
 #summary: converts list of Absorption Line object's line variable to a string, mainly used for Component alignment_printer function

@@ -35,6 +35,7 @@ class AveragesAndErrors(object):
             return quartiles*np.array([np.nanstd(data)/np.sqrt(l),np.nanstd(data)/np.sqrt(l)])
         def getstddev(data):
             return quartiles*np.array([np.nanstd(data),np.nanstd(data)])
+        self.threshold = threshold
         if plots in ["mean","stderr"]:
             self.plots = "mean"
             self.avgfn = np.nanmean
@@ -59,7 +60,6 @@ class AveragesAndErrors(object):
             self.plots = "covering_fraction"
             self.avgfn = np.nanmean
             self.errfn = getstderr
-            self.threshold = threshold
         else:
             raise BadVariableError('plots "%s" not recognized!'%plots)
 
@@ -121,7 +121,8 @@ def combine_xs(x_variable,tolerance):
 #outputs: xs: processed x data to plot
 #         ys: processed y data to plot
 #         empty: if True, no data points to plot
-def process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,subsample=1.0,offsetx=False,tolerance=1e-5,**kwargs):
+def process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,subsample=1.0,\
+                           offsetx=False,tolerance=1e-5,random_seed = None,**kwargs):
     logx,logy = xVar_packet[2],yVar_packet[2]
     def flatten_if_needed(ary):
         try:
@@ -130,11 +131,19 @@ def process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,subsample=1.0,off
             return np.concatenate(ary)
         except:
             return ary
-    def getsubsample(data,frac):
+    def getsubsample(data,frac,random_seed):
         l = int(len(data)*frac)
         mask = np.zeros(len(data))
         mask[:l] = 1
-        np.random.shuffle(mask)
+        if random_seed is None:
+            np.random.shuffle(mask) 
+        elif random_seed == 'ordered':
+            pass
+        elif isinstance(random_seed,int):
+            np.random.seed(random_seed)
+            np.random.shuffle(mask) 
+        else:
+            assert False, f"random_seed {random_seed} not understood."
         return mask.astype(bool)
     xs = np.zeros(len(xarys),dtype=object)
     ys = np.zeros(len(xarys),dtype=object)
@@ -142,7 +151,7 @@ def process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,subsample=1.0,off
     for i in range(len(xarys)):
         xs[i] = flatten_if_needed(xarys[i])
         ys[i] = flatten_if_needed(yarys[i])
-        mask = getsubsample(xs[i],subsample)
+        mask = getsubsample(xs[i],subsample,random_seed)
         xs[i]=xs[i][mask]
         ys[i]=ys[i][mask]
         if np.any(ys[i]>0) and np.any(xs[i]>0):
@@ -191,6 +200,8 @@ def process_errbars_onlyvertical(xVar_packet,yVar_packet,xarys,yarys,averager,of
             yvals = yarys[i][values_within_tolerance(xarys[i],x_value,tolerance,symmetric=False)]
             if averager.plots == 'covering_fraction':
                 yvals = (yvals>averager.threshold).astype(float)
+            elif averager.threshold is not None:
+                yvals[yvals<averager.threshold] = np.nan
             if len(yvals) == 0:
                 mask[j] = False
                 continue
@@ -251,6 +262,8 @@ def process_errbars_vertandhoriz(xVar_packet,yVar_packet,xarys,yarys,averager,**
         xerrs[i] = np.zeros((len(xarys[i]),2))
         yerrs[i] = np.zeros((len(xarys[i]),2))
         for j,xlist in enumerate(xarys[i]):
+            if averager.threshold is not None:
+                xlist[xlist<averager.threshold[0]] = np.nan
             xs[i][j] = averager.avgfn(xlist)
             xerrs[i][j] = averager.errfn(xlist)
             if logx:
@@ -258,6 +271,8 @@ def process_errbars_vertandhoriz(xVar_packet,yVar_packet,xarys,yarys,averager,**
                 xerrs[i][j][1] = np.log10(xs[i][j]+xerrs[i][j][1])-np.log10(xs[i][j])
                 xs[i][j] = np.log10(xs[i][j])
         for j,ylist in enumerate(yarys[i]):
+            if averager.threshold is not None:
+                ylist[ylist<averager.threshold[1]] = np.nan
             ys[i][j] = averager.avgfn(ylist)
             yerrs[i][j] = averager.errfn(ylist)
             if (xs[i][j]>0 and ys[i][j]>0) or (logx and ys[i][j]>0):

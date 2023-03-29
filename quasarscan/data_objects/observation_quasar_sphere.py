@@ -101,6 +101,7 @@ class ObsQuasarSphere(QuasarSphere):
         self.ssfr_eb = self.sfr_eb/self.Mstar
         super().__init__(fullname,redshift)
         self.author = self.version
+        self.survey = self.simname
         
         for param in param_xVars:
             if param not in self.__dict__.keys():

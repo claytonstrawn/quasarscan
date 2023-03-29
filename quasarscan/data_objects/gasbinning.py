@@ -1,7 +1,7 @@
 import numpy as np
 from quasarscan import mode
 if 'write' in mode:
-    from quasarscan.utils import PI_field_defs
+    from pi_or_ci import PI_field_defs
 
 class BadBinNameError(Exception):    
     def __init__(self, message):

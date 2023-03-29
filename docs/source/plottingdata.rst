@@ -115,6 +115,6 @@ The full list of keyword arguments for ``plot_hist`` is here:
 * ax=None:``matplotlib.Axis``, if not None, add plot to this axis. If None, generates a new axis.
 * fig=None:``matplotlib.Figure``, if not None, add plot to this figure. If None, generates a new figure.
 * weight=True,``boolean``, if True, normalize each discrete x position, if False, make 2D histogram which may have more total lines in outer impact parameters.
-* bar_type='HotCustom',``string``colorbar to use. Options for now are 'HotCustom','RainbowCustom', and 'BlackandWhite'
+* bar_type='HotCustom',``string`` colorbar to use. Options for now are 'HotCustom','RainbowCustom', and 'BlackandWhite'
 * cbarlabel=None,``string`` if given, replace colorbar label with this label
 * ns = (42,15), ``tuple`` number of bins to split space into.

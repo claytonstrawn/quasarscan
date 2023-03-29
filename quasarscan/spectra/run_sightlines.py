@@ -3,76 +3,58 @@ from quasarscan.utils.utils import data_path
 from quasarscan.data_objects import simulation_quasar_sphere
 from quasarscan.preprocessing.code_specific_setup import load_and_setup
 from quasarscan.spectra.trident_interfacer import get_line_list
+from quasarscan.utils.utils import agora_custom_metals
 import trident
 import numpy as np
 
-def find_endpoints(fullname,redshift,sightline_num,tolerance = .1):
-    PATH = data_path()
-    foldername = os.path.join(PATH,'output',f'{fullname}coldensinfo')
-    if os.path.exists(foldername):
-        contents = os.listdir(foldername)
-        filename = None
-        for filename in contents:
-            try:
-                z = float(filename.split('z')[1].split('.txt')[0])
-            except:
-                continue
-            if np.abs(z-redshift)<tolerance:
-                break
-    else:
-        print(f'{foldername} does not exist. Try running '\
-              '"quasarscan.create_qso_endpoints(fullname, filename, redshift, ions)"')
-    full_file_name = os.path.join(foldername,filename)
-    readvalsoutput = simulation_quasar_sphere.read_values(full_file_name)
-    q = simulation_quasar_sphere.SimQuasarSphere(start_up_info_packet = readvalsoutput)
-    assert sightline_num < q.length
-    start = q.info[sightline_num][5:8]
-    end = q.info[sightline_num][8:11]
-    path = q.simparams[6]
-    return path,start,end
+def set_up_folders(path):
+    segments = path.split('/')
+    partial_path = '/'
+    for segment in segments[:-1]:
+        partial_path = os.path.join(partial_path,segment)
+        if not os.path.exists(partial_path):
+            os.mkdir(partial_path)
 
-def create_dirs_in_path(path):
-    dirs_in_path = path.split('/')
-    last_is_file = '.' in path
-    if last_is_file:
-        iterate_over = dirs_in_path[:-1]
-    else:
-        iterate_over = dirs_in_path
-    path_so_far = ''
-    for d in iterate_over:
-        current_name_to_use = os.path.join(path_so_far,d)
-        if not os.path.exists(current_name_to_use):
-            os.mkdir(current_name_to_use)
-        path_so_far = current_name_to_use
-
-def run_line(fullname,approx_redshift,atom_list,sightline_num,wl_distance = 15):
-    path,raw_start,raw_end = find_endpoints(fullname,approx_redshift,sightline_num)
-    ds,_ = load_and_setup(path,fullname)
-    start = ds.arr(raw_start,'unitary')
-    end = ds.arr(raw_end,'unitary')
+def run_line(sim_name,sightline_num,ds,start,end,lines,loc = 'default',
+             metal_function = None,line_spec_width = 15,dlambda = 0.1):
     redshift = ds.current_redshift
-    ray = trident.make_simple_ray(ds,start_position = start, end_position = end, 
-                              data_filename =  f"ray{sightline_num}.h5", lines = atom_list)
-    _, _, line_list = get_line_list(atom_list)
-    PATH = data_path()
-    root = os.path.join(PATH,"output","spectra_from_trident","all")
-    full_path = os.path.join(f"{root}",f"{fullname}",f"{redshift}",f"Line_{sightline_num}")
-    create_dirs_in_path(full_path)
+    if loc == 'default':
+        root = "~/spectra_from_trident/Ion_Spectra"
+    all_done = True
     for line in line_list:
-        ion,wavelength = line
-        atom = ion.split(' ')[0]
-        line_name = f'{ion}_{wavelength}'
-        lambda_min = wavelength*(1+redshift) - wl_distance
-        lambda_max = wavelength*(1+redshift) + wl_distance
+        atom = line[0].split(' ')[0]
+        line_fname  = f'{root}/{sim_name}/{redshift}/'+\
+                      f'Line_{sightline_num}/{atom}/'+\
+                      f'{line[0]}_{line[1]}.txt'
+        if os.path.exists(line_fname):
+            print(f'line {sightline_num} ({line}) is already done! skipping...')
+            continue
+        else:
+            all_done = False
+            break
+    if all_done:
+        continue
+    ray = trident.make_simple_ray(ds,start_position = start, end_position = end, 
+                                      data_filename =  "ray.h5",fields = fields_to_keep)
+    if metal_function == 'agora':
+        trident.add_ion_fields(ray,ion_list,
+                            metal_source = 'custom',
+                            custom_metal_function = agora_custom_metals,
+                            H_source = 'density',
+                            custom_H_function = None)
+    else:
+        trident.add_ion_fields(ray,ion_list)
+    for line in line_list:
+        atom = line[0].split(' ')[0]
+        trident_line = line[0] + " " + str(line[1])
+        lambda_min = (line[1]*(1+redshift)) - line_spec_width
+        lambda_max = (line[1]*(1+redshift)) + line_spec_width
+
         sg = trident.SpectrumGenerator(lambda_min = np.floor(lambda_min),
-                                    lambda_max = np.ceil(lambda_max), dlambda = 0.01)
-        sg.make_spectrum(ray, lines = [line_name])
-        filename  = os.path.join(full_path,f"{atom}",f"{line_name}.txt")
-        create_dirs_in_path(filename)
+            lambda_max = np.ceil(lambda_max), dlambda = dlambda) 
+
+        sg.make_spectrum(ray, lines= trident_line)
+
+        filename  = f"{root}/{sim_name}/{redshift}/Line_{sightline_num}/{atom}/{line[0]}_{line[1]}.txt"
+        set_up_folders(filename)
         sg.save_spectrum(filename)
-    sg = trident.SpectrumGenerator(lambda_min = 1500,
-                                   lambda_max = 5000,
-                                   dlambda = 0.01)
-    sg.make_spectrum(ray, lines = atom_list)
-    filename  = os.path.join(full_path,"full.txt")
-    sg.save_spectrum(filename)

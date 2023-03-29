@@ -156,7 +156,7 @@ def fields_to_keep_in_sightline(code,ions,add_pi_fracs=True):
         for atom in atoms:
             if atom in atoms_from_ions(ions):
                 fields_to_keep.append(('gas','%s_nuclei_mass_density'%atom))
-        fields_to_keep.append(('gas',"H_nuclei_density"))
+        #fields_to_keep.append(('gas',"H_nuclei_density"))
     elif code == 'enzo':
         fields_to_keep.append(('gas', 'cell_volume'))
         fields_to_keep.append(('gas','metal_density'))
@@ -219,13 +219,17 @@ def check_redshift(ds,fullname = None,outputfilename=None,redshift = None,tolera
 #
 #outputs: ds: yt DataSet object of simulation
 #         fields_to_keep: list of yt field names.
-def load_and_setup(path,code,ions=None,add_pi_fracs=True):
+def load_and_setup(path,code,ions=None,add_pi_fracs=True,agora = False,redshift = None):
     if "_" in code:
         code = code.split("_")[2]
     if code not in codes:
         print("load_and_setup was not prepared for the code %s!"%code)
         print("Please edit that file first.")
         raise NotImplementedError
+    if agora:
+        from quasarscan.preprocessing.agora_setup import agora_load_and_setup
+        ds,fields_to_keep = agora_load_and_setup(path,code,redshift,ions=ions)
+        return ds, fields_to_keep
     ds = ytload(path,code)
     try:
         assert yt_dstype_names[code] == ds.dataset_type
