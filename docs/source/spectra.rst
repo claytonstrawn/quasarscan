@@ -71,3 +71,5 @@ Now that we've found the lines in our spectra, we can pretty easily plot the dat
      l.plot_data(ax)
  for c in comps: 
      c.plot_data(ax)
+     
+Here the actual spectrum is plotted in blue, and the detected lines as blue triangles. Components (which, generally, would contain multiple lines) are a black bar plotted below all the detected line indicators.
