@@ -25,6 +25,7 @@ To install quasarscan, visit https://github.com/claytonstrawn/quasarscan.git and
    sortingfiltering
    plottingdata
    advancedplotting
+   spectra
 
 Indices and tables
 ==================
