@@ -67,7 +67,7 @@ class AbsorptionLine(object):
             flux_to_plot = 1.1
         else:
             flux_to_plot = self.min_flux - 0.05
-        if plot_type = 'vel':
+        if plot_type == 'vel':
             x_coord = self.velocity
         elif plot_type == 'wl':
             x_coord = self.wl_det

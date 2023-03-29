@@ -102,8 +102,9 @@ def plot_wl_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Wavelength (Å)")
     ax.set_xlim(center-left_distance,center+right_distance)
+    return ax
 
-def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
+def plot_vel_around_line(wl,fl,line,cosmo_redshift,noise = 0,color = 'default',
                         left_distance = 200,right_distance = "default",\
                         label = 'default',ax = None,plot_chunk = 'lims',
                         bv_adjust = None):
@@ -112,12 +113,12 @@ def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
         right_distance = left_distance
     if ax is None:
         _,ax = plt.subplots()
-    v_ion = speedoflight*(wl/(line[1]*(1+redshift))-1)
+    v_ion = speedoflight*(wl/(line[1]*(1+cosmo_redshift))-1)
     if bv_adjust is not None:
         v_ion = v_ion+bv_adjust
 
-    add_noise = np.random.normal(0,noise,len(flux))
-    noise_flux = flux + add_noise
+    add_noise = np.random.normal(0,noise,len(fl))
+    noise_flux = fl + add_noise
     
     if color =='default':
         if line in default_color_assignments:
@@ -137,6 +138,7 @@ def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Velocity (km/s)")
     ax.set_xlim(0-left_distance,0+right_distance)
+    return ax
 
 
 

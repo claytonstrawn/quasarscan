@@ -73,7 +73,10 @@ def sort_ions(ions,flat = True):
 def reversearray(ary):
     ary = list(ary)
     ary.reverse()
-    return np.array(ary)
+    try:
+        return np.array(ary)
+    except ValueError:
+        return np.array(ary,dtype = object)
 
 def string_represents_ion(string):
     if ' ' not in string:

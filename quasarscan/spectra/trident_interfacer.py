@@ -114,9 +114,9 @@ nolinesdict = {'N': np.array([], dtype=np.float64),\
                'z': np.array([], dtype=np.float64),\
                'group#': np.array([], dtype=np.float64)}
 
-def call_trident_fitter(wavelength,flux,filename = 'default',
+def call_trident_fitter(wavelength,flux,trident_filename = 'default',
                         line = None,maxNumComps = 8,**kwargs):
-    lines_dict = trident_file_reader(filename=filename)
+    lines_dict = trident_file_reader(filename=trident_filename)
     new_lines_dict = {}
     if line != None:
         ions = [line[0]]
