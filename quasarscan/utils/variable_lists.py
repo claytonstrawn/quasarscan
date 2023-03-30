@@ -1,4 +1,4 @@
-stringcriteria = ["ions","name","simname","version","code","simnum","intensives"]
+stringcriteria = ["ions","name","simname","version","code","simnum","intensives"]+["author","survey"]
 
 intensives = ["Z","T","nmax","nmean",'n','rho']
 intensiveslabels = {"Z":"avg metallicity","T":"avg temperature(K)","nmean":"avg density(1/cm3)",\

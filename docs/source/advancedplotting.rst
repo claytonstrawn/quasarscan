@@ -44,11 +44,9 @@ You can also plot your snapshots before you've actually created and run sightlin
 
 .. code-block:: python
 
- mq = quasarscan.create_mq(loadempty='all')
- mq.constrain_current_quasar_array('simname',['VELA'], qtype = 'sim')
- lq = mq.sort_by('redshift',[0,1.05,2.05])
- ax = mq.plot_scatter('O VI','H I',lq=lq)
- mq.plot_scatter('Mstar','Mvir',lq=lq,qtype='empty')
+ mq = quasarscan.create_mq(loadsim='none',loadempty='VELA')
+ lq = mq.sort_by('simnum',['07','08','10','21','22','29'])
+ mq.plot_scatter('Mstar','Mvir',lq=lq,qtype='empty',markersize = 10)
 
 .. image:: _images/empty_smhm.png
   :width: 400
@@ -76,18 +74,19 @@ Where each argument is the same as in ``sort_by`` but with an ``_x`` or ``_y`` a
 
 .. code-block:: python
 
- faberplot(yVar,\
-           xVar='rdivR',\
-           plot_kind='err',\
-           lq2=None,\
-           qtype='sim',\
-           lq=None,\
-           fig = None,\
-           axes = None,\
-           figsize='guess',\
-           sharex=True,\
-           sharey=True,\
-           **kwargs):
+ mq = quasarscan.create_mq('AGORA')
+ mq.constrain_current_quasar_array('version','v4')
+ lq2 = mq.sort_by_2D('code',\
+                  'redshift',\
+                  bins_x = ['art','enzo','gadget'],\
+                  bins_y = [0.9,1.5,2.5])
+
+ mq.faberplot(['C IV','O VI'],lq2=lq2)
+ 
+.. image:: _images/faberplot.png
+ :width: 600
+ :alt: Faberplot of agora data, where the column is which code it is, the row is what redshift range, and in each panel is a errorbar plot as usual
+
 
 By specifying ``plot_kind`` as (``err``, ``scatter``, or ``hist``) you will determine whether each panel is an errorbar, scatter, or histogram plot. ``figsize`` is a tuple of two numbers specifying horizontal and vertical length, with the default attempting to scale with the number of panels. ``sharex`` and ``sharey`` restrict all panels to use the same ``x`` and ``y`` scales, even if they will fill different regions of parameter space. All other keyword args are the same as the respective plot kinds.
 

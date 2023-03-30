@@ -54,12 +54,11 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
         yerrs=[None]*len(xs)
 
     linestyle = linestyle if linestyle!='' else ls
-
+    if markersize=='default':
+        markersize=6
     if dots or plot_type in [3]:
         for i in range(len(xs)):
             fmt=fmt or 'o'
-            if markersize=='default':
-                markersize=6
             ax.plot(xs[i],ys[i],marker = fmt,linestyle=linestyle,label=labels[i],zorder = zorder,
                                   color=coloration[i],markersize=markersize,alpha = alpha,linewidth=linewidth)
     else:
@@ -69,13 +68,13 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
             fmt = fmtdict[average]
         if fmt=='fill':
             for i in range(len(xs)):
-                    ax.plot(xs[i],ys[i],label=labels[i],ls=linestyle,zorder = 100,\
+                    ax.plot(xs[i],ys[i],label=labels[i],ls=linestyle,zorder = 100,markersize = markersize,\
                                  color = coloration[i],marker = fmtdict[average],alpha = alpha, linewidth=linewidth)
                     ax.fill_between(xs[i],ys[i]-yerrs[i][0,:],ys[i]+yerrs[i][1,:],color = future_colors[-1],\
                                     alpha = alpha/2,linewidth = linewidth/2,zorder = zorder/2)
         else:
             for i in range(len(xs)):
-                    ax.errorbar(xs[i],ys[i],xerr=transpose_err_array(xerrs[i]),\
+                    ax.errorbar(xs[i],ys[i],xerr=transpose_err_array(xerrs[i]),markersize = markersize,\
                                             yerr=transpose_err_array(yerrs[i]),label=labels[i],\
                                             ls=linestyle,color = coloration[i],fmt = fmt,capsize = capsize,\
                                             alpha = alpha, linewidth=linewidth, elinewidth=elinewidth,\
@@ -88,7 +87,9 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
     if ylims != 'default':
         ax.set_ylim(ylims)
     if grid:
-        ax.grid()
+        if grid is True:
+            grid = 'major'
+        ax.grid(which = grid,visible = True)
     ax.legend().set_zorder(2)
     return fig,ax
 #plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title, 
@@ -120,6 +121,8 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,
                     label = None
                 ax.plot(xs[i][j],ys[i][j],'o',label=label,color=coloration[i],markersize=markersize,
                                     alpha = alpha,zorder=zordering_bot[j],marker=fmt)
+    elif isinstance(zorder,str):
+        print(f"I don't understand the command: zorder = {zorder}. Known commands: ['random'].")
     else:
         for i in range(len(xs)):
             ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=markersize,
@@ -133,16 +136,21 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,
     if ylims != 'default':
         ax.set_ylim(ylims)
     if grid:
-        ax.grid()
+        if grid is True:
+            grid = 'major'
+        ax.grid(which = grid,visible = True)
     ax.legend().set_zorder(2)
     return fig,ax
 
-def figure_out_limits(xerrs,i,j,default=.15):
+def figure_out_limits(xerrs,i,j,default=.15,nan_err_behavior = 'zero'):
     if xerrs is None:
         return None,False,False
     xerr = xerrs[i][j]
     if np.isnan(xerr) or np.isinf(xerr):
-        xerr,xlolims,xuplims = 0,False,False
+        if nan_err_behavior == 'zero':
+            xerr,xlolims,xuplims = 0,False,False
+        elif nan_err_behavior == 'nan':
+            xerr,xlolims,xuplims = np.nan,False,False
     elif xerr>=0:
         xerr,xlolims,xuplims = xerr,False,False
     elif xerr == -2:
@@ -178,35 +186,48 @@ def figure_out_limits(xerrs,i,j,default=.15):
 
 def plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,quasar_array,ax=None,fig=None,\
                         grid=False,symbols=None,coloration=None,xlims='default',ylims='default',\
-                        markersize='default',alpha = 1.0,capsize=3,**kwargs):
+                        markersize='default',alpha = 1.0,capsize=3,\
+                       **kwargs):
     if ax is None:
         assert fig is None
         fig,ax = plt.subplots(1)
-    lencolorlist = len(xs)//len(matplotlib_default_colors)+len(xs)%len(matplotlib_default_colors)
-    coloration = coloration or np.tile(matplotlib_default_colors,lencolorlist)
-    symbols = symbols or np.tile(matplotlib_default_symbols,lencolorlist)
-    citations = []
+    coloration = coloration or matplotlib_default_colors
+    symbols = symbols or matplotlib_default_symbols
+
+    author_symbol_dict = {}
+    survey_color_dict = {}
+    index_label_dict = {}
+    for i in range(len(xs)):
+        survey = labels[i]
+        if survey not in survey_color_dict:
+            survey_color_dict[survey] = coloration[len(survey_color_dict)]
+        for j in range(len(xs[i])):
+            author = quasar_array[i][j].author
+            if author not in author_symbol_dict:
+                author_symbol_dict[author] = symbols[len(author_symbol_dict)]
+            index_label_dict[(i,j)] = (survey,author)
+
+
     used_labels = []
     for i in range(len(xs)):
-        color = coloration[i]
         for j in range(len(xs[i])):
-            current_label = quasar_array[i][j].author+'-'+labels[i]
-            if current_label[0] not in citations:
-                citations.append(current_label[0])
-            if current_label not in used_labels:
-                used_labels.append(current_label)
-                fmt = symbols[len(citations)-1]
-                ax.errorbar([],[],color = color,fmt = fmt,capsize = capsize,\
-                    alpha = alpha,label = current_label)
+            (survey,author) = index_label_dict[(i,j)]
+            color = survey_color_dict[survey]
+            symbol = author_symbol_dict[author]
+            label = survey+' - '+author
+            if label not in used_labels:
+                ax.errorbar([],[],color = color,fmt = symbol,capsize = capsize,\
+                    alpha = alpha,label = label)
+                used_labels.append(label)
             xerr,xlolims,xuplims = figure_out_limits(xerrs,i,j)
             yerr,ylolims,yuplims = figure_out_limits(yerrs,i,j)
             if not (xlolims or ylolims or xuplims or yuplims):
                 ax.errorbar(xs[i][j],ys[i][j],xerr=xerr,yerr=yerr,color = color,\
-                            fmt = fmt,capsize = 3,alpha = alpha)
+                            fmt = symbol,capsize = 3,alpha = alpha)
             else:
                 ax.errorbar(xs[i][j],ys[i][j],xerr=xerr,yerr=yerr,xlolims=xlolims,xuplims=xuplims,\
                             lolims=ylolims,uplims=yuplims,\
-                             mec = color,ecolor = color,fmt = fmt,\
+                             mec = color,ecolor = color,fmt = symbol,\
                              capsize = 3,mfc='w',alpha = alpha)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -216,12 +237,14 @@ def plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,quasar
     if ylims != 'default':
         ax.set_ylim(ylims)
     if grid:
-        ax.grid()
+        if grid is True:
+            grid = 'major'
+        ax.grid(which = grid,visible = True)
     ax.legend().set_zorder(2)
     return fig,ax
 
 def plot_hist_on_ax(plot_type,xs,ys,xlabel,ylabel,title,weight,cbarlabel,ax=None,fig=None,ns = (42,15),\
-                    xlims='default',ylims='default',**kwargs):
+                    xlims='default',ylims='default',cbarlims = None,show_cbar = True,**kwargs):
     if ax is None:
         assert fig is None
         fig,ax = plt.subplots(1)
@@ -229,8 +252,12 @@ def plot_hist_on_ax(plot_type,xs,ys,xlabel,ylabel,title,weight,cbarlabel,ax=None
     H, xedges, yedges = np.histogram2d(xs, ys, bins=ns,weights = weight)
     H = H.T
     X, Y = np.meshgrid(xedges, yedges)
-    cms=ax.pcolormesh(X,Y, H, cmap=cmap)
-    fig.colorbar(cms,label = cbarlabel,ax=ax)
+    if cbarlims is None:
+        cms=ax.pcolormesh(X,Y, H, cmap=cmap)
+    else:
+        cms=ax.pcolormesh(X,Y, H, cmap=cmap,vmin = cbarlims[0],vmax = cbarlims[1])
+    if show_cbar:
+        fig.colorbar(cms,label = cbarlabel,ax=ax)
     def get_new_axislim(current,divideBy = 40):
         x1 = current[0]
         x2 = current[1]

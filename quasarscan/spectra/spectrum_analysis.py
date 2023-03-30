@@ -9,14 +9,14 @@ matplotlib_default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 default_color_assignments = {
                              ('O VI',1031.912000): matplotlib_default_colors[0],\
-                             ('O VI',1037.613000): matplotlib_default_colors[1],\
-                             ('C IV',1548.187000): matplotlib_default_colors[2],\
-                             ('C IV',1550.772000): matplotlib_default_colors[3],\
-                             ('Ne VIII', 780.324000): matplotlib_default_colors[4],\
-                             ('Ne VIII', 770.409000): matplotlib_default_colors[5],\
-                             ('Mg X', 624.941000): matplotlib_default_colors[6],\
-                             ('Mg X', 609.793000): matplotlib_default_colors[7],\
-                             ('Si IV',1402.770000): matplotlib_default_colors[8],\
+                             ('O VI',1037.613000): matplotlib_default_colors[5],\
+                             ('C IV',1548.187000): matplotlib_default_colors[1],\
+                             ('C IV',1550.772000): matplotlib_default_colors[6],\
+                             ('Ne VIII', 780.324000): matplotlib_default_colors[7],\
+                             ('Ne VIII', 770.409000): matplotlib_default_colors[2],\
+                             ('Mg X', 624.941000): matplotlib_default_colors[8],\
+                             ('Mg X', 609.793000): matplotlib_default_colors[3],\
+                             ('Si IV',1402.770000): matplotlib_default_colors[4],\
                             }
 
 #/project/projectdirs/agora/paper_CGM/spectra_from_trident/Ion_Spectra/AGORA_art_CR/1.998998976095549/Line_0/C I.txt
@@ -102,19 +102,23 @@ def plot_wl_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Wavelength (Å)")
     ax.set_xlim(center-left_distance,center+right_distance)
+    return ax
 
-def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
+def plot_vel_around_line(wl,fl,line,cosmo_redshift,noise = 0,color = 'default',
                         left_distance = 200,right_distance = "default",\
-                        label = 'default',ax = None,plot_chunk = 'lims'):
+                        label = 'default',ax = None,plot_chunk = 'lims',
+                        bv_adjust = None):
     
     if right_distance == 'default':
         right_distance = left_distance
     if ax is None:
         _,ax = plt.subplots()
-    v_ion = speedoflight*(wl/(line[1]*(1+redshift))-1)
+    v_ion = speedoflight*(wl/(line[1]*(1+cosmo_redshift))-1)
+    if bv_adjust is not None:
+        v_ion = v_ion+bv_adjust
 
-    add_noise = np.random.normal(0,noise,len(flux))
-    noise_flux = flux + add_noise
+    add_noise = np.random.normal(0,noise,len(fl))
+    noise_flux = fl + add_noise
     
     if color =='default':
         if line in default_color_assignments:
@@ -122,7 +126,7 @@ def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
         else:
             color = None
     if label == 'default':
-        label = str(line)
+        label = f'{line[0]} ({line[1]:.3f})'
     if plot_chunk == 'all':
         chunk = np.ones(len(wl),dtype = bool)
     elif plot_chunk == 'lims':
@@ -134,6 +138,7 @@ def plot_vel_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Velocity (km/s)")
     ax.set_xlim(0-left_distance,0+right_distance)
+    return ax
 
 
 

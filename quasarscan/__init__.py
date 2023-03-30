@@ -1,41 +1,36 @@
-__version__ = "3.0.3"
+__version__ = "3.1.0"
 
-print('Checking for yt...',end = '')
 try:
     import yt
     from yt import load
     hasyt = True
-    print('done.')
 except ImportError:
     hasyt = False
-    print('not found.')
+    print('yt not found.')
     print('Running quasarscan in readonly mode. Cannot load simulations, create metadata, or process new sightlines. Quasarscan can still plot existing data.')
 
 if hasyt:
-    print('Checking for trident and yt_astro_analysis...',end = '')
     try:
         import trident
         from trident import verify
         import yt_astro_analysis
         from yt_astro_analysis import halo_analysis
         hastrident = True
-        print('done.')
     except ImportError:
         hastrident = False
-        print('not found.')
+        print('trident or yt_astro_analysis not found.')
         print('Running quasarscan in loadonly mode. Can load simulations, but not create new metadata or process new sightlines. Quasarscan can still plot existing data.')
 
-print('Checking for saved output data...',end = '')
 import os
 HOME = os.path.expanduser('~')
 PATH = "quasarscan_data"
 import os
 if os.path.exists(PATH):
-    print("folder 'quasarscan_data' found.")
+    pass
 elif os.path.exists(os.path.join(HOME,PATH)):
-    print("folder '~/quasarscan_data' found.")
+    pass
 else:
-    print("no data found.")
+    print("no data found for quasarscan.")
     if not hasyt:
         print('Quasarscan has no functionality in readonly mode without data.')
 

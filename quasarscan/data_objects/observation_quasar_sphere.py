@@ -78,7 +78,7 @@ class ObsQuasarSphere(QuasarSphere):
                 if string_represents_ion(ion) and ion not in ions:
                     ions.append(ion)
         self.ions = ions
-
+        self.intensives = []
         iondata = []
         for ion in self.ions:
             iondata.append(access_obs_data_values('%s:cdens'%ion,header_columns_dict,parsed_line))
@@ -99,9 +99,9 @@ class ObsQuasarSphere(QuasarSphere):
         self.sfr_eb = access_obs_data_values('sfr:eb',header_columns_dict,parsed_line)
         self.ssfr = self.sfr/self.Mstar
         self.ssfr_eb = self.sfr_eb/self.Mstar
-
         super().__init__(fullname,redshift)
         self.author = self.version
+        self.survey = self.simname
         
         for param in param_xVars:
             if param not in self.__dict__.keys():

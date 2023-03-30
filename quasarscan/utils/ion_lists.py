@@ -58,7 +58,7 @@ joeions = ['C III', 'C IV', 'H I','H II', 'Mg II', 'Mg X', 'N II', 'N III', 'N I
 alloxygens = ['O I', 'O II', 'O III', 'O IV', 'O V', 'O VI', 'O VII', 'O VIII', 'O IX']
 hydrogens = ['H I','H II']
 agoraions = ['O I', 'O II', 'O III', 'O IV','O V', 'O VI', 'O VII', 'O VIII', 'O IX', 'H I','H II',\
-'S II', 'S III', 'S IV', 'S V', 'S VI', 'S XIV', 'Si II', 'Si III', 'Si IV', 'Si XII', 'Ne I','Ne II',\
+'Si II', 'Si III', 'Si IV', 'Si XII', 'Ne I','Ne II',\
 'Ne III','Ne IV','Ne V','Ne VI','Ne VII','Ne VIII','Ne IX','C I','C II','C III','C IV','C V','C VI','C VII']
 Stern16ions = ['H I','O I','N I','Mg I','Mg II','Fe II','Si II','C II','N II','Fe III','Si III','C III',\
              'N III','Si IV','N V','O VI','S II','S III']
