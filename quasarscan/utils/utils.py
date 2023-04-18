@@ -95,7 +95,7 @@ def string_represents_ion(string):
 #inputs: code: which kind of AGORA code is under analysis here
 #
 #outputs: whether this is sph or amr code in question
-sphcodes = ['gizmo','gadget','gear','tipsy','changa']
+sphcodes = ['gizmo','gadget','gear','tipsy','changa','arepo']
 def get_gasbins_arg(code):
     if code in sphcodes:
         return 'all_sph'

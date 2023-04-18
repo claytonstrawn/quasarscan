@@ -155,19 +155,19 @@ class GasBinsHolder(object):
         elif bins is None:
             bins = []
         if "density" in bins:
-            assert ds_has_field(ds,density_bin)
+            assert ds_has_field(ds,density_bin), f'{density_bin.field} field not found'
             self.bin_types.append(density_bin)
         if "temperature" in bins:
-            assert ds_has_field(ds,temperature_bin)
+            assert ds_has_field(ds,temperature_bin), f'{temperature_bin.field} field not found'
             self.bin_types.append(temperature_bin)
         if "radial_velocity" in bins:
-            assert ds_has_field(ds,radial_velocity_bin)
+            assert ds_has_field(ds,radial_velocity_bin), f'{radial_velocity_bin.field} field not found'
             self.bin_types.append(radial_velocity_bin)
         if "resolution" in bins:
-            assert ds_has_field(ds,res_bin)
+            assert ds_has_field(ds,res_bin), f'{res_bin.field} field not found'
             self.bin_types.append(res_bin)
         if "ionization_mechanism" in bins:
-            assert ds_has_field(ds,pi_bin)
+            assert ds_has_field(ds,pi_bin), f'{pi_bin.field} field not found'
             self.bin_types.append(pi_bin)
 
     def __contains__(self, key):

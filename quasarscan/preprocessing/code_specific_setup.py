@@ -2,11 +2,12 @@ import yt
 import numpy as np
 from pi_or_ci import PI_field_defs
 from quasarscan.preprocessing.add_common_fields import set_up_funcs
+from quasarscan.utils.utils import sphcodes
 
 
-codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy','changa','mockstreams']
-sphcodes = ['gizmo','gadget','gear','tipsy','changa']
-yt_dstype_names = {'art':'art','ramses':'ramses','gizmo':'gadget_hdf5','gadget':'gadget_hdf5','gear':'gadget_hdf5','enzo':None,'tipsy':'tipsy','changa':'tipsy','mockstreams':'stream'}
+codes = ['art','ramses','gizmo','gadget','gear','enzo','tipsy','changa','arepo','mockstreams']
+sphcodes = ['gizmo','gadget','gear','tipsy','changa','arepo']
+yt_dstype_names = {'art':'art','ramses':'ramses','gizmo':'gadget_hdf5','gadget':'gadget_hdf5','gear':'gadget_hdf5','enzo':None,'tipsy':'tipsy','changa':'tipsy','mockstreams':'stream','arepo':'gadget_hdf5'}
 
 atoms = ['C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', \
         'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', \
@@ -68,7 +69,7 @@ def ytload(path,code):
                                   file_particle_stars=s)
     elif code == 'mockstreams':
         ds = load_mockstreams_func(path)
-    elif code == 'gadget':
+    elif code == 'gadget' or code == 'arepo':
         unit_base = {'length':(1.0, "Mpccm/h")}
         ds = yt.load(path,unit_base = unit_base)
     else:
@@ -129,7 +130,7 @@ def check_necessary_fields_exist(ds,code):
 #         and told to forward to the sightlines created by 
 #         trident.make_simple_ray
 #
-#inputs: code: which kind of AGORA code is under analysis here
+#inputs: code: which kind of code is under analysis here
 #        ions: which ions we will attempt to track
 #        add_pi_fracs: whether we want to add PI/CI field definitions 
 #                     as defined in Strawn et al. (2020) as binary 

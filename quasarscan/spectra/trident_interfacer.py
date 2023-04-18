@@ -130,7 +130,8 @@ def call_trident_fitter(wavelength,flux,trident_filename = 'default',
     orderFits,speciesDicts = trident_lines_starting_points(ions,new_lines_dict,**kwargs)
     fitted_lines, fitted_flux = generate_total_fit(wavelength, flux, orderFits,
                                                    speciesDicts,maxLength = 5000,
-                                                   maxNumComps = maxNumComps)
+                                                  )
+                                                   #maxNumComps = maxNumComps)
     dict_to_return = {}
     for ion in ions:
         if ion.replace(' ','') not in fitted_lines:

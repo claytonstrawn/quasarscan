@@ -213,8 +213,45 @@ def set_up_mockstreams(ds):
                 sampling_type = 'cell',
                 function = metal_density,
                 units = 'g/cm**3')
+
+def set_up_arepo(ds):
+    def star_mass_rename(field,data):
+        return data['PartType4','particle_mass']
+    ds.add_field(('stars','particle_mass'),
+                sampling_type = 'particle',
+                function = star_mass_rename,
+                units = 'g')
     
-set_up_funcs = {'art':set_up_art,'enzo':set_up_enzo,'ramses':set_up_ramses,'changa':set_up_changa,'gear':set_up_gear,'gizmo':set_up_gizmo,'gadget':set_up_gadget,'mockstreams':set_up_mockstreams}    
+    ad = ds.all_data()
+    m1 = ad['PartType1','Masses']
+    unique_dm1_masses = np.unique(m1)
+    m2 = ad['PartType2','Masses']
+    unique_dm2_masses = np.unique(m2)    
+    def dm_filter(pfilter, data):
+        allowed = np.zeros(data[pfilter.filtered_type, 'Masses'].shape,dtype=bool)
+        for v in ds.arr(np.concatenate([unique_dm1_masses,unique_dm2_masses]).v,m2.units):
+            allowed = np.logical_or(allowed,data[pfilter.filtered_type, 'Masses']==v)
+        return allowed
+    add_particle_filter('darkmatter', function=dm_filter, filtered_type='all', requires=['Masses'])
+    ds.add_particle_filter('darkmatter')
+    
+    co = Cosmology(hubble_constant=ds.hubble_constant, omega_matter=ds.omega_matter,
+               omega_lambda=ds.omega_lambda, omega_curvature=0.0)
+    def particle_creation_time_rename(field,data):
+        return co.t_from_a(data['PartType4','StellarFormationTime'])
+    ds.add_field(('stars','particle_creation_time'),
+                sampling_type = 'particle',
+                function = particle_creation_time_rename,
+                units = 's')
+    
+    def metal_density(field,data):
+        return data['gas','metallicity']*data['gas','density']
+    ds.add_field(('gas','metal_density'),
+                sampling_type = 'particle',
+                function = metal_density,
+                units = 'g/cm**3')
+    
+set_up_funcs = {'art':set_up_art,'enzo':set_up_enzo,'ramses':set_up_ramses,'changa':set_up_changa,'gear':set_up_gear,'gizmo':set_up_gizmo,'gadget':set_up_gadget,'arepo':set_up_arepo,'mockstreams':set_up_mockstreams}    
 
 def add_radial_distance_fields(ds,center):
     for i,ax in enumerate('xyz'):
