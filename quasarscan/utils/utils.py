@@ -195,32 +195,16 @@ solar_abundance = {
     'Mn': 2.88e-07, 'Fe': 2.82e-05, 'Co': 8.32e-08,
     'Ni': 1.78e-06, 'Cu': 1.62e-08, 'Zn': 3.98e-08}
 
-atomic_mass = {
-    'H' : 1.00794,   'He': 4.002602,  'Li': 6.941,
-    'Be': 9.012182,  'B' : 10.811,    'C' : 12.0107,
-    'N' : 14.0067,   'O' : 15.9994,   'F' : 18.9984032,
-    'Ne': 20.1797,   'Na': 22.989770, 'Mg': 24.3050,
-    'Al': 26.981538, 'Si': 28.0855,   'P' : 30.973761,
-    'S' : 32.065,    'Cl': 35.453,    'Ar': 39.948,
-    'K' : 39.0983,   'Ca': 40.078,    'Sc': 44.955910,
-    'Ti': 47.867,    'V' : 50.9415,   'Cr': 51.9961,
-    'Mn': 54.938049, 'Fe': 55.845,    'Co': 58.933200,
-    'Ni': 58.6934,   'Cu': 63.546,    'Zn': 65.409}
-
 from yt.utilities.physical_constants import mh
-
 def agora_custom_metals(field,data):
     if isinstance(field.name, tuple):
-        ftype = field.name[0]
         field_name = field.name[1]
     else:
-        ftype = "gas"
         field_name = field.name
     atom = field_name.split("_")[1]
-    
     H_mass_fraction = 0.76
     to_nH = H_mass_fraction / mh
     return data['gas', "agora_metallicity"]*\
             data['gas', 'density']*\
-            data.ds.quan(solar_abundance[atom],'1/Zsun')*\
+            solar_abundance[atom]*\
             to_nH
