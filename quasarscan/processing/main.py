@@ -66,6 +66,7 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                                                            q.code,q.ions,
                                                            agora=agora,
                                                            redshift = q.redshift)
+    
     code_specific_setup.check_redshift(ds,outputfilename=outputfilename)
     num_bin_vars = q.gasbins.get_length()
     #Can start at a position further than 0 if reached
@@ -109,19 +110,13 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                 continue
             if agora:
                 metal_source = 'custom'
-                H_source = 'density'
                 custom_metal_function = utils.agora_custom_metals
-                custom_H_function = None
             else:
                 metal_source = metal_source
-                H_source = None
                 custom_metal_function = None
-                custom_H_function = None
             trident.add_ion_fields(ray,q.ions,
                                     metal_source = metal_source,
                                     custom_metal_function = custom_metal_function,
-                                    H_source = H_source,
-                                    custom_H_function = custom_H_function,
                                   )
             field_data = ray.all_data()
             dl = field_data['gas','dl']
@@ -132,8 +127,11 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             for j in range(len(q.ions)):
                 ion = q.ions[j]
                 atom = ion.split(' ')[0]
-                ionfield = field_data["gas",ion_to_field_name(ion)]
-                atomfield = field_data["gas",'trident_%s_nuclei_density'%atom]
+                ion_field_name = ion_to_field_name(ion)
+                frac_field_name = ion_field_name.replace('number_density','ion_fraction')
+                ionfield = field_data["gas",ion_field_name]
+                fracfield = field_data["gas",frac_field_name]
+                atomfield = ionfield/fracfield
                 cdens = np.sum((ionfield * dl).in_units('cm**-2')).value
                 total_nucleus = np.sum((atomfield * dl).in_units('cm**-2')).value
                 vector[11+j*(num_bin_vars+2)] = cdens
@@ -191,7 +189,11 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average density')
             try:
-                T = np.average(field_data['gas','temperature'],\
+                if agora:
+                    T = np.average(field_data['gas','agora_temperature'],\
+                               weights=field_data['gas','density']*dl)
+                else:
+                    T = np.average(field_data['gas','temperature'],\
                                weights=field_data['gas','density']*dl)
                 vector[-4] = T
             except Exception as e:

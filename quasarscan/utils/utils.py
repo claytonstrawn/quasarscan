@@ -181,8 +181,9 @@ def data_path():
         PATH = None
     return PATH
 
-#taken from trident
-# Taken from Cloudy documentation.
+# taken from trident, which was from Cloudy documentation.
+# These are number densities, i.e. how many atoms of 
+# element X for each atom of H in the sun
 solar_abundance = {
     'H' : 1.00e+00, 'He': 1.00e-01, 'Li': 2.04e-09,
     'Be': 2.63e-11, 'B' : 6.17e-10, 'C' : 2.45e-04,
@@ -201,7 +202,7 @@ def agora_custom_metals(field,data):
         field_name = field.name[1]
     else:
         field_name = field.name
-    atom = field_name.split("_")[1]
+    atom = field_name.split("_")[0]
     H_mass_fraction = 0.76
     to_nH = H_mass_fraction / mh
     return data['gas', "agora_metallicity"]*\

@@ -96,7 +96,7 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
 
 def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,fig=None,\
                         grid=False,fmt=None,coloration=None,xlims='default',ylims='default',\
-                        markersize='default',alpha = 1.0,zorder = -100,**kwargs):
+                        markersize='default',alpha = 1.0,zorder = -100,stars = None,**kwargs):
     if ax is None:
         assert fig is None
         fig,ax = plt.subplots(1)
@@ -119,14 +119,30 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,
                     label=labels[i]
                 else:
                     label = None
-                ax.plot(xs[i][j],ys[i][j],'o',label=label,color=coloration[i],markersize=markersize,
-                                    alpha = alpha,zorder=zordering_bot[j],marker=fmt)
+                ax.plot(xs[i][j],ys[i][j],linestyle='',label=label,color=coloration[i],
+                        markersize=markersize,alpha = alpha,zorder=zordering_bot[j],marker=fmt)
     elif isinstance(zorder,str):
         print(f"I don't understand the command: zorder = {zorder}. Known commands: ['random'].")
     else:
         for i in range(len(xs)):
-            ax.plot(xs[i],ys[i],'o',label=labels[i],color=coloration[i],markersize=markersize,
-                                    alpha = alpha,zorder=zorder,marker=fmt)
+            ax.plot(xs[i],ys[i],linestyle='',label=labels[i],color=coloration[i],
+                    markersize=markersize,alpha = alpha,zorder=zorder,marker=fmt)
+            
+    if stars is not None:
+        used = False
+        for i in range(len(xs)):
+            label = labels[i]
+            try:
+                js_to_use = stars[label]
+                used = True
+            except KeyError:
+                continue
+            for j in js_to_use:
+                ax.plot(xs[i][j],ys[i][j],linestyle='',label=None,color=coloration[i],
+                        markersize=markersize*2,alpha = alpha,zorder=zorder,marker="*")
+        if not used:
+            print(f'stars was given as {stars} but no stars added.'+\
+                  f'Did you have the correct keys? {labels}')
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)

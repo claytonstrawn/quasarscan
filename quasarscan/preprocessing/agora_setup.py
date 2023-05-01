@@ -20,6 +20,8 @@ def agora_load_and_setup(path,code,redshift,ions=None,add_pi_fracs=True):
     fields_to_keep += [('gas','agora_metallicity'),\
                           ('gas','agora_density'),\
                           ('gas','density'),\
+                          ('gas','agora_temperature'),\
+                          ('gas','log_T'),\
                           ('gas','radial_distance'),\
                           ('gas','radial_velocity')]
     if ions is not None:
