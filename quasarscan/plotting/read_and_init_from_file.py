@@ -71,6 +71,8 @@ def read_and_init(loadonly,qtype):
     textfiles = get_all_textfiles(loadonly,qtype)
     if qtype == 'sim':
         for file in textfiles:
+            if '(old)' in file:
+                continue
             readvalsoutput = simulation_quasar_sphere.read_values(file)
             q = simulation_quasar_sphere.SimQuasarSphere(start_up_info_packet = readvalsoutput)
             quasar_array.append(q)

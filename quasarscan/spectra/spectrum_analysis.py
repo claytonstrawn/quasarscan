@@ -107,7 +107,7 @@ def plot_wl_around_line(wl,flux,line,redshift,noise = 0,color = 'default',
 def plot_vel_around_line(wl,fl,line,cosmo_redshift,noise = 0,color = 'default',
                         left_distance = 200,right_distance = "default",\
                         label = 'default',ax = None,plot_chunk = 'lims',
-                        bv_adjust = None):
+                        bv_adjust = None,fitted = False):
     
     if right_distance == 'default':
         right_distance = left_distance
@@ -133,7 +133,17 @@ def plot_vel_around_line(wl,fl,line,cosmo_redshift,noise = 0,color = 'default',
         chunk = np.logical_and(v_ion>=0-left_distance,v_ion<=0+right_distance)
     elif isinstance(plot_chunk,(int,float)):
         chunk = np.logical_and(v_ion>=0-left_distance*plot_chunk,v_ion<=0+right_distance*plot_chunk)
-    ax.plot(v_ion[chunk],noise_flux[chunk],label = label,color = color)
+    if fitted:
+        linewidth = 4
+        linestyle = '-'
+        alpha = 0.5
+        label = None
+    else:
+        linewidth = 2
+        linestyle = '-'
+        alpha = 1
+    ax.plot(v_ion[chunk],noise_flux[chunk],label = label,color = color,
+            linestyle = linestyle, linewidth = linewidth, alpha = alpha)
     ax.legend()
     ax.set_ylabel("Relative Flux")
     ax.set_xlabel("Velocity (km/s)")

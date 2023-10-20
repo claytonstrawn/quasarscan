@@ -132,8 +132,8 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
                 ionfield = field_data["gas",ion_field_name]
                 fracfield = field_data["gas",frac_field_name]
                 atomfield = ionfield/fracfield
-                cdens = np.sum((ionfield * dl).in_units('cm**-2')).value
-                total_nucleus = np.sum((atomfield * dl).in_units('cm**-2')).value
+                cdens = np.nansum((ionfield * dl).in_units('cm**-2')).value
+                total_nucleus = np.nansum((atomfield * dl).in_units('cm**-2')).value
                 vector[11+j*(num_bin_vars+2)] = cdens
                 vector[11+j*(num_bin_vars+2)+1] = cdens / total_nucleus
                 #4th for loop is processing each gasbin for the current ion
@@ -164,15 +164,15 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             #mass-weighted temperature
             try:
                 if agora:
-                    Z = np.sum(field_data['gas',"agora_metallicity"].in_units('')*\
+                    Z = np.nansum(field_data['gas',"agora_metallicity"].in_units('')*\
                                field_data['gas',"density"]*dl)/ \
-                        np.sum(field_data['gas',"density"]*dl)
+                        np.nansum(field_data['gas',"density"]*dl)
                 elif ('gas',"H_nuclei_density") in ray.derived_field_list:
-                    Z = np.sum(field_data['gas',"metal_density"]*dl)/ \
-                        np.sum(field_data['gas',"H_nuclei_density"]*mh*dl)
+                    Z = np.nansum(field_data['gas',"metal_density"]*dl)/ \
+                        np.nansum(field_data['gas',"H_nuclei_density"]*mh*dl)
                 else:
-                    Z = np.sum(field_data['gas',"metal_density"]*dl)/ \
-                        np.sum(field_data['gas',"number_density"]*mh*dl)
+                    Z = np.nansum(field_data['gas',"metal_density"]*dl)/ \
+                        np.nansum(field_data['gas',"number_density"]*mh*dl)
                 vector[-1] = Z
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average metallicity')
@@ -184,16 +184,17 @@ def run_sightlines(outputfilename,save_after_num,parallel,simulation_dest = None
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with max density')
             try:
-                nmean = np.sum(field_data['gas','number_density']*dl)/np.sum(dl)
+                nmean = np.nansum(field_data['gas','number_density']*dl)/np.sum(dl)
                 vector[-3] = nmean
             except Exception as e:
                 throw_errors_if_allowed(e,throwerrors,'problem with average density')
             try:
                 if agora:
-                    T = np.average(field_data['gas','agora_temperature'],\
-                               weights=field_data['gas','density']*dl)
+                    T = np.nansum(field_data['gas',"agora_temperature"]*\
+                               field_data['gas',"density"]*dl)/ \
+                        np.nansum(field_data['gas',"density"]*dl)
                 else:
-                    T = np.average(field_data['gas','temperature'],\
+                    T = np.nanmean(field_data['gas','temperature'],\
                                weights=field_data['gas','density']*dl)
                 vector[-4] = T
             except Exception as e:

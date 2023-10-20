@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 matplotlib_default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 import numpy as np
 from quasarscan.utils.utils import definecolorbar
-matplotlib_default_symbols = np.array(['s', 'v', '^', '<', '>', '1', '2', '3', '4', '8', 'p', 'P', '*', 'h', 'H', '+', 'x', 'X', 'D', 'd', '|', '_'])
+matplotlib_default_symbols = np.array(['s', 'v', '^', '<', '>', '8', 'p', 'P', '*', 'h', 'H', '+', 'x', 'X', 'D', 'd', '|', '_', '1', '2', '3', '4'])
 import logging
 logging.getLogger().setLevel(logging.CRITICAL)
 
@@ -42,7 +42,7 @@ def transpose_err_array(errs):
 def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,ax=None,fig=None,
                average='default',dots=False,grid=True,linestyle='',ls='',linewidth = 1.5,
                fmt=None,coloration=None,xlims='default',ylims='default',markersize='default',
-               alpha = 1.0,elinewidth=None,capsize=3,zorder = 100,**kwargs):
+               alpha = 1.0,elinewidth=None,capsize=3,zorder = 100,legend = True,**kwargs):
     if ax is None:
         assert fig is None
         fig,ax = plt.subplots(1)
@@ -90,13 +90,14 @@ def plot_sim_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title_final,
         if grid is True:
             grid = 'major'
         ax.grid(which = grid,visible = True)
-    ax.legend().set_zorder(2)
+    if legend:
+        ax.legend().set_zorder(2)
     return fig,ax
 #plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title, 
 
 def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,fig=None,\
                         grid=False,fmt=None,coloration=None,xlims='default',ylims='default',\
-                        markersize='default',alpha = 1.0,zorder = -100,stars = None,**kwargs):
+                        markersize='default',alpha = 1.0,legend = True,zorder = -100,stars = None,**kwargs):
     if ax is None:
         assert fig is None
         fig,ax = plt.subplots(1)
@@ -139,7 +140,7 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,
                 continue
             for j in js_to_use:
                 ax.plot(xs[i][j],ys[i][j],linestyle='',label=None,color=coloration[i],
-                        markersize=markersize*2,alpha = alpha,zorder=zorder,marker="*")
+                        markersize=markersize*2,alpha = alpha,zorder=200,marker="*",markeredgecolor = 'k')
         if not used:
             print(f'stars was given as {stars} but no stars added.'+\
                   f'Did you have the correct keys? {labels}')
@@ -155,7 +156,8 @@ def plot_scatter_on_ax(plot_type,xs,ys,xlabel,ylabel,labels,title_final,ax=None,
         if grid is True:
             grid = 'major'
         ax.grid(which = grid,visible = True)
-    ax.legend().set_zorder(2)
+    if legend:
+        ax.legend().set_zorder(2)
     return fig,ax
 
 def figure_out_limits(xerrs,i,j,default=.15,nan_err_behavior = 'zero'):
@@ -202,7 +204,7 @@ def figure_out_limits(xerrs,i,j,default=.15,nan_err_behavior = 'zero'):
 
 def plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,quasar_array,ax=None,fig=None,\
                         grid=False,symbols=None,coloration=None,xlims='default',ylims='default',\
-                        markersize='default',alpha = 1.0,capsize=3,\
+                        markersize='default',alpha = 1.0,capsize=3,legend = True,\
                        **kwargs):
     if ax is None:
         assert fig is None
@@ -256,7 +258,8 @@ def plot_obs_on_ax(plot_type,xs,ys,xerrs,yerrs,xlabel,ylabel,labels,title,quasar
         if grid is True:
             grid = 'major'
         ax.grid(which = grid,visible = True)
-    ax.legend().set_zorder(2)
+    if legend:
+        ax.legend().set_zorder(2)
     return fig,ax
 
 def plot_hist_on_ax(plot_type,xs,ys,xlabel,ylabel,title,weight,cbarlabel,ax=None,fig=None,ns = (42,15),\

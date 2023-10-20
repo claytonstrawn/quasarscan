@@ -38,26 +38,30 @@ def ion_strongest_line(ion):
     max_gamma = np.argmax(gammas)
     return lines_to_use[max_gamma]
 
-def convert_equivalent_width_to_coldens(ew,ew_err,ion,approx_wavelength):
+def convert_equivalent_width_to_coldens(ew,ew_err,ion,approx_wavelength = None,ew_limit = 0.2):
+    if approx_wavelength is None:
+        approx_wavelength = ion_strongest_line(ion)[0]
     lines_dict = trident_file_reader()
     lines_to_check = lines_dict[ion]
+    wavelengths,gammas,fs = [],[],[]
     for line in lines_to_check:
         wavelengths+=[line[0]]
         gammas+=[line[1]]
         fs+=[line[2]]
-    closest_wl_index = np.argmax(np.abs(np.array(wavelengths)-approx_wavelength))
+    closest_wl_index = np.argmin(np.abs(np.array(wavelengths)-approx_wavelength))
     f = fs[closest_wl_index]
     wl = wavelengths[closest_wl_index]
-    if ew < 0.2:
+    if ew < ew_limit:
         #formula from https://www.aanda.org/articles/aa/full/2004/04/aa0003/aa0003.right.html
         cdens = 1.13e20*ew/(wl**2*f)
         cdens_low = 1.13e20*(ew-ew_err)/(wl**2*f)
         cdens_high = 1.13e20*(ew+ew_err)/(wl**2*f)
-        cdens_eb = np.mean(np.abs(cdens_low-cdens),np.abs(cdens_high-cdens))
+        log_cdens_eb = np.mean([np.abs(np.log10(cdens_low)-np.log10(cdens)),
+                                np.abs(np.log10(cdens_high)-np.log10(cdens))])
     else:
         print('equivalent width not in linear regime, conversion unknown.')
-        cdens,cdens_eb = np.nan,np.nan
-    return cdens, cdens_eb
+        cdens,log_cdens_eb = np.nan,np.nan
+    return cdens, log_cdens_eb
         
 def get_line_list(atom_list = None, ion_list = None,only_strongest = False):
     if atom_list is None:
@@ -113,6 +117,14 @@ nolinesdict = {'N': np.array([], dtype=np.float64),\
                'b': np.array([], dtype=np.float64),\
                'z': np.array([], dtype=np.float64),\
                'group#': np.array([], dtype=np.float64)}
+
+def add_noise(flux,snr = 30,random_seed = None):
+    if snr is not None:
+        if random_seed is not None:
+            np.random.seed(random_seed)
+        noise = np.random.normal(0,1/snr,len(flux))
+        flux += noise
+    return flux
 
 def call_trident_fitter(wavelength,flux,trident_filename = 'default',
                         line = None,maxNumComps = 8,**kwargs):

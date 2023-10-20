@@ -325,7 +325,10 @@ def handle_scatter_errs(xVar_packet,yVar_packet,quasar_array):
             xerrs[i] = np.zeros(len(l))
             for j,q in enumerate(l):
                 if xVar in param_xVars:
-                    xerrs[i][j] = eval('q.%s'%xVar_err)
+                    try:
+                        xerrs[i][j] = eval('q.%s'%xVar_err)
+                    except AttributeError:
+                        xerrs[i][j] = np.nan
                 elif string_represents_ion(xVar):
                     xerrs[i][j] = q.get_ion_values(xVar_err)[0]
                 xerrs[i][j] = np.log10(xerrs[i][j]) if logx and xerrs[i][j]>0 else xerrs[i][j]

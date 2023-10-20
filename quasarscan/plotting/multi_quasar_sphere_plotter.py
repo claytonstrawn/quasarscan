@@ -108,21 +108,30 @@ class MultiQuasarSpherePlotter():
     def plot_err(self,yVar,xVar='rdivR',qtype = 'sim',average = 'default',force_averaging = False,**kwargs):
         average = self.defaultaverage if average == 'default' else average
         average = 'scatter' if qtype == 'obs' and not force_averaging else average
-        plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(xVar,yVar,average,**kwargs)
+        plot_type,xVar_packet,yVar_packet,labels,filter_for = var_labels_interpreter.configure_variables(
+                                                                xVar,yVar,average,**kwargs)
         unfiltered_qlist = self.quasar_array_handler.impose_requirements(filter_for,qtype)
-        xlabel,ylabel,title_final = var_labels_interpreter.get_labels_and_titles(plot_type,xVar_packet,yVar_packet,average,**kwargs)
+        xlabel,ylabel,title_final = var_labels_interpreter.get_labels_and_titles(
+                                                                plot_type,xVar_packet,yVar_packet,average,**kwargs)
         quasar_array = var_labels_interpreter.decide_quasar_array(qtype,self.quasar_array_handler.get_qlist(qtype),**kwargs)
-        xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
         if qtype == 'sim' or force_averaging:
-            xs,ys,xerrs,yerrs,empty = errorbar_processor.get_sim_errs(plot_type,xVar_packet,yVar_packet,xarys,yarys,average = average,**kwargs)
+            xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
+            xs,ys,xerrs,yerrs,empty = errorbar_processor.get_sim_errs(plot_type,xVar_packet,yVar_packet,
+                                                                      xarys,yarys,average = average,**kwargs)
             if not empty:
-                to_return = matplotlib_interfacer.plot_sim_on_ax(plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title_final, **kwargs)        
+                to_return = matplotlib_interfacer.plot_sim_on_ax(plot_type, xs, ys, xerrs, yerrs,
+                                                                 xlabel, ylabel, labels, title_final, **kwargs)        
         elif qtype == 'obs':
+            xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,
+                                                          quasar_array,mask_positive = False,**kwargs)
             xs,ys,empty = errorbar_processor.process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,**kwargs)
             xerrs,yerrs = errorbar_processor.handle_scatter_errs(xVar_packet,yVar_packet,quasar_array)
             if not empty:
-                to_return = matplotlib_interfacer.plot_obs_on_ax(plot_type, xs, ys, xerrs, yerrs, xlabel, ylabel, labels, title_final, quasar_array, **kwargs)
+                to_return = matplotlib_interfacer.plot_obs_on_ax(plot_type, xs, ys, xerrs,
+                                                                 yerrs, xlabel, ylabel, labels,
+                                                                 title_final, quasar_array, **kwargs)
         elif qtype == 'empty':
+            xarys,yarys = plot_data_processor.get_xy_vals(plot_type,xVar_packet,yVar_packet,quasar_array,**kwargs)
             assert plot_type == 3
             xs,ys,empty = errorbar_processor.process_scatter_points(xVar_packet,yVar_packet,xarys,yarys,**kwargs)
             xerrs,yerrs = None,None
@@ -170,7 +179,7 @@ class MultiQuasarSpherePlotter():
         self.quasar_array_handler.update_qlist(qtype,unfiltered_qlist)
         return to_return
 
-    def faberplot(self,yVar,xVar='rdivR',plot_kind='err',lq2=None,qtype='sim',lq=None,fig = None, axes = None,figsize='guess',sharex=True,sharey=True,\
+    def faberplot(self,yVar,xVar='rdivR',plot_kind='err',lq2=None,qtype='sim',lq=None,fig = None, axes = None,figsize='guess',sharex=True,sharey=True,legend_at = (0,0),\
                   **kwargs):
         #after using sort_by_2d to get a set of labels and a 2d array of quasarspheres,
         #ask plot_err or plot_hist for completed plots of type given, for 
@@ -186,7 +195,9 @@ class MultiQuasarSpherePlotter():
                 self.quasar_array_handler.update_qlist(qtype,quasar_array[i][j])
                 if lq is not None:
                     lq = self.sort_by(lq[3],lq[1],**kwargs)
-                    lq = [None]*len(lq[0]) if i>0 or j>0 else lq[0],lq[1],lq[2],lq[3]
+                    col = legend_at[0]
+                    row = legend_at[1]
+                    lq = [None]*len(lq[0]) if i!=col or j!=row else lq[0],lq[1],lq[2],lq[3]
                 if plot_kind=='err':
                     self.plot_err(yVar, xVar=xVar, qtype=qtype, fig = fig,ax = ax, lq=lq,  **kwargs)
                 elif plot_kind=='scatter':

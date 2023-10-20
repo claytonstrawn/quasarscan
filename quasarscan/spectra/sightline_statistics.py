@@ -78,6 +78,17 @@ def covering_fraction(ion,comp_list):
                 return [1]
     return [0]
 
+def remove_outliers_nans(code,redshift,ion,var,all_var):
+    all_var_array = np.array(all_var)
+    all_var_array = all_var_array[~np.isnan(all_var_array)]
+    if code == 'gear' and redshift == 3.00000000000869 and var == 'b':
+        #gear has very few detections (<5) at z=3 but 
+        #one of them has extremely wide (>5x as much as all others)
+        #components, giving a huge spread
+        print('gear',all_var_array,'removing b outliers...')
+        all_var_array = all_var_array[all_var_array<100]
+    return list(all_var_array)
+
 #summary: returns average and standard error of chosen variables(total components, b, column density, covering fraction) for each ion chosen for the code chosen
 #
 #inputs: code: galaxy code
@@ -88,12 +99,13 @@ def covering_fraction(ion,comp_list):
 #       min_data_points: minimum number of components needed to be included
 #
 #output: array of averages for each chosen variable for each chosen ion and an array of standard errors for each chosen variable for each chosen ion
-def sightline_looping(code,sightline_range,ions,vars_to_return = [],include_zero = False, min_data_points = 2):
-    root = '/global/project/projectdirs/agora/paper_CGM/spectra_from_trident/Ion_Spectra/'
-    redshifts = {'art':1.998998976095549, 'enzo':1.9999988698963, 'ramses':2.0005652511032306, 
-             'gadget':2.003003004441382, 'gear':2.0000000000018687, 'gizmo':2.0012562123472377}
-    redshift = redshifts[code]
-    vars_funcs_dict = {'num':ncomps,'b':bparam, 'n':nparam,'covering_fraction':covering_fraction}
+def sightline_looping(code,redshift,sightline_range,ions,
+                      vars_to_return = [],include_zero = False, 
+                      min_data_points = 2,root = 'Ion_Spectra_new',
+                      errors = 'warn',snr = None):
+    root = '/global/cfs/projectdirs/agora/paper_CGM/spectra_from_trident/'+root
+    vars_funcs_dict = {'num':ncomps,'b':bparam, 
+                       'n':nparam,'covering_fraction':covering_fraction}
     #add a second thing, in addition to 
     #to_return values, return the errors on each
     to_return = np.zeros((len(vars_to_return),len(ions)))+np.nan        
@@ -102,13 +114,23 @@ def sightline_looping(code,sightline_range,ions,vars_to_return = [],include_zero
         try:
             func = vars_funcs_dict[var]
         except KeyError as e:
-            print(f'key {var} is not a known function. Known functions are {list(vars_funcs_dict.keys())}')
+            print(f'key {var} is not a known function. '+\
+                  f'Known functions are {list(vars_funcs_dict.keys())}')
             raise e
         for j,ion in enumerate(ions):
             all_var = []
             for sightline_num in range(sightline_range):
-                f_name = f"{root}/AGORA_{code}_CR/{redshift}/Line_{sightline_num}/components.txt"
-                data = load_components(f_name)
+                add_snr = '' if snr is None else f"_snr{snr}"
+                f_name = f"{root}/AGORA_{code}_CR/{redshift}/"+\
+                        f"Line_{sightline_num}/components{add_snr}.txt"
+                try:
+                    data = load_components(f_name)
+                except FileNotFoundError as e:
+                    if errors == 'warn':
+                        print(e)
+                    elif errors is True:
+                        raise(e)
+                    continue
                 one_ion_results = func(ion,data)
                 if var in ['num']:
                     if include_zero:
@@ -118,10 +140,11 @@ def sightline_looping(code,sightline_range,ions,vars_to_return = [],include_zero
                             all_var =  all_var + one_ion_results
                 else:
                     all_var =  all_var + one_ion_results
-            if len(all_var) < min_data_points:
+            all_var = remove_outliers_nans(code,redshift,ion,var,all_var)
+            if var != 'num' and len(all_var) < min_data_points:
                 avg_var = np.nan
             else:
-                avg_var = np.average(all_var) 
+                avg_var = np.average(all_var)
             sd_var = np.std(all_var, ddof = 1)
             se_var = sd_var/math.sqrt((len(all_var)))
             return_SE[i][j] = se_var             

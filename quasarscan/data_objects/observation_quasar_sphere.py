@@ -3,6 +3,7 @@ from quasarscan.data_objects.quasar_sphere import QuasarSphere
 from quasarscan.utils.utils import string_represents_ion,round_redshift
 from quasarscan.data_objects.gasbinning import GasBinsHolder
 from quasarscan.utils.variable_lists import param_xVars
+from quasarscan.spectra.trident_interfacer import convert_equivalent_width_to_coldens
 
 def get_header_columns_dict(header):
     to_return = {}
@@ -24,7 +25,7 @@ def access_obs_data_values(variable,header_dict,parsed_line):
             i,islog = header_dict[variable]
             assert not islog
             return parsed_line[i]
-        except:
+        except Exception as e:
             return None
     elif variable in numvars or 'cdens' in variable or 'eb' in variable:
         try:
@@ -41,7 +42,7 @@ def access_obs_data_values(variable,header_dict,parsed_line):
                 return 10.**float(value)
             else:
                 return value
-        except:
+        except Exception as e:
             return np.nan
     else:
         print("%s should not be stored in the sightline!"%variable)
@@ -81,8 +82,15 @@ class ObsQuasarSphere(QuasarSphere):
         self.intensives = []
         iondata = []
         for ion in self.ions:
-            iondata.append(access_obs_data_values('%s:cdens'%ion,header_columns_dict,parsed_line))
-            iondata.append(access_obs_data_values('%s:eb'%ion,header_columns_dict,parsed_line))
+            if f'{ion}:cdens' in temp:
+                iondata.append(access_obs_data_values('%s:cdens'%ion,header_columns_dict,parsed_line))
+                iondata.append(access_obs_data_values('%s:eb'%ion,header_columns_dict,parsed_line))
+            elif f'{ion}:EW' in temp:
+                ew = access_obs_data_values('%s:EW'%ion,header_columns_dict,parsed_line)
+                ew_eb = access_obs_data_values('%s:EW_eb'%ion,header_columns_dict,parsed_line)
+                cdens,cdens_eb = convert_equivalent_width_to_coldens(ew,ew_eb,ion)
+                iondata.append(cdens)
+                iondata.append(cdens_eb)
         self.info = np.array([[-1, -1, -1]+
                              [access_obs_data_values('r',header_columns_dict,parsed_line)]+
                              [-1, -1, -1,-1,-1, -1, -1] + 

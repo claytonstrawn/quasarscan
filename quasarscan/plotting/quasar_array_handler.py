@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import ndarray
 from quasarscan.plotting.read_and_init_from_file import read_and_init
 from quasarscan.utils import utils
 from quasarscan.utils.variable_lists import stringcriteria,intensives,intensiveslabels,\
@@ -89,7 +90,7 @@ class QuasarArrayHandler(object):
             s += q.fullname +" at z=%s ("%q.rounded_redshift
             for c in criteria:
                 v = q.__getattribute__(c)
-                if isinstance(v,str) or isinstance(v,list):
+                if isinstance(v,str) or isinstance(v,list) or isinstance(v,ndarray):
                     s+="%s = %s, "%(c,v)
                 elif log:
                     s+="%s = 10^%0.3f, "%(c,np.log10(v))

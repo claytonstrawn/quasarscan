@@ -71,7 +71,7 @@ class AbsorptionLine(object):
             x_coord = self.velocity
         elif plot_type == 'wl':
             x_coord = self.wl_det
-        ax.plot(x_coord, flux_to_plot, "^", color = color)
+        ax.plot(x_coord, flux_to_plot, "^", color = color,markeredgecolor = 'k')
         
 class Component(object):
     #summary: initialise components and loads data
